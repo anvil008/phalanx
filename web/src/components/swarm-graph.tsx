@@ -1,15 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { gsap } from "gsap"
 import type { A2AMessageKind, AgentState, BusMessage, IncidentSeverity } from "@/lib/model"
 import { VIRTUAL, type GraphLayout, type GraphNode } from "@/lib/graph-model"
+import { useAgentIndex } from "@/lib/store"
+import { Grid, Hexagon, Radar, Shield } from "lucide-react"
 
-/* The swarm graph.
-   A canvas instrument rather than a document: nodes are agents, static edges
-   are who reports to whom, and the moving packets are literal A2A messages —
-   one per JSON-RPC hop, coloured by message kind. Watching the packets is
-   watching the protocol, not an illustration of it. */
+/* The Phalanx Swarm Graph Instrument.
+   A native cyber-tactical canvas instrument:
+   - "Tactical Mesh": Incident topology with commander hubs and dynamic specialist links.
+   - "Hex Constellation": Geometric defensive lattice inspired by anvilpalamattam.com.
+   - "Incident Focus": Incident-centric blast radius & containment perimeter.
+   - Real-time radar sweep telemetry scanner with continuous sensor polling wave.
+   - Enhanced A2A photon packets traveling along quadratic bezier flight paths. */
 
 const PACKET_MS = 2400
-const PACKET_TAIL = 0.22
+const PACKET_TAIL = 0.24
+
+export type SwarmCanvasMode = "tactical" | "hex" | "focus"
 
 interface Palette {
   canvas: string
@@ -19,6 +26,7 @@ interface Palette {
   faint: string
   border: string
   accent: string
+  accentIndigo: string
   positive: string
   warning: string
   negative: string
@@ -35,6 +43,11 @@ interface Packet {
   startedAt: number
 }
 
+interface AnimatedCoord {
+  x: number
+  y: number
+}
+
 export interface SwarmGraphProps {
   layout: GraphLayout
   bus: BusMessage[]
@@ -47,43 +60,45 @@ export interface SwarmGraphProps {
 }
 
 function cssValue(name: string): string {
+  if (typeof document === "undefined") return ""
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
 function readPalette(): Palette {
   return {
-    canvas: cssValue("--phalanx-canvas"),
-    grid: cssValue("--phalanx-grid"),
-    foreground: cssValue("--foreground"),
-    muted: cssValue("--muted-foreground"),
-    faint: cssValue("--phalanx-paused"),
-    border: cssValue("--border"),
-    accent: cssValue("--brand-phalanx"),
-    positive: cssValue("--positive"),
-    warning: cssValue("--warning"),
-    negative: cssValue("--destructive"),
+    canvas: cssValue("--phalanx-canvas") || "#080908",
+    grid: cssValue("--phalanx-grid") || "rgba(241, 240, 233, 0.05)",
+    foreground: cssValue("--foreground") || "#f1f0e9",
+    muted: cssValue("--muted-foreground") || "#a3a299",
+    faint: cssValue("--phalanx-paused") || "#787770",
+    border: cssValue("--border") || "rgba(241, 240, 233, 0.10)",
+    accent: cssValue("--brand-phalanx") || "#4cc9d9",
+    accentIndigo: cssValue("--accent-indigo") || "#79a7ff",
+    positive: cssValue("--positive") || "#3ecf8e",
+    warning: cssValue("--warning") || "#e0b34d",
+    negative: cssValue("--destructive") || "#f2565f",
     classes: {
-      command: cssValue("--phalanx-class-command"),
-      analysis: cssValue("--phalanx-class-analysis"),
-      action: cssValue("--phalanx-class-action"),
-      comms: cssValue("--phalanx-class-comms"),
+      command: cssValue("--phalanx-class-command") || "#4cc9d9",
+      analysis: cssValue("--phalanx-class-analysis") || "#79a7ff",
+      action: cssValue("--phalanx-class-action") || "oklch(0.72 0.15 45)",
+      comms: cssValue("--phalanx-class-comms") || "oklch(0.72 0.13 310)",
     },
     bus: {
-      task: cssValue("--phalanx-bus-task"),
-      report: cssValue("--phalanx-bus-report"),
-      query: cssValue("--phalanx-bus-query"),
-      answer: cssValue("--phalanx-bus-report"),
-      escalation: cssValue("--phalanx-bus-escalation"),
-      broadcast: cssValue("--phalanx-bus-broadcast"),
-      handoff: cssValue("--phalanx-bus-escalation"),
-      operator_query: cssValue("--phalanx-bus-operator_query") || cssValue("--warning"),
-      commander_reply: cssValue("--phalanx-bus-commander_reply") || cssValue("--phalanx-bus-task"),
+      task: cssValue("--phalanx-bus-task") || "#4cc9d9",
+      report: cssValue("--phalanx-bus-report") || "#3ecf8e",
+      query: cssValue("--phalanx-bus-query") || "#79a7ff",
+      answer: cssValue("--phalanx-bus-report") || "#3ecf8e",
+      escalation: cssValue("--phalanx-bus-escalation") || "#e0b34d",
+      broadcast: cssValue("--phalanx-bus-broadcast") || "oklch(0.72 0.13 310)",
+      handoff: cssValue("--phalanx-bus-escalation") || "#e0b34d",
+      operator_query: cssValue("--phalanx-bus-operator_query") || "#e0b34d",
+      commander_reply: cssValue("--phalanx-bus-commander_reply") || "#4cc9d9",
     },
     severity: {
-      sev1: cssValue("--phalanx-sev1"),
-      sev2: cssValue("--phalanx-sev2"),
-      sev3: cssValue("--phalanx-sev3"),
-      sev4: cssValue("--phalanx-sev4"),
+      sev1: cssValue("--phalanx-sev1") || "#f2565f",
+      sev2: cssValue("--phalanx-sev2") || "#e0b34d",
+      sev3: cssValue("--phalanx-sev3") || "#4cc9d9",
+      sev4: cssValue("--phalanx-sev4") || "#a3a299",
     },
   }
 }
@@ -98,15 +113,14 @@ function withAlpha(color: string, alpha: number): string {
   return hex
 }
 
-/** Working states earn a ring; standby does not. */
 function stateRing(state: AgentState, palette: Palette): string | null {
   switch (state) {
     case "working":
       return palette.accent
     case "consulting":
-      return palette.bus.query!
+      return palette.bus.query || palette.accentIndigo
     case "briefing":
-      return palette.bus.task!
+      return palette.bus.task || palette.accent
     case "reporting":
       return palette.positive
     case "blocked":
@@ -116,24 +130,131 @@ function stateRing(state: AgentState, palette: Palette): string | null {
   }
 }
 
-function edgePath(from: GraphNode, to: GraphNode): { cx: number; cy: number } {
+function edgePath(from: { x: number; y: number }, to: { x: number; y: number }): { cx: number; cy: number } {
   const midX = (from.x + to.x) / 2
   const midY = (from.y + to.y) / 2
   const dx = to.x - from.x
   const dy = to.y - from.y
   const length = Math.hypot(dx, dy) || 1
-  // Bow every edge the same way so parallel edges between the same pair of
-  // clusters stay individually readable.
-  const bow = Math.min(38, length * 0.11)
+  const bow = Math.min(36, length * 0.12)
   return { cx: midX - (dy / length) * bow, cy: midY + (dx / length) * bow }
 }
 
-function quadPoint(from: GraphNode, control: { cx: number; cy: number }, to: GraphNode, t: number) {
+function quadPoint(
+  from: { x: number; y: number },
+  control: { cx: number; cy: number },
+  to: { x: number; y: number },
+  t: number,
+) {
   const inverse = 1 - t
   return {
     x: inverse * inverse * from.x + 2 * inverse * t * control.cx + t * t * to.x,
     y: inverse * inverse * from.y + 2 * inverse * t * control.cy + t * t * to.y,
   }
+}
+
+/** Compute positions for "Hex Constellation" mode (symmetrical orbital lattice) */
+function computeHexConstellationPositions(nodes: GraphNode[]): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>()
+  const cx = VIRTUAL.width / 2
+  const cy = VIRTUAL.height / 2
+
+  const commanders = nodes.filter((n) => n.kind === "commander")
+  const specialists = nodes.filter((n) => n.kind !== "commander")
+
+  // Position commanders in the hub
+  if (commanders.length === 1) {
+    positions.set(commanders[0]!.id, { x: cx, y: cy })
+  } else if (commanders.length === 2) {
+    positions.set(commanders[0]!.id, { x: cx - 64, y: cy })
+    positions.set(commanders[1]!.id, { x: cx + 64, y: cy })
+  } else if (commanders.length > 2) {
+    commanders.forEach((cmd, idx) => {
+      const angle = (idx * Math.PI * 2) / commanders.length - Math.PI / 2
+      positions.set(cmd.id, { x: cx + 55 * Math.cos(angle), y: cy + 55 * Math.sin(angle) })
+    })
+  }
+
+  // Position specialists in two concentric rings
+  const innerRingRadius = 175
+  const outerRingRadius = 285
+
+  // Take up to 6 specialists in inner ring (wave 1)
+  const innerSpecialists = specialists.slice(0, 6)
+  const outerSpecialists = specialists.slice(6)
+
+  innerSpecialists.forEach((spec, idx) => {
+    const angle = (idx * Math.PI * 2) / innerSpecialists.length - Math.PI / 6
+    positions.set(spec.id, {
+      x: cx + innerRingRadius * Math.cos(angle),
+      y: cy + innerRingRadius * Math.sin(angle),
+    })
+  })
+
+  outerSpecialists.forEach((spec, idx) => {
+    const angle = (idx * Math.PI * 2) / outerSpecialists.length - Math.PI / 12
+    positions.set(spec.id, {
+      x: cx + outerRingRadius * Math.cos(angle),
+      y: cy + outerRingRadius * Math.sin(angle),
+    })
+  })
+
+  return positions
+}
+
+/** Compute positions for "Incident Focus" mode */
+function computeIncidentFocusPositions(
+  nodes: GraphNode[],
+  focusedId: string | null,
+): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>()
+  const cx = VIRTUAL.width / 2
+  const cy = 260
+
+  // Filter assigned vs reserve
+  const assigned = nodes.filter(
+    (n) => (focusedId ? n.incidentIds.includes(focusedId) : n.incidentIds.length > 0),
+  )
+  const unassigned = nodes.filter(
+    (n) => !(focusedId ? n.incidentIds.includes(focusedId) : n.incidentIds.length > 0),
+  )
+
+  const activeCommanders = assigned.filter((n) => n.kind === "commander")
+  const activeSpecialists = assigned.filter((n) => n.kind !== "commander")
+
+  if (activeCommanders.length > 0) {
+    activeCommanders.forEach((cmd, idx) => {
+      positions.set(cmd.id, { x: cx + (idx - (activeCommanders.length - 1) / 2) * 90, y: cy })
+    })
+  }
+
+  // Arrange active specialists in radial arc around commander
+  if (activeSpecialists.length > 0) {
+    const arcRadius = 180
+    activeSpecialists.forEach((spec, idx) => {
+      const angle =
+        (idx / Math.max(1, activeSpecialists.length - 1)) * (Math.PI * 1.3) -
+        (Math.PI * 1.3) / 2 -
+        Math.PI / 2
+      positions.set(spec.id, {
+        x: cx + arcRadius * Math.cos(angle),
+        y: cy + arcRadius * Math.sin(angle) + 40,
+      })
+    })
+  }
+
+  // Lay out unassigned / standby nodes in a clean perimeter row at the bottom
+  const rowY = 540
+  const rowWidth = VIRTUAL.width - 200
+  unassigned.forEach((node, idx) => {
+    const spacing = unassigned.length > 1 ? rowWidth / (unassigned.length - 1) : 0
+    positions.set(node.id, {
+      x: 100 + idx * spacing,
+      y: rowY,
+    })
+  })
+
+  return positions
 }
 
 export function SwarmGraph({
@@ -153,6 +274,19 @@ export function SwarmGraph({
   const busRef = useRef(bus)
   const focusRef = useRef(focusIncidentId)
   const selectedRef = useRef(selected)
+
+  const [mode, setMode] = useState<SwarmCanvasMode>("tactical")
+  const modeRef = useRef<SwarmCanvasMode>(mode)
+  modeRef.current = mode
+
+  const [radarActive, setRadarActive] = useState(true)
+  const radarActiveRef = useRef(radarActive)
+  radarActiveRef.current = radarActive
+
+  const radarAngleRef = useRef({ angle: 0 })
+  const animCoordsRef = useRef<Map<string, AnimatedCoord>>(new Map())
+
+  const agentDefs = useAgentIndex()
   const [hover, setHover] = useState<{ node: GraphNode; x: number; y: number } | null>(null)
   const hoverRef = useRef<GraphNode | null>(null)
 
@@ -161,18 +295,65 @@ export function SwarmGraph({
   focusRef.current = focusIncidentId
   selectedRef.current = selected
 
-  // Only animate hops we actually witnessed. A page opened mid-incident should
-  // not replay the whole backlog as a burst of packets.
+  // GSAP continuous radar sweep timeline
+  useEffect(() => {
+    const sweep = gsap.to(radarAngleRef.current, {
+      angle: Math.PI * 2,
+      duration: 7.2,
+      repeat: -1,
+      ease: "none",
+    })
+    return () => {
+      sweep.kill()
+    }
+  }, [])
+
+  // GSAP animate node positions when layout or mode changes
+  useEffect(() => {
+    let targetPositions = new Map<string, { x: number; y: number }>()
+
+    if (mode === "tactical") {
+      layout.nodes.forEach((n) => targetPositions.set(n.id, { x: n.x, y: n.y }))
+    } else if (mode === "hex") {
+      targetPositions = computeHexConstellationPositions(layout.nodes)
+    } else if (mode === "focus") {
+      targetPositions = computeIncidentFocusPositions(layout.nodes, focusIncidentId)
+    }
+
+    // Tween each node coordinate to target
+    layout.nodes.forEach((node) => {
+      const target = targetPositions.get(node.id) || { x: node.x, y: node.y }
+      let current = animCoordsRef.current.get(node.id)
+      if (!current) {
+        current = { x: node.x, y: node.y }
+        animCoordsRef.current.set(node.id, current)
+      }
+      gsap.to(current, {
+        x: target.x,
+        y: target.y,
+        duration: 0.85,
+        ease: "power2.out",
+        overwrite: "auto",
+      })
+    })
+  }, [layout, mode, focusIncidentId])
+
+  // Packet animation queue
   useEffect(() => {
     const now = performance.now()
     const fresh: Packet[] = []
     for (const message of bus) {
       if (seenRef.current.has(message.id)) continue
       seenRef.current.add(message.id)
-      // Skip anything already stale by the time it reached the client.
       if (Date.now() - Date.parse(message.at) > PACKET_MS) continue
       if (message.toAgentId) {
-        fresh.push({ id: message.id, from: message.fromAgentId, to: message.toAgentId, kind: message.kind, startedAt: now })
+        fresh.push({
+          id: message.id,
+          from: message.fromAgentId,
+          to: message.toAgentId,
+          kind: message.kind,
+          startedAt: now,
+        })
       } else {
         const peers = layoutRef.current.nodes.filter(
           (node) =>
@@ -181,7 +362,13 @@ export function SwarmGraph({
             (message.incidentId === null || node.incidentIds.includes(message.incidentId)),
         )
         for (const peer of peers) {
-          fresh.push({ id: `${message.id}:${peer.id}`, from: message.fromAgentId, to: peer.id, kind: "broadcast", startedAt: now })
+          fresh.push({
+            id: `${message.id}:${peer.id}`,
+            from: message.fromAgentId,
+            to: peer.id,
+            kind: "broadcast",
+            startedAt: now,
+          })
         }
       }
     }
@@ -194,10 +381,11 @@ export function SwarmGraph({
         let best: GraphNode | null = null
         let bestDistance = Infinity
         for (const node of layoutRef.current.nodes) {
-          const dx = screenX - (originX + node.x * scale)
-          const dy = screenY - (originY + node.y * scale)
+          const coord = animCoordsRef.current.get(node.id) || node
+          const dx = screenX - (originX + coord.x * scale)
+          const dy = screenY - (originY + coord.y * scale)
           const distance = Math.hypot(dx, dy)
-          const hit = Math.max(12, node.radius * scale + 8)
+          const hit = Math.max(14, node.radius * scale + 10)
           if (distance <= hit && distance < bestDistance) {
             best = node
             bestDistance = distance
@@ -234,14 +422,17 @@ export function SwarmGraph({
       canvas.style.width = `${width}px`
       canvas.style.height = `${height}px`
       context.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const pad = 28
+      const pad = 24
       scale = Math.min((width - pad * 2) / VIRTUAL.width, (height - pad * 2) / VIRTUAL.height)
       originX = (width - VIRTUAL.width * scale) / 2
       originY = (height - VIRTUAL.height * scale) / 2
       palette = readPalette()
     }
 
-    const project = (node: { x: number; y: number }) => ({ x: originX + node.x * scale, y: originY + node.y * scale })
+    const project = (coord: { x: number; y: number }) => ({
+      x: originX + coord.x * scale,
+      y: originY + coord.y * scale,
+    })
 
     const draw = () => {
       const current = layoutRef.current
@@ -252,8 +443,13 @@ export function SwarmGraph({
       context.fillStyle = palette.canvas
       context.fillRect(0, 0, width, height)
 
-      // Grid. Fixed screen pitch so it reads as a backdrop, not as data.
-      context.strokeStyle = withAlpha(palette.grid || "#ffffff", 0.35)
+      const centerScreen = {
+        x: originX + (VIRTUAL.width / 2) * scale,
+        y: originY + (VIRTUAL.height / 2) * scale,
+      }
+
+      // 1. Grid backdrop
+      context.strokeStyle = palette.grid
       context.lineWidth = 1
       for (let x = originX % 48; x < width; x += 48) {
         context.beginPath()
@@ -268,59 +464,144 @@ export function SwarmGraph({
         context.stroke()
       }
 
-      // Incident halos.
-      for (const cluster of current.clusters) {
-        const centre = project(cluster)
-        const radius = cluster.radius * scale
-        const tint = palette.severity[cluster.severity] ?? palette.accent
-        const dim = focusRef.current !== null && focusRef.current !== cluster.incidentId
-        const gradient = context.createRadialGradient(centre.x, centre.y, radius * 0.25, centre.x, centre.y, radius)
-        gradient.addColorStop(0, withAlpha(tint, dim ? 0.03 : 0.075))
-        gradient.addColorStop(1, withAlpha(tint, 0))
-        context.fillStyle = gradient
+      // 2. Continuous Radar Sweep Telemetry Wave
+      if (radarActiveRef.current) {
+        const sweepAngle = radarAngleRef.current.angle
+        const radarMaxRadius = Math.max(width, height) * 0.58
+
+        // Concentric distance range rings & compass tick marks
+        const rangeSteps = [80, 160, 240, 320, 420]
+        context.save()
+        context.strokeStyle = "rgba(241, 240, 233, 0.04)"
+        context.lineWidth = 1
+        for (const r of rangeSteps) {
+          const rad = r * scale
+          context.beginPath()
+          context.arc(centerScreen.x, centerScreen.y, rad, 0, Math.PI * 2)
+          context.stroke()
+        }
+
+        // Cardinal bearing lines & Space Mono ticks
+        context.strokeStyle = "rgba(241, 240, 233, 0.03)"
         context.beginPath()
-        context.arc(centre.x, centre.y, radius, 0, Math.PI * 2)
+        context.moveTo(centerScreen.x - radarMaxRadius, centerScreen.y)
+        context.lineTo(centerScreen.x + radarMaxRadius, centerScreen.y)
+        context.moveTo(centerScreen.x, centerScreen.y - radarMaxRadius)
+        context.lineTo(centerScreen.x, centerScreen.y + radarMaxRadius)
+        context.stroke()
+
+        // Radar sweep arc beam
+        const sweepSpan = 0.42
+        const startAngle = sweepAngle - sweepSpan
+        context.save()
+        context.beginPath()
+        context.moveTo(centerScreen.x, centerScreen.y)
+        context.arc(centerScreen.x, centerScreen.y, radarMaxRadius, startAngle, sweepAngle)
+        context.closePath()
+
+        const sweepGrad = context.createRadialGradient(
+          centerScreen.x,
+          centerScreen.y,
+          10,
+          centerScreen.x,
+          centerScreen.y,
+          radarMaxRadius,
+        )
+        sweepGrad.addColorStop(0, withAlpha(palette.accent, 0.14))
+        sweepGrad.addColorStop(0.7, withAlpha(palette.accent, 0.04))
+        sweepGrad.addColorStop(1, withAlpha(palette.accent, 0))
+        context.fillStyle = sweepGrad
         context.fill()
 
-        context.strokeStyle = withAlpha(tint, dim ? 0.1 : 0.22)
-        context.setLineDash([4, 6])
-        context.lineWidth = 1
+        // Leading scanner ray
+        context.strokeStyle = withAlpha(palette.accent, 0.35)
+        context.lineWidth = 1.2
         context.beginPath()
-        context.arc(centre.x, centre.y, radius, 0, Math.PI * 2)
-        context.stroke()
-        context.setLineDash([])
-
-        context.fillStyle = withAlpha(tint, dim ? 0.4 : 0.95)
-        context.font = "650 12px ui-sans-serif, system-ui, sans-serif"
-        context.textAlign = "center"
-        context.fillText(cluster.code, centre.x, centre.y - radius - 16)
-        context.fillStyle = withAlpha(palette.muted, dim ? 0.35 : 0.85)
-        context.font = "500 11px ui-sans-serif, system-ui, sans-serif"
-        context.fillText(
-          cluster.status === "resolved" ? "resolved" : `${cluster.severity} · ${cluster.status}`,
-          centre.x,
-          centre.y - radius - 3,
+        context.moveTo(centerScreen.x, centerScreen.y)
+        context.lineTo(
+          centerScreen.x + radarMaxRadius * Math.cos(sweepAngle),
+          centerScreen.y + radarMaxRadius * Math.sin(sweepAngle),
         )
+        context.stroke()
+        context.restore()
+        context.restore()
       }
 
-      // Static edges.
+      // 3. Mode-specific structures (Hex Constellation spokes, Incident blast halos)
+      if (modeRef.current === "hex") {
+        // Draw constellation lattice edges connecting center to nodes
+        context.save()
+        context.strokeStyle = withAlpha(palette.foreground, 0.07)
+        context.lineWidth = 0.8
+        for (const node of current.nodes) {
+          const coord = animCoordsRef.current.get(node.id) || node
+          const pt = project(coord)
+          context.beginPath()
+          context.moveTo(centerScreen.x, centerScreen.y)
+          context.lineTo(pt.x, pt.y)
+          context.stroke()
+        }
+        context.restore()
+      } else if (modeRef.current === "focus" || modeRef.current === "tactical") {
+        // Incident cluster halos
+        for (const cluster of current.clusters) {
+          const centre = project(cluster)
+          const radius = cluster.radius * scale
+          const tint = palette.severity[cluster.severity] ?? palette.accent
+          const dim = focusRef.current !== null && focusRef.current !== cluster.incidentId
+          const gradient = context.createRadialGradient(centre.x, centre.y, radius * 0.2, centre.x, centre.y, radius)
+          gradient.addColorStop(0, withAlpha(tint, dim ? 0.02 : 0.08))
+          gradient.addColorStop(1, withAlpha(tint, 0))
+          context.fillStyle = gradient
+          context.beginPath()
+          context.arc(centre.x, centre.y, radius, 0, Math.PI * 2)
+          context.fill()
+
+          context.strokeStyle = withAlpha(tint, dim ? 0.08 : 0.24)
+          context.setLineDash([4, 6])
+          context.lineWidth = 1
+          context.beginPath()
+          context.arc(centre.x, centre.y, radius, 0, Math.PI * 2)
+          context.stroke()
+          context.setLineDash([])
+
+          // Monospace incident header label
+          context.fillStyle = withAlpha(tint, dim ? 0.4 : 0.95)
+          context.font = "700 11px 'Space Mono', ui-monospace, monospace"
+          context.textAlign = "center"
+          context.fillText(cluster.code, centre.x, centre.y - radius - 16)
+          context.fillStyle = withAlpha(palette.muted, dim ? 0.3 : 0.8)
+          context.font = "400 10px 'Space Mono', ui-monospace, monospace"
+          context.fillText(
+            cluster.status === "resolved" ? "CONTAINED // RESOLVED" : `${cluster.severity.toUpperCase()} · ${cluster.status.toUpperCase()}`,
+            centre.x,
+            centre.y - radius - 3,
+          )
+        }
+      }
+
+      // 4. Static / Dynamic edges
       for (const edge of current.edges) {
-        const from = current.nodeById.get(edge.from)
-        const to = current.nodeById.get(edge.to)
-        if (!from || !to) continue
+        const fromNode = current.nodeById.get(edge.from)
+        const toNode = current.nodeById.get(edge.to)
+        if (!fromNode || !toNode) continue
+
+        const fromCoord = animCoordsRef.current.get(edge.from) || fromNode
+        const toCoord = animCoordsRef.current.get(edge.to) || toNode
         const dim = focusRef.current !== null && edge.incidentId !== null && edge.incidentId !== focusRef.current
         const highlighted =
           selectedRef.current !== null && (edge.from === selectedRef.current || edge.to === selectedRef.current)
-        const control = edgePath(from, to)
-        const a = project(from)
-        const b = project(to)
-        const c = { x: originX + control.cx * scale, y: originY + control.cy * scale }
+
+        const control = edgePath(fromCoord, toCoord)
+        const a = project(fromCoord)
+        const b = project(toCoord)
+        const c = project({ x: control.cx, y: control.cy })
 
         context.strokeStyle =
           edge.kind === "campaign"
-            ? withAlpha(palette.warning, highlighted ? 0.7 : dim ? 0.12 : 0.34)
-            : withAlpha(palette.foreground, highlighted ? 0.4 : dim ? 0.05 : 0.13)
-        context.lineWidth = edge.kind === "campaign" ? 1.4 : 1
+            ? withAlpha(palette.warning, highlighted ? 0.8 : dim ? 0.1 : 0.38)
+            : withAlpha(palette.foreground, highlighted ? 0.5 : dim ? 0.04 : 0.12)
+        context.lineWidth = edge.kind === "campaign" ? 1.5 : 1
         if (edge.kind === "campaign") context.setLineDash([6, 5])
         context.beginPath()
         context.moveTo(a.x, a.y)
@@ -329,104 +610,164 @@ export function SwarmGraph({
         context.setLineDash([])
       }
 
-      // Packets — one per A2A hop.
+      // 5. Enhanced A2A Packet Transport (Glowing photon heads + bezier particle tails)
       for (const packet of packetsRef.current) {
-        const from = current.nodeById.get(packet.from)
-        const to = current.nodeById.get(packet.to)
-        if (!from || !to) continue
+        const fromNode = current.nodeById.get(packet.from)
+        const toNode = current.nodeById.get(packet.to)
+        if (!fromNode || !toNode) continue
+
+        const fromCoord = animCoordsRef.current.get(packet.from) || fromNode
+        const toCoord = animCoordsRef.current.get(packet.to) || toNode
+
         const progress = (now - packet.startedAt) / PACKET_MS
-        const control = edgePath(from, to)
+        const control = edgePath(fromCoord, toCoord)
         const colour = palette.bus[packet.kind] ?? palette.accent
         const fade = progress > 0.85 ? 1 - (progress - 0.85) / 0.15 : 1
 
-        // Trail, then head. The trail is what makes direction readable.
-        context.strokeStyle = withAlpha(colour, 0.4 * fade)
-        context.lineWidth = 1.6
+        // Multi-segment quadratic tail with gradient
+        context.save()
+        context.strokeStyle = withAlpha(colour, 0.45 * fade)
+        context.lineWidth = 1.8
         context.beginPath()
         const tailStart = Math.max(0, progress - PACKET_TAIL)
-        for (let step = 0; step <= 10; step += 1) {
-          const t = tailStart + ((progress - tailStart) * step) / 10
-          const point = quadPoint(from, control, to, Math.min(1, t))
-          const screen = { x: originX + point.x * scale, y: originY + point.y * scale }
+        for (let step = 0; step <= 12; step += 1) {
+          const t = tailStart + ((progress - tailStart) * step) / 12
+          const pt = quadPoint(fromCoord, control, toCoord, Math.min(1, t))
+          const screen = project(pt)
           if (step === 0) context.moveTo(screen.x, screen.y)
           else context.lineTo(screen.x, screen.y)
         }
         context.stroke()
 
-        const head = quadPoint(from, control, to, Math.min(1, progress))
-        const screenHead = { x: originX + head.x * scale, y: originY + head.y * scale }
-        context.fillStyle = withAlpha(colour, 0.95 * fade)
+        // Glowing photon head with luminous core
+        const head = quadPoint(fromCoord, control, toCoord, Math.min(1, progress))
+        const screenHead = project(head)
+
+        // Outer glow aura
+        context.fillStyle = withAlpha(colour, 0.22 * fade)
         context.beginPath()
-        context.arc(screenHead.x, screenHead.y, 2.6, 0, Math.PI * 2)
+        context.arc(screenHead.x, screenHead.y, 7.5, 0, Math.PI * 2)
         context.fill()
-        context.fillStyle = withAlpha(colour, 0.18 * fade)
+
+        // Mid photon flare
+        context.fillStyle = withAlpha(colour, 0.85 * fade)
         context.beginPath()
-        context.arc(screenHead.x, screenHead.y, 6.5, 0, Math.PI * 2)
+        context.arc(screenHead.x, screenHead.y, 3.2, 0, Math.PI * 2)
         context.fill()
+
+        // High-intensity white core
+        context.fillStyle = withAlpha("#ffffff", 0.95 * fade)
+        context.beginPath()
+        context.arc(screenHead.x, screenHead.y, 1.4, 0, Math.PI * 2)
+        context.fill()
+        context.restore()
       }
 
-      // Nodes.
+      // 6. Enhanced Agent Nodes (Luminous glows, class halos, breathing rings)
       for (const node of current.nodes) {
-        const point = project(node)
+        const coord = animCoordsRef.current.get(node.id) || node
+        const point = project(coord)
         const dim =
-          (focusRef.current !== null && !node.incidentIds.includes(focusRef.current) && !node.reserve) || node.reserve
+          (focusRef.current !== null && !node.incidentIds.includes(focusRef.current) && !node.reserve) ||
+          (node.reserve && modeRef.current === "focus")
         const colour = palette.classes[node.agentClass] ?? palette.accent
-        const radius = Math.max(3.2, node.radius * scale)
+        const radius = Math.max(3.5, node.radius * scale)
         const isSelected = selectedRef.current === node.id
         const isHovered = hoverRef.current?.id === node.id
 
+        // Breathing active ring for working/consulting states
         const ring = stateRing(node.state, palette)
         if (ring && !node.reserve) {
-          const pulse = 0.55 + 0.45 * Math.sin(now / 420 + node.x)
-          context.strokeStyle = withAlpha(ring, 0.28 + 0.28 * pulse)
-          context.lineWidth = 1.4
+          const pulse = 0.55 + 0.45 * Math.sin(now / 380 + coord.x * 0.05)
+          context.save()
+          context.strokeStyle = withAlpha(ring, 0.35 + 0.35 * pulse)
+          context.lineWidth = 1.6
           context.beginPath()
-          context.arc(point.x, point.y, radius + 5 + pulse * 2, 0, Math.PI * 2)
+          context.arc(point.x, point.y, radius + 5.5 + pulse * 2.5, 0, Math.PI * 2)
           context.stroke()
+          context.restore()
         }
 
+        // Shared agent cross-front indicator
         if (node.shared) {
-          context.strokeStyle = withAlpha(palette.warning, 0.55)
+          context.strokeStyle = withAlpha(palette.warning, 0.65)
           context.setLineDash([2, 3])
-          context.lineWidth = 1
+          context.lineWidth = 1.2
           context.beginPath()
-          context.arc(point.x, point.y, radius + 3.5, 0, Math.PI * 2)
+          context.arc(point.x, point.y, radius + 4, 0, Math.PI * 2)
           context.stroke()
           context.setLineDash([])
         }
 
-        context.fillStyle = withAlpha(colour, dim ? 0.32 : 1)
+        // Radar beam passing blip highlight
+        if (radarActiveRef.current) {
+          const dx = point.x - centerScreen.x
+          const dy = point.y - centerScreen.y
+          let nodeAngle = Math.atan2(dy, dx)
+          if (nodeAngle < 0) nodeAngle += Math.PI * 2
+          const diff = Math.abs(radarAngleRef.current.angle - nodeAngle)
+          if (diff < 0.18 || Math.abs(diff - Math.PI * 2) < 0.18) {
+            context.save()
+            context.strokeStyle = withAlpha(colour, 0.55)
+            context.lineWidth = 1.4
+            context.beginPath()
+            context.arc(point.x, point.y, radius + 8, 0, Math.PI * 2)
+            context.stroke()
+            context.restore()
+          }
+        }
+
+        // Node background & halo
+        context.save()
+        if (node.kind === "commander") {
+          // Commander aura halo
+          const haloGrad = context.createRadialGradient(point.x, point.y, radius * 0.5, point.x, point.y, radius * 2.4)
+          haloGrad.addColorStop(0, withAlpha(colour, dim ? 0.08 : 0.28))
+          haloGrad.addColorStop(1, withAlpha(colour, 0))
+          context.fillStyle = haloGrad
+          context.beginPath()
+          context.arc(point.x, point.y, radius * 2.4, 0, Math.PI * 2)
+          context.fill()
+        }
+
+        // Solid Node core
+        context.fillStyle = withAlpha(colour, dim ? 0.3 : 1)
         context.beginPath()
         context.arc(point.x, point.y, radius, 0, Math.PI * 2)
         context.fill()
 
+        // Commander concentric ring
         if (node.kind === "commander") {
           context.strokeStyle = withAlpha(palette.canvas, 1)
           context.lineWidth = 2
           context.beginPath()
-          context.arc(point.x, point.y, radius * 0.42, 0, Math.PI * 2)
+          context.arc(point.x, point.y, radius * 0.44, 0, Math.PI * 2)
           context.stroke()
         }
 
+        // Selection / Hover reticle
         if (isSelected || isHovered) {
-          context.strokeStyle = withAlpha(palette.foreground, isSelected ? 0.85 : 0.45)
+          context.strokeStyle = withAlpha(palette.foreground, isSelected ? 0.95 : 0.5)
           context.lineWidth = 1.5
           context.beginPath()
           context.arc(point.x, point.y, radius + 8, 0, Math.PI * 2)
           context.stroke()
         }
+        context.restore()
 
-        context.fillStyle = withAlpha(palette.foreground, dim ? 0.35 : node.kind === "commander" ? 0.95 : 0.75)
-        context.font = `${node.kind === "commander" ? "650" : "500"} ${node.kind === "commander" ? 12 : 11}px ui-sans-serif, system-ui, sans-serif`
+        // Monospace Space Mono Node Label
+        context.fillStyle = withAlpha(palette.foreground, dim ? 0.32 : node.kind === "commander" ? 0.98 : 0.8)
+        context.font = `${node.kind === "commander" ? "700" : "400"} ${node.kind === "commander" ? 11 : 10}px 'Space Mono', ui-monospace, monospace`
         context.textAlign = "center"
-        context.fillText(node.label, point.x, point.y + radius + 13)
+        context.fillText(node.label.toUpperCase(), point.x, point.y + radius + 14)
       }
 
-      if (current.reserveLabel) {
-        context.fillStyle = withAlpha(palette.muted, 0.6)
-        context.font = "500 11px ui-sans-serif, system-ui, sans-serif"
+      // Reserve Shelf micro-label
+      if (current.reserveLabel && modeRef.current !== "hex") {
+        context.fillStyle = withAlpha(palette.muted, 0.55)
+        context.font = "400 10px 'Space Mono', ui-monospace, monospace"
         context.textAlign = "center"
-        context.fillText(current.reserveLabel.toUpperCase(), width / 2, height - 12)
+        context.fillText(`[ ${current.reserveLabel.toUpperCase()} ]`, width / 2, height - 12)
       }
 
       frame = requestAnimationFrame(draw)
@@ -477,23 +818,147 @@ export function SwarmGraph({
     }
   }, [nodeAt, onSelect, onOpenIncident])
 
+  const hoverDef = hover ? agentDefs.get(hover.node.id) : undefined
+  const clearanceStamp =
+    hoverDef?.clearance === "command"
+      ? "TS//SCI"
+      : hoverDef?.clearance === "act"
+        ? "SECRET"
+        : "CONFIDENTIAL"
+
   return (
-    <div ref={shellRef} className={`phalanx-graph-shell ${className ?? ""}`}>
+    <div ref={shellRef} className={`phalanx-graph-shell group relative ${className ?? ""}`}>
+      {/* Top Instrumentation Toolbar: Mode Toggle & Radar Telemetry */}
+      <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        {/* Mode Selector */}
+        <div className="flex items-center gap-1 rounded-control border border-border/80 bg-background/85 p-1 backdrop-blur-md shadow-md pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setMode("tactical")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-item text-[10px] font-mono transition-all ${
+              mode === "tactical"
+                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Grid className="size-3" />
+            <span>Tactical Mesh</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMode("hex")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-item text-[10px] font-mono transition-all ${
+              mode === "hex"
+                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Hexagon className="size-3" />
+            <span>Hex Constellation</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMode("focus")}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-item text-[10px] font-mono transition-all ${
+              mode === "focus"
+                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <Shield className="size-3" />
+            <span>Incident Focus</span>
+          </button>
+        </div>
+
+        {/* Radar Toggle & Instrument Badge */}
+        <div className="flex items-center gap-1.5 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => setRadarActive(!radarActive)}
+            className={`flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-[10px] font-mono backdrop-blur-md transition-colors ${
+              radarActive
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border/80 bg-background/80 text-muted-foreground hover:text-foreground"
+            }`}
+            title="Toggle Continuous Radar Sweep Telemetry"
+          >
+            <Radar className={`size-3 ${radarActive ? "animate-spin" : ""}`} style={{ animationDuration: "7s" }} />
+            <span>RADAR {radarActive ? "ONLINE" : "OFFLINE"}</span>
+          </button>
+        </div>
+      </div>
+
       <canvas ref={canvasRef} className="phalanx-graph-canvas" data-hover="false" />
+
+      {/* Glassmorphic Hover Tooltip with Space Mono Telemetry */}
       {hover ? (
         <div
-          className="phalanx-tooltip"
+          className="phalanx-tooltip pointer-events-none"
           style={{
-            left: Math.min(hover.x + 14, (shellRef.current?.clientWidth ?? 0) - 260),
-            top: Math.max(8, hover.y - 12),
+            left: Math.min(hover.x + 16, (shellRef.current?.clientWidth ?? 0) - 280),
+            top: Math.max(12, Math.min(hover.y - 16, (shellRef.current?.clientHeight ?? 0) - 200)),
           }}
         >
-          <div className="text-xs font-medium text-foreground">{hover.node.name}</div>
-          <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{hover.node.id}</div>
-          <div className="mt-1.5 text-xs text-foreground">{hover.node.activity}</div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            {hover.node.state}
-            {hover.node.incidentIds.length > 0 ? ` · ${hover.node.incidentIds.length} incident${hover.node.incidentIds.length === 1 ? "" : "s"}` : ""}
+          <div className="flex items-center justify-between gap-2 border-b border-border/50 pb-2">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block size-2 rounded-full"
+                style={{ background: `var(--phalanx-class-${hover.node.agentClass})` }}
+              />
+              <span className="font-mono text-xs font-bold text-foreground">
+                {hover.node.label.toUpperCase()}
+              </span>
+              <span className="font-mono text-[10px] text-muted-foreground">
+                ({hover.node.id})
+              </span>
+            </div>
+            <span className="rounded border border-primary/40 bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] font-bold text-primary">
+              {clearanceStamp}
+            </span>
+          </div>
+
+          <div className="mt-2 text-xs font-medium text-foreground">
+            {hoverDef?.name || hover.node.name}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {hoverDef ? `${hoverDef.discipline} · ${hoverDef.class}` : hover.node.agentClass}
+          </div>
+
+          <div className="mt-2 flex items-center gap-2 rounded-item border border-border/60 bg-black/40 px-2 py-1 text-xs">
+            <span
+              className="size-1.5 rounded-full"
+              style={{
+                background:
+                  hover.node.state === "working"
+                    ? "var(--brand-phalanx)"
+                    : hover.node.state === "blocked"
+                      ? "var(--destructive)"
+                      : "var(--positive)",
+              }}
+            />
+            <span className="font-mono text-[10px] uppercase text-muted-foreground">
+              {hover.node.state}
+            </span>
+            <span className="ml-auto truncate text-[11px] text-foreground">
+              {hover.node.activity}
+            </span>
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-mono text-muted-foreground pt-1.5 border-t border-border/40">
+            <div>
+              <span className="text-muted-foreground/70">Incidents: </span>
+              <span className="text-foreground font-semibold">
+                {hover.node.incidentIds.length > 0 ? hover.node.incidentIds.join(", ") : "None (Standby)"}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground/70">Capacity: </span>
+              <span className="text-foreground font-semibold">
+                {hover.node.incidentIds.length}/{hoverDef?.capacity ?? 2}
+              </span>
+            </div>
           </div>
         </div>
       ) : null}
@@ -503,19 +968,22 @@ export function SwarmGraph({
 
 export function BusLegend({ className }: { className?: string }) {
   const items: { kind: A2AMessageKind; label: string }[] = [
-    { kind: "task", label: "task" },
-    { kind: "report", label: "report" },
-    { kind: "query", label: "peer query" },
-    { kind: "escalation", label: "escalation" },
-    { kind: "broadcast", label: "broadcast" },
+    { kind: "task", label: "TASK" },
+    { kind: "report", label: "REPORT" },
+    { kind: "query", label: "PEER QUERY" },
+    { kind: "escalation", label: "ESCALATION" },
+    { kind: "broadcast", label: "BROADCAST" },
   ]
   return (
-    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground ${className ?? ""}`}>
+    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground ${className ?? ""}`}>
       {items.map((item) => (
         <span key={item.kind} className="flex items-center gap-1.5">
           <span
-            className="inline-block size-1.5 rounded-full"
-            style={{ background: `var(--phalanx-bus-${item.kind})` }}
+            className="inline-block size-1.5 rounded-full shadow-[0_0_4px_currentColor]"
+            style={{
+              background: `var(--phalanx-bus-${item.kind})`,
+              color: `var(--phalanx-bus-${item.kind})`,
+            }}
           />
           {item.label}
         </span>
@@ -526,16 +994,22 @@ export function BusLegend({ className }: { className?: string }) {
 
 export function ClassLegend({ className }: { className?: string }) {
   const items = [
-    { key: "command", label: "command" },
-    { key: "analysis", label: "analysis" },
-    { key: "action", label: "action" },
-    { key: "comms", label: "comms" },
+    { key: "command", label: "COMMAND" },
+    { key: "analysis", label: "ANALYSIS" },
+    { key: "action", label: "ACTION" },
+    { key: "comms", label: "COMMS" },
   ]
   return (
-    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground ${className ?? ""}`}>
+    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[10px] font-mono uppercase tracking-wider text-muted-foreground ${className ?? ""}`}>
       {items.map((item) => (
         <span key={item.key} className="flex items-center gap-1.5">
-          <span className="inline-block size-1.5 rounded-full" style={{ background: `var(--phalanx-class-${item.key})` }} />
+          <span
+            className="inline-block size-1.5 rounded-full shadow-[0_0_4px_currentColor]"
+            style={{
+              background: `var(--phalanx-class-${item.key})`,
+              color: `var(--phalanx-class-${item.key})`,
+            }}
+          />
           {item.label}
         </span>
       ))}

@@ -1,9 +1,12 @@
+@import "@fontsource/space-mono/index.css";
+@import "@fontsource/space-mono/700.css";
 @import "@foundry/ui/globals.css";
 @import "./controls.css";
 
 /*
  * Phalanx theme boundary: the instrument palette, density, radii, and custom
  * constellation colors all live here rather than in page components.
+ * Adopts anvilpalamattam.com warm obsidian palette, Space Mono, and refined hairlines.
  */
 @source "../";
 
@@ -11,35 +14,40 @@
   color-scheme: dark;
 
   --phalanx-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --phalanx-font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --phalanx-font-mono: "Space Mono", "Commit Mono", ui-monospace, monospace;
   --font-sans: var(--phalanx-font-sans);
   --font-mono: var(--phalanx-font-mono);
 
+  --page: #080908;
+  --background: #080908;
+  --card: #0f1211;
+  --popover: #131716;
+  --sidebar: #070807;
+  --ink: #f1f0e9;
+  --foreground: #f1f0e9;
+  --strong: #fbfaf6;
+  --secondary: rgb(241 240 233 / 4%);
+  --control: rgb(241 240 233 / 4%);
+  --muted: rgb(241 240 233 / 4%);
+  --muted-foreground: #a3a299;
+  --faint: #787770;
   --brand-phalanx: #4cc9d9;
-  --brand-phalanx-hover: #6fd8e5;
+  --brand-phalanx-hover: #72d9e6;
   --brand-phalanx-foreground: #04171a;
+  --accent-indigo: #79a7ff;
+  --rule: rgb(241 240 233 / 12%);
+  --rule-soft: rgb(241 240 233 / 7%);
+  --border: rgb(241 240 233 / 10%);
+  --hairline: rgb(241 240 233 / 6%);
 
-  --sidebar: #000000;
-  --background: #000000;
-  --card: #0a0a0a;
-  --popover: #121214;
-  --secondary: rgb(255 255 255 / 4%);
-  --control: rgb(255 255 255 / 4%);
-  --muted: rgb(255 255 255 / 4%);
-  --well: rgb(255 255 255 / 4%);
-  --row: rgb(255 255 255 / 4%);
+  --well: rgb(241 240 233 / 4%);
+  --row: rgb(241 240 233 / 4%);
 
-  --foreground: #f5f5f5;
-  --strong: #f5f5f5;
-  --secondary-foreground: #f5f5f5;
-  --muted-foreground: #a6a6ad;
-  /* Legacy callers still resolve these names, but no information text may
-     fall below the solved muted-foreground contrast floor. */
   --subtle: var(--muted-foreground);
-  --faint: var(--muted-foreground);
 
-  --card-foreground: #f5f5f5;
-  --popover-foreground: #f5f5f5;
+  --card-foreground: #f1f0e9;
+  --popover-foreground: #f1f0e9;
+  --secondary-foreground: #f1f0e9;
 
   --primary: var(--brand-phalanx);
   --primary-foreground: var(--brand-phalanx-foreground);
@@ -47,10 +55,10 @@
   --primary-surface-hover: rgb(76 201 217 / 16%);
   --primary-surface-foreground: var(--brand-phalanx);
   --primary-border: rgb(76 201 217 / 36%);
-  --accent: rgb(255 255 255 / 4%);
-  --accent-foreground: #f5f5f5;
+  --accent: rgb(241 240 233 / 4%);
+  --accent-foreground: #f1f0e9;
   --destructive: #f2565f;
-  --destructive-foreground: #f5f5f5;
+  --destructive-foreground: #f1f0e9;
   --positive: #3ecf8e;
   --positive-foreground: #04120b;
   --negative: #f2565f;
@@ -73,22 +81,20 @@
   --update-surface: var(--primary-surface);
   --update-surface-hover: var(--primary-surface-hover);
 
-  --border: rgb(255 255 255 / 6%);
-  --hairline: rgb(255 255 255 / 6%);
-  --input: rgb(255 255 255 / 8%);
+  --input: rgb(241 240 233 / 8%);
   --ring: var(--brand-phalanx);
-  --overlay-backdrop: rgb(0 0 0 / 64%);
+  --overlay-backdrop: rgb(0 0 0 / 72%);
 
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-muted-foreground: #a6a6ad;
+  --sidebar-foreground: #f1f0e9;
+  --sidebar-muted-foreground: #a3a299;
   --sidebar-primary: var(--brand-phalanx);
   --sidebar-primary-foreground: var(--brand-phalanx-foreground);
-  --sidebar-accent: rgb(255 255 255 / 4%);
-  --sidebar-accent-foreground: #f5f5f5;
-  --sidebar-border: rgb(255 255 255 / 6%);
+  --sidebar-accent: rgb(241 240 233 / 4%);
+  --sidebar-accent-foreground: #f1f0e9;
+  --sidebar-border: rgb(241 240 233 / 8%);
   --sidebar-ring: var(--brand-phalanx);
-  --sidebar-width: 11.5rem;
-  --sidebar-width-icon: 3rem;
+  --sidebar-width: 12rem;
+  --sidebar-width-icon: 3.25rem;
 
   --radius: 1.125rem;
   --control-radius: 0.5rem;
@@ -103,26 +109,26 @@
   --glass-saturation: 1.08;
   --glass-opacity: 88%;
   --phalanx-scrollbar-width: 6px;
-  --phalanx-scrollbar-thumb: rgb(255 255 255 / 8%);
-  --phalanx-scrollbar-thumb-hover: rgb(255 255 255 / 16%);
+  --phalanx-scrollbar-thumb: rgb(241 240 233 / 10%);
+  --phalanx-scrollbar-thumb-hover: rgb(241 240 233 / 20%);
   --surface-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
   --surface-grain-size: 256px 256px;
 
-  --phalanx-canvas: #0a0a0a;
-  --phalanx-grid: rgb(255 255 255 / 6%);
-  --phalanx-control-border: rgb(255 255 255 / 8%);
-  --phalanx-control-border-active: rgb(255 255 255 / 16%);
+  --phalanx-canvas: #080908;
+  --phalanx-grid: rgb(241 240 233 / 5%);
+  --phalanx-control-border: rgb(241 240 233 / 10%);
+  --phalanx-control-border-active: rgb(241 240 233 / 20%);
   --phalanx-attention: rgb(242 86 95 / 8%);
   --phalanx-attention-border: rgb(242 86 95 / 16%);
   --phalanx-attention-hairline: rgb(242 86 95 / 8%);
   --phalanx-attention-text: #ff9ca3;
-  --phalanx-paused: #a6a6ad;
-  --phalanx-tool-binding: #a6a6ad;
+  --phalanx-paused: #787770;
+  --phalanx-tool-binding: #a3a299;
   --phalanx-ok-bar: var(--positive);
   /* Agent classes share one lightness so hue groups discipline without making
      any one class look more important than another. */
   --phalanx-class-command: var(--brand-phalanx);
-  --phalanx-class-analysis: oklch(0.72 0.14 255);
+  --phalanx-class-analysis: var(--accent-indigo);
   --phalanx-class-action: oklch(0.72 0.15 45);
   --phalanx-class-comms: oklch(0.72 0.13 310);
 
@@ -130,7 +136,7 @@
      decoration on the node. */
   --phalanx-bus-task: var(--brand-phalanx);
   --phalanx-bus-report: var(--positive);
-  --phalanx-bus-query: oklch(0.75 0.13 255);
+  --phalanx-bus-query: var(--accent-indigo);
   --phalanx-bus-escalation: var(--warning);
   --phalanx-bus-broadcast: oklch(0.72 0.13 310);
   --phalanx-bus-operator_query: var(--warning);
@@ -139,7 +145,7 @@
   --phalanx-sev1: #f2565f;
   --phalanx-sev2: #e0b34d;
   --phalanx-sev3: #4cc9d9;
-  --phalanx-sev4: #a6a6ad;
+  --phalanx-sev4: #a3a299;
 
   /* Backward compatibility aliases */
   --brand-esper: var(--brand-phalanx);
@@ -179,6 +185,13 @@
 }
 
 @theme inline {
+  --color-page: var(--page);
+  --color-ink: var(--ink);
+  --color-accent-indigo: var(--accent-indigo);
+  --color-hairline: var(--hairline);
+  --color-rule: var(--rule);
+  --color-rule-soft: var(--rule-soft);
+
   --color-phalanx-canvas: var(--phalanx-canvas);
   --color-phalanx-grid: var(--phalanx-grid);
   --color-phalanx-attention: var(--phalanx-attention);
@@ -353,7 +366,11 @@ body {
 [data-slot="alert"],
 [data-slot="empty"] {
   border-radius: var(--shell-radius);
-  box-shadow: inset 0 1px rgb(255 255 255 / 4%);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%), 0 8px 32px -8px rgb(0 0 0 / 60%);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 [data-slot="card"] {
@@ -387,15 +404,15 @@ body {
    surface and row tokens to the persistent shell. */
 [data-slot="sidebar-inner"],
 [data-slot="sidebar"][data-mobile="true"] {
-  --sidebar: #000;
-  --sidebar-foreground: #f5f5f5;
-  --sidebar-muted-foreground: #a6a6ad;
-  --sidebar-accent: rgb(255 255 255 / 4%);
-  --sidebar-accent-foreground: #f5f5f5;
-  --sidebar-border: rgb(255 255 255 / 6%);
-  --phalanx-sidebar-row-hover: rgb(255 255 255 / 4%);
-  --phalanx-sidebar-row-active: rgb(255 255 255 / 8%);
-  --phalanx-sidebar-row-selected: rgb(255 255 255 / 7%);
+  --sidebar: #070807;
+  --sidebar-foreground: #f1f0e9;
+  --sidebar-muted-foreground: #a3a299;
+  --sidebar-accent: rgb(241 240 233 / 4%);
+  --sidebar-accent-foreground: #f1f0e9;
+  --sidebar-border: rgb(241 240 233 / 8%);
+  --phalanx-sidebar-row-hover: rgb(241 240 233 / 5%);
+  --phalanx-sidebar-row-active: rgb(241 240 233 / 9%);
+  --phalanx-sidebar-row-selected: rgb(241 240 233 / 7%);
   --esper-sidebar-row-hover: var(--phalanx-sidebar-row-hover);
   --esper-sidebar-row-active: var(--phalanx-sidebar-row-active);
   --esper-sidebar-row-selected: var(--phalanx-sidebar-row-selected);
@@ -648,10 +665,10 @@ body {
   height: var(--phalanx-graph-height, var(--esper-graph-height, 30rem));
   min-width: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+  border: 1px solid var(--border);
   border-radius: var(--shell-radius);
   background: var(--phalanx-canvas);
-  box-shadow: inset 0 1px rgb(255 255 255 / 4%);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%), 0 12px 40px -12px rgb(0 0 0 / 70%);
 }
 
 .phalanx-graph-canvas,
@@ -671,15 +688,85 @@ body {
 .esper-tooltip {
   position: absolute;
   z-index: 20;
-  max-width: 22rem;
-  padding: 0.5rem 0.625rem;
-  border: 1px solid rgb(255 255 255 / 8%);
+  max-width: 24rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border);
   border-radius: var(--item-radius);
-  background: color-mix(in srgb, var(--popover) var(--glass-opacity), transparent);
-  box-shadow: 0 18px 44px -18px rgb(0 0 0 / 80%);
+  background: color-mix(in srgb, var(--popover) 90%, transparent);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 8%), 0 20px 48px -12px rgb(0 0 0 / 90%);
   -webkit-backdrop-filter: blur(var(--glass-blur));
   backdrop-filter: blur(var(--glass-blur));
   pointer-events: none;
+}
+
+/* Tactical micro-labels and chips */
+.soc-micro-label {
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.tactical-border {
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%);
+}
+
+/* Radar sweep, glowing ring, and automated containment animations */
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.25;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+@keyframes glow-breathe {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px var(--brand-phalanx));
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 12px var(--brand-phalanx));
+  }
+}
+
+@keyframes containment-firewall {
+  0%, 100% {
+    box-shadow: 0 0 16px rgb(76 201 217 / 45%), inset 0 0 10px rgb(76 201 217 / 35%);
+    border-color: rgb(76 201 217 / 85%);
+  }
+  50% {
+    box-shadow: 0 0 26px rgb(242 86 95 / 65%), inset 0 0 14px rgb(242 86 95 / 45%);
+    border-color: rgb(242 86 95 / 90%);
+  }
+}
+
+.animate-radar-pulse {
+  animation: radar-pulse 2.4s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+}
+
+.animate-glow-breathe {
+  animation: glow-breathe 2.5s ease-in-out infinite;
+}
+
+.animate-containment-firewall {
+  animation: containment-firewall 1.8s ease-in-out infinite;
 }
 
 /* A2UI cards arrive from an agent mid-run; the entrance makes that legible
@@ -701,5 +788,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .phalanx-card-in,
-  .esper-card-in { animation: none }
+  .esper-card-in,
+  .animate-radar-pulse,
+  .animate-glow-breathe,
+  .animate-containment-firewall { animation: none }
 }

@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Radio,
+  Lock,
+  Flame,
 } from "lucide-react"
 import type { Detection, IncidentTimelineEntry } from "@/lib/model"
 import { usePhalanx, type PhalanxState } from "@/lib/store"
@@ -40,7 +42,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
   const hookState = usePhalanx()
   const state = propState ?? hookState
 
-  const stages: KillChainStage[] = useMemo(() => {
+  const { stages, isContained, containmentDetails } = useMemo(() => {
     const detections = state.detections
     const incidents = [...state.incidents.values()]
     const hosts = [...state.hosts.values()]
@@ -50,7 +52,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
     // Helper checks
     const latestRule = (pattern: RegExp) => detections.find((d: Detection) => pattern.test(d.rule) || pattern.test(d.detail))
     const isAnyIncidentContained = incidents.some(
-      (inc) => inc.status === "contained" || inc.status === "resolved" || ["contain", "eradicate", "recover", "review"].includes(inc.phase)
+      (inc) => inc.status === "contained" || inc.status === "resolved" || ["contain", "eradicate", "recover", "review"].includes(inc.phase),
     )
     const isAllContained =
       incidents.length > 0 &&
@@ -152,7 +154,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
       exfilEvidence = exfilMatch?.rule ?? "47s beacon / bulk read"
     }
 
-    // 6. Containment (Active Defense)
+    // 6. Containment (Active Defense - MITRE D3FEND D3-DEF)
     const hasContainmentAction =
       posture.containedToday > 0 ||
       incidents.some((inc) => inc.status === "contained" || inc.status === "resolved") ||
@@ -180,13 +182,28 @@ export function KillChain({ state: propState, className }: KillChainProps) {
       containmentEvidence = `${posture.agentsEngaged} defender(s) isolating`
     }
 
-    return [
+    const isContainedFlag =
+      hasContainmentAction ||
+      initAccessRemediated ||
+      execRemediated ||
+      lateralRemediated ||
+      exfilRemediated ||
+      edgeIsolated ||
+      principalsRevoked ||
+      c2Blocked
+
+    let containmentText = "AEGIS Automated Air-Gap Isolation Active"
+    if (edgeIsolated) containmentText = "AEGIS Air-Gap Active · edge-gw-01 Isolated from Production"
+    else if (principalsRevoked) containmentText = "KEYSTONE Credential Revocation Active · OAuth Tokens Expired"
+    else if (c2Blocked) containmentText = "SPECTRE Egress Sinkhole Active · 185.121.44.19 Blackholed"
+
+    const stagesList: KillChainStage[] = [
       {
         id: "initial-access",
         step: "01",
         mitreId: "TA0001",
         name: "Initial Access",
-        scope: "WAF & Ingress Gateways",
+        scope: "WAF & INGRESS GATEWAYS",
         description: "Public-facing gateway exploit (HTTP desync) or corporate identity consent abuse.",
         status: initAccessStatus,
         evidence: initAccessEvidence,
@@ -197,7 +214,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "02",
         mitreId: "TA0002",
         name: "Execution",
-        scope: "Process & Host EDR",
+        scope: "PROCESS & HOST EDR",
         description: "Adversary commands, unauthorized service shells, or malicious script detonation.",
         status: execStatus,
         evidence: execEvidence,
@@ -208,8 +225,8 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "03",
         mitreId: "TA0003",
         name: "Persistence",
-        scope: "Host & CI Artifacts",
-        description: "Maintaining foothold via LD_PRELOAD shims, poisoned CI artifacts, or backdoors.",
+        scope: "HOST & CI ARTIFACTS",
+        description: "Foothold via LD_PRELOAD shims, poisoned CI artifacts, or scheduled triggers.",
         status: persistStatus,
         evidence: persistEvidence,
         Icon: Layers,
@@ -219,7 +236,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "04",
         mitreId: "TA0008",
         name: "Lateral Movement",
-        scope: "East-West NetFlow & IAM",
+        scope: "EAST-WEST FLOW & IAM",
         description: "Pivot across network zones using harvested service accounts or tenant tokens.",
         status: lateralStatus,
         evidence: lateralEvidence,
@@ -230,7 +247,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "05",
         mitreId: "TA0010",
         name: "Exfiltration",
-        scope: "C2 Egress & S3 Buckets",
+        scope: "C2 EGRESS & S3 BUCKETS",
         description: "Periodic 47s C2 beaconing and bulk customer export data extraction.",
         status: exfilStatus,
         evidence: exfilEvidence,
@@ -241,32 +258,38 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "06",
         mitreId: "D3-DEF",
         name: "Containment",
-        scope: "Automated Blue SOAR",
+        scope: "AUTONOMOUS SOAR",
         description: "Autonomous host isolation, credential revocation, and C2 blackholing by Phalanx.",
         status: containmentStatus,
         evidence: containmentEvidence,
         Icon: ShieldCheck,
       },
     ]
+
+    return {
+      stages: stagesList,
+      isContained: isContainedFlag,
+      containmentDetails: containmentText,
+    }
   }, [state])
 
   const detectedCount = stages.filter((s) => s.status === "Detected").length
   const remediatedCount = stages.filter((s) => s.status === "Remediated/Blocked").length
 
   return (
-    <Card className={cn("shrink-0 border-border/80 bg-card/60 backdrop-blur-sm", className)}>
-      <CardHeader className="border-b border-border/40 pb-3 pt-3">
+    <Card className={cn("shrink-0 border-border bg-card/85 backdrop-blur-md shadow-xl", className)}>
+      <CardHeader className="border-b border-border/50 pb-3 pt-3.5 px-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="flex size-6 items-center justify-center rounded-control border border-border/80 bg-accent/30 text-foreground">
-              <Shield className="size-3.5" />
+            <div className="flex size-7 items-center justify-center rounded-control border border-border/80 bg-primary/10 text-primary shadow-[0_0_8px_rgba(76,201,217,0.25)]">
+              <Shield className="size-4" />
             </div>
             <div>
-              <CardTitle className="text-xs font-semibold tracking-wide text-foreground">
-                MITRE ATT&CK Intrusion Lifecycle
+              <CardTitle className="font-mono text-xs sm:text-sm font-bold tracking-wider text-foreground uppercase">
+                MITRE ATT&CK INTRUSION LIFECYCLE & ACTIVE INTERCEPT
               </CardTitle>
-              <CardDescription className="text-[11px] text-muted-foreground">
-                Adversary stage tracking & autonomous blue-team intercept telemetry
+              <CardDescription className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
+                ADVERSARY STAGE TRACKING · AUTONOMOUS AGENT CONTAINMENT TELEMETRY
               </CardDescription>
             </div>
           </div>
@@ -275,34 +298,64 @@ export function KillChain({ state: propState, className }: KillChainProps) {
             {detectedCount > 0 ? (
               <Badge
                 variant="destructive"
-                className="gap-1.5 border-destructive/40 bg-destructive/15 font-mono text-[10px] text-destructive"
+                className="gap-1.5 border-destructive/50 bg-destructive/20 font-mono text-[10px] font-bold text-destructive shadow-[0_0_10px_rgba(242,86,95,0.25)]"
               >
                 <AlertTriangle className="size-3" />
-                <span>{detectedCount} Active Stage{detectedCount > 1 ? "s" : ""}</span>
+                <span>{detectedCount} ACTIVE INTERCEPT{detectedCount > 1 ? "S" : ""}</span>
               </Badge>
             ) : remediatedCount > 0 ? (
               <Badge
                 variant="outline"
-                className="gap-1.5 border-positive/40 bg-positive/15 font-mono text-[10px] text-positive"
+                className="gap-1.5 border-positive/50 bg-positive/20 font-mono text-[10px] font-bold text-positive shadow-[0_0_10px_rgba(62,207,142,0.25)]"
               >
                 <CheckCircle2 className="size-3" />
-                <span>{remediatedCount} Stage{remediatedCount > 1 ? "s" : ""} Neutralized</span>
+                <span>{remediatedCount} STAGES NEUTRALIZED</span>
               </Badge>
             ) : (
               <Badge
                 variant="outline"
-                className="gap-1.5 border-border/60 bg-black/40 font-mono text-[10px] text-muted-foreground"
+                className="gap-1.5 border-border/70 bg-black/40 font-mono text-[10px] text-muted-foreground"
               >
-                <Radio className="size-3 text-positive" />
-                <span>Perimeter Nominal · All Quiet</span>
+                <Radio className="size-3 text-positive animate-pulse" />
+                <span>PERIMETER NOMINAL · ALL QUIET</span>
               </Badge>
             )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-3">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+      <CardContent className="p-3.5 sm:p-4 flex flex-col gap-3.5">
+        {/* Animated Automated Containment Barrier (Displays glowing firewall lock between stages) */}
+        {isContained ? (
+          <div className="animate-containment-firewall rounded-item border border-primary/70 bg-primary/[0.08] p-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_10px_rgba(76,201,217,0.8)]">
+                <Lock className="size-3.5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 font-mono text-xs font-bold text-primary uppercase tracking-wide">
+                  <Flame className="size-3.5 text-warning animate-bounce" />
+                  <span>AUTOMATED BLUE-TEAM CONTAINMENT BARRIER ACTIVE</span>
+                </div>
+                <div className="font-mono text-[11px] text-foreground/90 mt-0.5">
+                  {containmentDetails}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="rounded border border-positive/40 bg-positive/20 px-2 py-0.5 font-bold text-positive">
+                D3FEND D3-DEF VERIFIED
+              </span>
+              <span className="rounded border border-border/80 bg-black/50 px-2 py-0.5 text-muted-foreground">
+                0 REMAINING HOPS
+              </span>
+            </div>
+          </div>
+        ) : null}
+
+        {/* 6 MITRE ATT&CK Stage Cards */}
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
           {stages.map((stage) => {
             const isDetected = stage.status === "Detected"
             const isRemediated = stage.status === "Remediated/Blocked"
@@ -312,71 +365,71 @@ export function KillChain({ state: propState, className }: KillChainProps) {
               <div
                 key={stage.id}
                 className={cn(
-                  "relative flex flex-col justify-between rounded-item border p-2.5 transition-colors",
-                  isDetected && "border-destructive/60 bg-destructive/[0.08]",
-                  isRemediated && "border-positive/40 bg-positive/[0.05]",
-                  !isDetected && !isRemediated && "border-border/60 bg-card/40 hover:border-border/80"
+                  "relative flex flex-col justify-between rounded-item border p-3 transition-all",
+                  isDetected && "border-destructive/70 bg-destructive/[0.1] shadow-[0_0_14px_rgba(242,86,95,0.2)]",
+                  isRemediated && "border-positive/50 bg-positive/[0.06] shadow-[0_0_12px_rgba(62,207,142,0.15)]",
+                  !isDetected && !isRemediated && "border-border/70 bg-card/50 hover:border-border hover:bg-card/75",
                 )}
                 title={stage.description}
               >
-                {/* Header row: Step code and status */}
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="font-mono text-[10px] font-semibold text-muted-foreground">
+                {/* Header row: Step code and status badge */}
+                <div className="flex items-center justify-between gap-1.5 border-b border-border/40 pb-1.5">
+                  <span className="font-mono text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     {stage.step} · {stage.mitreId}
                   </span>
 
                   {isDetected ? (
                     <Badge
                       variant="destructive"
-                      className="h-4 px-1.5 font-mono text-[9px] font-semibold border-destructive/40 bg-destructive/20 text-destructive"
+                      className="h-4 px-1.5 font-mono text-[9px] font-bold border-destructive/50 bg-destructive/30 text-destructive"
                     >
-                      Active
+                      ACTIVE
                     </Badge>
                   ) : isRemediated ? (
                     <Badge
                       variant="outline"
-                      className="h-4 px-1.5 font-mono text-[9px] font-semibold border-positive/40 bg-positive/15 text-positive"
+                      className="h-4 px-1.5 font-mono text-[9px] font-bold border-positive/50 bg-positive/20 text-positive"
                     >
-                      Blocked
+                      BLOCKED
                     </Badge>
                   ) : (
-                    <span className="font-mono text-[9px] text-muted-foreground/60">
-                      Quiet
+                    <span className="font-mono text-[9px] text-muted-foreground/60 uppercase">
+                      QUIET
                     </span>
                   )}
                 </div>
 
-                {/* Stage title */}
-                <div className="mt-2 flex items-center gap-1.5">
+                {/* Stage title & Icon */}
+                <div className="mt-2.5 flex items-center gap-2">
                   <Icon
                     className={cn(
-                      "size-3.5 shrink-0",
+                      "size-4 shrink-0",
                       isDetected && "text-destructive",
                       isRemediated && "text-positive",
-                      !isDetected && !isRemediated && "text-muted-foreground"
+                      !isDetected && !isRemediated && "text-muted-foreground",
                     )}
                   />
-                  <span className="font-medium text-xs text-foreground truncate">
+                  <span className="font-mono text-xs font-bold text-foreground truncate">
                     {stage.name}
                   </span>
                 </div>
 
-                {/* Telemetry Indicator / Scope */}
-                <div className="mt-2 pt-1.5 border-t border-border/30">
+                {/* Telemetry Evidence / Scope Chip */}
+                <div className="mt-2.5 pt-2 border-t border-border/30">
                   {stage.evidence ? (
                     <div
                       className={cn(
-                        "font-mono text-[10px] leading-tight truncate",
-                        isDetected && "text-destructive font-medium",
-                        isRemediated && "text-positive"
+                        "rounded border px-1.5 py-1 font-mono text-[10px] leading-tight truncate flex items-center gap-1",
+                        isDetected && "border-destructive/40 bg-destructive/15 text-destructive font-semibold",
+                        isRemediated && "border-positive/40 bg-positive/15 text-positive font-semibold",
                       )}
                       title={stage.evidence}
                     >
-                      <span className="mr-1">●</span>
-                      {stage.evidence}
+                      <span className="inline-block size-1.5 rounded-full bg-currentColor animate-pulse shrink-0" />
+                      <span className="truncate">{stage.evidence}</span>
                     </div>
                   ) : (
-                    <div className="font-mono text-[10px] text-muted-foreground/60 truncate">
+                    <div className="font-mono text-[9px] text-muted-foreground/60 uppercase truncate">
                       {stage.scope}
                     </div>
                   )}
@@ -389,4 +442,3 @@ export function KillChain({ state: propState, className }: KillChainProps) {
     </Card>
   )
 }
-

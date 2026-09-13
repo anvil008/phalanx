@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/space-mono": "^5.3.0",
     "@foundry/charts": "file:vendor/foundry/foundry-charts-0.1.22.tgz",
     "@foundry/tokens": "file:vendor/foundry/foundry-tokens-0.1.10.tgz",
     "@foundry/ui": "file:vendor/foundry/foundry-ui-0.1.23.tgz",
+    "gsap": "^3.15.0",
     "lucide-react": "^1.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
