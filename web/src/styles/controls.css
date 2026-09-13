@@ -1,0 +1,294 @@
+/*
+ * Shared control contracts. These selectors intentionally stop at Foundary
+ * slots so pages can retain their content and behavior while sharing a real
+ * measurable interaction surface.
+ */
+
+:where(
+  .hit-target,
+  button,
+  [role="button"],
+  [data-slot$="-trigger"],
+  [data-slot="toggle-group-item"],
+  [data-slot="pagination-link"],
+  [data-slot="select-scroll-up-button"],
+  [data-slot="select-scroll-down-button"]
+) {
+  min-inline-size: 1.5rem;
+  min-block-size: 1.5rem;
+}
+
+.hit-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Base UI's horizontal-state selector does not reliably survive every nested
+ * toolbar layout. Keep the default segmented control on the shared 32px
+ * control rhythm even when a caller allows the list to wrap with `h-auto`.
+ * Line tabs and deliberately compact custom navigation remain unaffected. */
+[data-slot="tabs-list"][data-variant="default"] {
+  min-block-size: 2rem;
+}
+
+[data-slot="tabs-list"][data-variant="default"] > [data-slot="tabs-trigger"] {
+  min-block-size: calc(2rem - 2px);
+}
+
+/* Disabled controls still need to read as controls. Foundary's lower vendor
+ * opacity made muted labels effectively disappear on Nexus' dark canvas. */
+:where(
+  [data-slot="button"],
+  [data-slot="tabs-trigger"],
+  [data-slot="toggle"],
+  [data-slot="toggle-group-item"]
+):is(:disabled, [aria-disabled="true"]) {
+  opacity: 0.6;
+}
+
+/* Table links are controls when they are the direct cell content. Making the
+ * box real (rather than using only a pseudo element) lets the probe measure it.
+ * The negative block margin consumes half of the cell padding on each side, so
+ * a 24px target does not make the compact Foundary rows taller. */
+[data-slot="table-head"] > :is(button, [role="button"]),
+[data-slot="table-cell"] > :is(a[href], button, [role="button"]) {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: 1.5rem;
+  min-block-size: 1.5rem;
+  margin-block: -0.25rem;
+  vertical-align: middle;
+}
+
+:where(
+  a[href],
+  button,
+  [role="button"],
+  [data-slot$="-trigger"],
+  [data-slot="toggle-group-item"],
+  [data-slot="pagination-link"]
+):not(:disabled):not([aria-disabled="true"]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* The visual footprint stays dense for mouse users. On touch hardware, use a
+ * real box for ordinary actions: adjacent buttons, triggers, toggles, and
+ * pagination links would make each other's overlaid targets ambiguous. The
+ * raw size-6 workflow icon lives in a fixed-height data strip, so it remains
+ * the deliberate dense exception alongside absolute timeline and graph marks.
+ * Explicit non-absolute .hit-targets are the sole safe overlay case. */
+@media (pointer: coarse) {
+  :is(
+    [data-slot="button"]:not(.absolute),
+    button:not([data-slot]):not(.absolute):not(.size-6),
+    [data-slot$="-trigger"]:not(.absolute),
+    [data-slot="toggle-group-item"]:not(.absolute),
+    [data-slot="pagination-link"]:not(.absolute)
+  ):not(:disabled):not([aria-disabled="true"]) {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+
+  /* Foundary's default TabsList owns a fixed 32px desktop block. Promote the
+   * container with its triggers so adjacent tab groups do not receive an
+   * overflowed 44px child from the preceding row. */
+  [data-slot="tabs-list"][data-variant] {
+    min-block-size: 2.75rem;
+  }
+
+  /* The shared table contract uses negative block margins to preserve its
+   * desktop row rhythm. Remove them only for targets promoted above so their
+   * real 44px boxes reserve layout space instead of crossing into the next row. */
+  [data-slot="table-head"] > :where(
+    [data-slot="button"]:not(.absolute),
+    button:not([data-slot]):not(.absolute):not(.size-6)
+  ):not(:disabled):not([aria-disabled="true"]),
+  [data-slot="table-cell"] > :where(
+    [data-slot="button"]:not(.absolute),
+    button:not([data-slot]):not(.absolute):not(.size-6)
+  ):not(:disabled):not([aria-disabled="true"]) {
+    margin-block: 0;
+  }
+
+  :where(
+    .hit-target:not(.absolute)
+  ) {
+    position: relative;
+  }
+
+  :where(
+    .hit-target:not(.absolute)
+  ):not(:disabled):not([aria-disabled="true"])::after {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    width: 2.75rem;
+    height: 2.75rem;
+    transform: translate(-50%, -50%);
+    content: "";
+  }
+}
+
+/* Badge variants resolve to the tokenized 8% rest / 16% interaction surfaces.
+ * Later callers can select a semantic color without introducing a new badge
+ * implementation or a solid status fill. */
+[data-slot="badge"] {
+  --badge-tone: var(--primary-surface-foreground);
+  --badge-surface: var(--primary-surface);
+  --badge-surface-hover: var(--primary-surface-hover);
+  --badge-border: color-mix(in srgb, var(--badge-tone) 32%, transparent);
+
+  border-color: var(--badge-border);
+  background-color: var(--badge-surface);
+  color: var(--badge-tone);
+}
+
+[data-slot="badge"]:not(:disabled):not([aria-disabled="true"]):is(:hover, :active) {
+  background-color: var(--badge-surface-hover);
+}
+
+[data-slot="badge"]:is(
+  [data-tone="positive"],
+  [data-tone="success"],
+  [data-status="positive"],
+  [data-status="success"]
+) {
+  --badge-tone: var(--positive);
+  --badge-surface: var(--positive-surface);
+  --badge-surface-hover: var(--positive-surface-hover);
+}
+
+[data-slot="badge"]:is(
+  [data-variant="destructive"],
+  [data-tone="negative"],
+  [data-tone="error"],
+  [data-status="negative"],
+  [data-status="error"]
+) {
+  --badge-tone: var(--negative);
+  --badge-surface: var(--negative-surface);
+  --badge-surface-hover: var(--negative-surface-hover);
+}
+
+[data-slot="badge"]:is(
+  [data-tone="warning"],
+  [data-status="warning"]
+) {
+  --badge-tone: var(--warning);
+  --badge-surface: var(--warning-surface);
+  --badge-surface-hover: var(--warning-surface-hover);
+}
+
+[data-slot="badge"]:is(
+  [data-tone="info"],
+  [data-status="info"]
+) {
+  --badge-tone: var(--info);
+  --badge-surface: var(--info-surface);
+  --badge-surface-hover: var(--info-surface-hover);
+}
+
+[data-slot="badge"]:is(
+  [data-tone="update"],
+  [data-status="update"]
+) {
+  --badge-tone: var(--update-foreground);
+  --badge-surface: var(--update-surface);
+  --badge-surface-hover: var(--update-surface-hover);
+}
+
+/* Foundary table defaults retain their scroll container while letting callers
+ * opt into a reliable truncation span instead of relying on ch caps. */
+[data-slot="table-container"] {
+  max-inline-size: 100%;
+}
+
+[data-slot="table"] {
+  font-size: 0.75rem;
+}
+
+[data-slot="table-header"] {
+  color: var(--muted-foreground);
+}
+
+[data-slot="table-head"] {
+  height: 2rem;
+  min-block-size: 2rem;
+  padding-block: 0.25rem;
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+
+[data-slot="table-cell"] {
+  min-inline-size: 0;
+  font-size: 0.75rem;
+}
+
+.table-truncate,
+[data-slot="table-truncate"] {
+  display: block;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-slot="status-dot"] {
+  --status-dot-color: var(--muted-foreground);
+
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--status-dot-color);
+}
+
+[data-slot="status-dot"][data-tone="positive"] {
+  --status-dot-color: var(--positive);
+}
+
+[data-slot="status-dot"][data-tone="negative"] {
+  --status-dot-color: var(--negative);
+}
+
+[data-slot="status-dot"][data-tone="warning"] {
+  --status-dot-color: var(--warning);
+}
+
+[data-slot="status-dot"][data-tone="info"] {
+  --status-dot-color: var(--info);
+}
+
+@keyframes status-dot-pulse {
+  0%, 40% {
+    opacity: 1;
+    animation-timing-function: steps(6);
+  }
+
+  50%, 90% {
+    opacity: 0.5;
+    animation-timing-function: steps(6);
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+[data-slot="status-dot"][data-pulse="true"] {
+  animation: status-dot-pulse 2s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="status-dot"][data-pulse="true"] {
+    animation: none;
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "phalanx",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Phalanx — an autonomous blue-team agent swarm coordinating over A2A and A2UI with multi-provider LLM support",
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "dev": "npm run dev --workspace=server & npm run dev --workspace=web",
+    "build": "npm run build --workspace=web && npm run build --workspace=server",
+    "typecheck": "npm run typecheck --workspace=server && npm run typecheck --workspace=web",
+    "start": "npm run start --workspace=server"
+  }
+}

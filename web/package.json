@@ -1,0 +1,31 @@
+{
+  "name": "phalanx-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --pretty false",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@foundry/charts": "file:vendor/foundry/foundry-charts-0.1.22.tgz",
+    "@foundry/tokens": "file:vendor/foundry/foundry-tokens-0.1.10.tgz",
+    "@foundry/ui": "file:vendor/foundry/foundry-ui-0.1.23.tgz",
+    "lucide-react": "^1.21.0",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "7.18.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6",
+    "tailwindcss": "4.3.3",
+    "typescript": "~5.9",
+    "vite": "^8"
+  }
+}
