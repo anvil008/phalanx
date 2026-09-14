@@ -148,7 +148,9 @@ npm run dev --workspace=server    # :8095
 npm run dev --workspace=web       # :5195, proxies /api to the server
 ```
 
-Then press **Multi-front campaign** on Mission Control.
+Then press **Campaign** in the run strip at the top of Mission Control, or open
+**Simulation Lab** (`/simulations`) and dispatch the **Salt Meridian** coordinated
+multi-front campaign from its scenario dossier.
 
 ### Live, Multi-Provider, and Replay Modes
 
@@ -172,11 +174,11 @@ Configuration is in `.env.example`.
 
 ## The pages
 
-- **Mission Control** — The standing command deck for the estate and swarm, displaying Threat Level, neutralized MITRE ATT&CK stages, detection telemetry feed, and agent-authored A2UI surfaces in real time.
+- **Mission Control** — The standing command deck for the estate and swarm, displaying Threat Level, neutralized MITRE ATT&CK stages, detection telemetry feed, and agent-authored A2UI surfaces in real time. A compact run strip launches any scenario or range from here; the tactical dossiers live one click away in the Simulation Lab.
 
   ![Mission Control](docs/screenshots/mission-control.png)
 
-- **Incident Response Team** — Swarm graph & active incidents, featuring the dual-incident multi-commander constellation linking ID Commander, Edge Commander, and Campaign Commander with active specialists.
+- **Incident Response Team** — Active engagements above a live swarm graph with three geometries — tactical mesh, hex constellation, and incident focus. Amber dashed links mark the cross-correlation that puts Commander, ID Cmdr, and Campaign on one adversary.
 
   ![Incident Response Team](docs/screenshots/incident-response-team.png)
 
@@ -196,11 +198,17 @@ Configuration is in `.env.example`.
 
   ![Protocol Trace](docs/screenshots/protocol-trace.png)
 
+- **Simulation Lab** — The dossier view of everything you can run: three simulated attack scenarios (OP-1041 ingress zero-day, OP-1042 identity consent abuse, and the Salt Meridian coordinated campaign) alongside the live range lab at one, two, or four fronts. Each card carries its targets, ATT&CK technique ids, and the tactical defence flow the swarm forms against it, and any run already in flight appears below as an active engagement.
+
+  ![Simulation Lab](docs/screenshots/simulation-lab.png)
+
 - **Model Settings** — Live multi-provider configuration (Google Gemini, Anthropic Claude, OpenAI) with direct API key entry and real-time connectivity testing.
 
   ![Model Settings](docs/screenshots/model-settings.png)
 
 - **How this works** — Comprehensive technical specification of Phalanx's 4-tier autonomous loop, A2A/A2UI mechanics, and MITRE ATT&CK kill-chain mapping.
+
+  ![How this works](docs/screenshots/how-it-works.png)
 
 ## Layout
 
