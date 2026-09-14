@@ -66,7 +66,7 @@ export function PhalanxProductBrand({
           <span className="truncate text-[0.8125rem] font-semibold leading-tight tracking-[-0.01em] text-ink">
             Phalanx
           </span>
-          <span className="truncate font-mono text-[0.625rem] leading-tight text-muted-foreground">
+          <span className="truncate font-sans text-[0.625rem] leading-tight text-muted-foreground">
             Blue-team swarm
           </span>
         </span>

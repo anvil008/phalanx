@@ -269,7 +269,7 @@ function Stat({
   return (
     <div className="flex flex-col gap-0.5 bg-card px-3 py-2.5">
       <span className="eyebrow">{label}</span>
-      <span className={`font-mono text-[1.125rem] leading-tight font-normal ${colour}`}>{value}</span>
+      <span className={`font-sans text-[1.125rem] leading-tight font-normal ${colour}`}>{value}</span>
       {subtext ? <span className="meta-mono truncate">{subtext}</span> : null}
     </div>
   )

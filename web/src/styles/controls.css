@@ -132,7 +132,7 @@
 }
 
 /* Badges are outlined text, never a filled pill: a 1px rule at 40% of the tone
- * and a monospaced label. The tone still carries the reading. */
+ * and a styled label. The tone still carries the reading. */
 [data-slot="badge"] {
   --badge-tone: var(--muted);
 
@@ -141,9 +141,9 @@
   border-radius: 0.125rem;
   background: transparent;
   color: var(--badge-tone);
-  font-family: var(--phalanx-font-mono);
+  font-family: var(--phalanx-font-sans);
   font-size: 0.625rem;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: none;
 }
@@ -206,9 +206,9 @@
   min-block-size: 2rem;
   padding-block: 0.25rem;
   color: var(--muted);
-  font-family: var(--phalanx-font-mono);
+  font-family: var(--phalanx-font-sans);
   font-size: 0.6875rem;
-  font-weight: 400;
+  font-weight: 500;
   line-height: 1rem;
   letter-spacing: 0.065em;
   white-space: nowrap;

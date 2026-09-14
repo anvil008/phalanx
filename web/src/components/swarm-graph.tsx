@@ -583,11 +583,11 @@ export function SwarmGraph({
 
           // Incident header label
           context.fillStyle = withAlpha(tint, dim ? 0.4 : 0.95)
-          context.font = "400 11px 'Space Mono', ui-monospace, monospace"
+          context.font = "400 11px 'Roboto Mono', ui-monospace, monospace"
           context.textAlign = "center"
           context.fillText(cluster.code, centre.x, centre.y - radius - 16)
           context.fillStyle = withAlpha(palette.muted, dim ? 0.3 : 0.8)
-          context.font = "400 10px 'Space Mono', ui-monospace, monospace"
+          context.font = "400 10px 'Roboto Mono', ui-monospace, monospace"
           context.fillText(
             cluster.status === "resolved" ? "Contained · resolved" : `${cluster.severity} · ${cluster.status}`,
             centre.x,
@@ -734,7 +734,7 @@ export function SwarmGraph({
           node.kind === "commander" ? palette.foreground : palette.muted,
           dim ? 0.3 : 0.9,
         )
-        context.font = "400 10px 'Space Mono', ui-monospace, monospace"
+        context.font = "400 10px 'Roboto Mono', ui-monospace, monospace"
         context.textAlign = "center"
         context.fillText(node.label, point.x, point.y + radius + 14)
       }
@@ -742,7 +742,7 @@ export function SwarmGraph({
       // Reserve shelf label
       if (current.reserveLabel && modeRef.current === "focus") {
         context.fillStyle = withAlpha(palette.muted, 0.55)
-        context.font = "400 10px 'Space Mono', ui-monospace, monospace"
+        context.font = "400 10px 'Roboto Mono', ui-monospace, monospace"
         context.textAlign = "center"
         context.fillText(current.reserveLabel, width / 2, height - 12)
       }

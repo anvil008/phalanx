@@ -7,7 +7,7 @@ demo with zero external repository dependencies, and nothing outside this direct
 should be edited to change its behaviour.
 
 - **Ports:** server `:8095`, web dev server `:5195`.
-- **Design language:** Flat hairline dashboard surfaces on `@foundry/ui`, restyled through tokens in `web/src/styles/phalanx.css` rather than per-page overrides. The page is black; grouped content sits in a `.panel` (`--card` fill, 1px rule, `0.375rem` radius). The accent is indigo `#79a7ff`; amber and red stay reserved for severity, and severity shows as text colour or a small dot, never a fill or a glow. Titles and prose are Inter (`.title`, `.prose`), labels/meta/data/buttons/nav are Space Mono, and uppercase is permitted only for eyebrows. No glass, blur, grain, gradient, shadow or glow anywhere.
+- **Design language:** Flat hairline dashboard surfaces on `@foundry/ui`, restyled through tokens in `web/src/styles/phalanx.css` rather than per-page overrides. The page is black; grouped content sits in a `.panel` (`--card` fill, 1px rule, `0.375rem` radius). The accent is indigo `#79a7ff`; amber and red stay reserved for severity, and severity shows as text colour or a small dot, never a fill or a glow. Titles, prose, buttons, navigation, and badges use Roboto (`--phalanx-font-sans`), while structured data, telemetry, and code use Roboto Mono (`--phalanx-font-mono`), and uppercase is permitted only for eyebrows. No glass, blur, grain, gradient, shadow or glow anywhere.
 - **The live range is real data, and its isolation is load-bearing.** The
   `range/` lab is Node processes on `127.0.0.1` writing real logs to
   `~/.phalanx-range`; the agents read those logs through the `TelemetrySource`
