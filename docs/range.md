@@ -8,7 +8,7 @@ isolate the gateway and the beacon you can see in the log actually stops.
 
 There is no container runtime dependency. The whole lab is Node processes bound
 to `127.0.0.1`, confined to a working directory (`~/.phalanx-range`, override with
-`PHALANX_RANGE_DIR` or `ESPER_RANGE_DIR`). Nothing leaves the host.
+`PHALANX_RANGE_DIR`). Nothing leaves the host.
 
 ## What runs
 
@@ -53,10 +53,10 @@ The range runs one or more **fronts** concurrently, each a separate attacker
 process producing its own real telemetry:
 
 - **gateway** — the pre-auth request-smuggling intrusion of the ingress
-  gateway, ending in a live beacon and bulk exfiltration. Commanded by ATLAS.
+  gateway, ending in a live beacon and bulk exfiltration. Commanded by Atlas.
 - **identity** — consent-grant abuse in the corporate tenant: two finance users
   are tricked into granting an unverified OAuth app, which then really
-  enumerates shared mailboxes on a loop until contained. Commanded by VESPER.
+  enumerates shared mailboxes on a loop until contained. Commanded by Vesper.
 
 Both fronts beacon/callback through the same C2 (`cdn-status-check.net` /
 `185.121.44.19`), so when they run together ORRERY correlates them into one
@@ -110,6 +110,6 @@ processes, restores the built-in estate as the source, and clears the world.
 
 ## Pacing
 
-- `ESPER_RANGE_BEACON_MS` — beacon interval (default 1500).
-- `ESPER_RANGE_STEP_MS` — attacker stage spacing (default 2600).
-- `ESPER_RANGE_BASE_PORT` — first loopback port (default 8110).
+- `PHALANX_RANGE_BEACON_MS` — beacon interval (default 1500).
+- `PHALANX_RANGE_STEP_MS` — attacker stage spacing (default 2600).
+- `PHALANX_RANGE_BASE_PORT` — first loopback port (default 8110).

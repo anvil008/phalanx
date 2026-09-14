@@ -3,7 +3,7 @@
 Scenario definitions live in `server/src/scenarios/index.ts`; the ground truth
 the specialists uncover lives in `server/src/tools/world.ts`.
 
-## `zero-day-edge` — ESP-1041, commanded by ATLAS
+## `zero-day-edge` — PLX-1041, commanded by Atlas
 
 A pre-authentication request-smuggling flaw in the Rivet Edge 4.2.1 TLS
 terminator. Five detections arrive over roughly four seconds of wall clock:
@@ -31,19 +31,19 @@ Ground truth the specialists have to assemble between them:
 The last two are the ones that punish a commander who moves to recovery too
 early.
 
-## `identity-front` — ESP-1042, commanded by VESPER
+## `identity-front` — PLX-1042, commanded by Vesper
 
 Consent-grant abuse in the corporate tenant: an unregistered OAuth application
 granted `mail.read` by two finance users four minutes apart, then enumerating
-shared mailboxes. Shorter, and shaped differently on purpose — VESPER cannot
+shared mailboxes. Shorter, and shaped differently on purpose — Vesper cannot
 close its own incident, because the adversary's way back in is on ATLAS's side
 of the estate.
 
 ## The campaign
 
 `POST /api/campaign/run` starts both, staggered, then runs commander
-coordination once each has something worth trading. VESPER raises the shared
-indicator with ATLAS, ORRERY pulls both pictures, links the incidents, and
+coordination once each has something worth trading. Vesper raises the shared
+indicator with Atlas, Orrery pulls both pictures, links the incidents, and
 publishes an arbitration card giving ATLAS priority on the shared specialists
 while the front with an active egress channel is still open.
 

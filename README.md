@@ -5,8 +5,19 @@ commander that plans instead of executing a workflow, specialists that talk to
 each other over the Agent2Agent protocol, and an operator interface the agents
 author while they work.
 
-Phalanx is a demo. Everything the agents observe is a simulated enterprise — no
-tool in this repository touches a real network, host, or credential.
+**Status**: Demo. Replay mode by default (needs no API keys); live mode requires provider keys. No automated test suite yet.
+
+The default estate is fully simulated; an optional loopback-only [range](docs/range.md) runs real local processes bound to 127.0.0.1 and never leaves the machine; the "vulnerability" is a marker header, not an exploit. See [docs/range.md](docs/range.md) for live range architecture and [docs/scenarios.md](docs/scenarios.md) for scenario dossiers.
+
+### The vulnerability is modelled, not weaponised
+
+The "exploit" is a crafted-but-benign request the gateway is instrumented to
+treat as a foothold. Node's HTTP stack normalises genuinely conflicting
+framing (and its server rejects it), so the dual Transfer-Encoding/Content-Length
+desync that defines the flaw is asserted with a marker header. The request is
+real and served; the classification is the lab modelling what an unpatched
+appliance would be fooled by. No memory-corruption primitive, no shipped
+exploit, nothing that touches anything outside the range.
 
 ![Mission Control — Autonomous Blue-Team Command Deck](docs/screenshots/mission-control.png)
 
@@ -31,11 +42,11 @@ flowchart TD
     direction LR
     IC_ATLAS["Incident Commander: ic-atlas<br/>Zero-Day Edge & Host Intrusion"]
     IC_ORRERY["Campaign Commander: ic-orrery<br/>Multi-Front Strategic Correlation"]
-    IC_VESPER["Identity Commander: ic-vesper<br/>OAuth & Tenant Abuse"]
+    IC_VESP["Identity Commander: ic-vesper<br/>OAuth & Tenant Abuse"]
     IC_WARDEN["Endpoint Commander: ic-warden<br/>Data Destruction & Ransomware"]
 
     IC_ATLAS <-->|"Campaign Scope"| IC_ORRERY
-    IC_ORRERY <-->|"Shared Specialists"| IC_VESPER
+    IC_ORRERY <-->|"Shared Specialists"| IC_VESP
     IC_ORRERY <-->|"Containment Bounds"| IC_WARDEN
   end
 
@@ -45,8 +56,8 @@ flowchart TD
     subgraph C1["Evidence & Exfiltration Chain"]
       direction TB
       CINDER["Host Forensics: forensics-cinder<br/>Memory capture, host timeline"]
-      SPECTRE["Network Analysis: net-spectre<br/>C2 beaconing, PCAP analysis"]
-      CINDER <-->|"P2P: Correlate Host C2 with 47s Beacon"| SPECTRE
+      TIDE["Network Analysis: network-tide<br/>C2 beaconing, PCAP analysis"]
+      CINDER <-->|"P2P: Correlate Host C2 with 47s Beacon"| TIDE
     end
 
     subgraph C2["Threat Recognition & Dwell Scope"]
@@ -58,9 +69,9 @@ flowchart TD
 
     subgraph C3["Containment & Access Revocation"]
       direction TB
-      AEGIS["Active Containment: contain-aegis<br/>Blast radius calculation, host isolation"]
+      BULWARK["Active Containment: contain-bulwark<br/>Blast radius calculation, host isolation"]
       KEYSTONE["Identity Enforcement: identity-keystone<br/>Service account trees, token revocation"]
-      AEGIS <-->|"P2P: Revoke credentials before host reboot"| KEYSTONE
+      BULWARK <-->|"P2P: Revoke credentials before host reboot"| KEYSTONE
     end
   end
 
@@ -92,7 +103,7 @@ Phalanx decouples detection ingestion, autonomous planning, peer-to-peer special
 
 1. **Telemetry & Signal Ingestion**: Telemetry from WAF (HTTP request smuggling), EDR (process injection, `LD_PRELOAD` shims), IdP (OAuth consent abuse, token theft), and Netflow (C2 beacons, periodic egress) streams into the ingestion dispatcher (`runner.ts`) without pre-packaged playbooks.
 2. **Autonomous Command Tier**: Incident Commanders (`ic-atlas`, `ic-vesper`, `ic-warden`) powered by Gemini 3.1 Pro, Claude Sonnet 5, or OpenAI GPT-5 reason over the estate in real time, querying agent cards via `a2a_discover` and adapting response plans dynamically as findings emerge. Strategic Campaign Commander `ic-orrery` correlates multi-front activity across incidents and arbitrates shared specialist priority.
-3. **Decentralized Peer-to-Peer A2A Swarm (JSON-RPC 2.0 Bus)**: Specialists query peers directly over HTTP without hub-and-spoke bottlenecks. Host Forensics (`forensics-cinder`) directly correlates memory artifacts with Network Analysis (`net-spectre`), Threat Intel (`intel-oracle`) syncs technique signatures with Threat Hunter (`hunt-drift`), and Containment (`contain-aegis`) syncs blast-radius boundaries with Identity Enforcement (`identity-keystone`).
+3. **Decentralized Peer-to-Peer A2A Swarm (JSON-RPC 2.0 Bus)**: Specialists query peers directly over HTTP without hub-and-spoke bottlenecks. Host Forensics (`forensics-cinder`) directly correlates memory artifacts with Network Analysis (`network-tide`), Threat Intel (`intel-oracle`) syncs technique signatures with Threat Hunter (`hunt-drift`), and Containment (`contain-bulwark`) syncs blast-radius boundaries with Identity Enforcement (`identity-keystone`).
 4. **Dual Downstream Real-time Channels**:
    - **Target Estate & Active Defense**: Scoped MCP tool execution (`isolate_host`, `block_egress`, `revoke_sessions`, `memory_capture`) safely acts on the simulated range under explicit commander authorization.
    - **Live Operator Dashboard**: Agents author their own interactive surfaces at runtime, emitting declarative [A2UI](https://a2ui.org) v0.9 cards (`updateComponents`, `updateDataModel`) over a high-throughput Server-Sent Events (`/api/stream`) bus.
@@ -132,18 +143,23 @@ specialists they both want.
 
 ## Running it
 
+**Prerequisites**: Node 22.6+ (the server runs `node --experimental-strip-types`) and npm 10+.
+
 ```sh
+cd phalanx
+cp .env.example .env
 npm install
 npm run build --workspace=web     # emits server/webdist
 npm run start --workspace=server  # http://127.0.0.1:8095
 ```
 
 The server binds `0.0.0.0`, so it is reachable from the rest of the network at
-`http://<host>:8095` without any extra flag. Set `PHALANX_PORT` (or `ESPER_PORT`) to move it.
+`http://<host>:8095` without any extra flag. Set `PHALANX_PORT` to move it.
 
 For development, run the two halves separately:
 
 ```sh
+cd phalanx
 npm run dev --workspace=server    # :8095
 npm run dev --workspace=web       # :5195, proxies /api to the server
 ```
@@ -168,9 +184,9 @@ You can configure models, switch execution modes, and enter your API keys direct
 
 ![Model & API Settings — Frontier Multi-Provider Configuration](docs/screenshots/model-settings.png)
 
-Replay mode exists so the demo runs offline, costs nothing, and produces the same run twice when you are testing. It is not a mock of the UI: it drives the real A2A transport, the real tools, and the real A2UI surfaces — only the reasoning is pre-scripted.
+Replay mode exists so the demo runs offline, costs nothing, and produces the same run twice when you are testing. It is not a mock of the UI: it drives the real A2A transport, the real tools, and the real A2UI surfaces — only the reasoning is pre-scripted. Replay mode is the default and needs no API keys. Live mode requires at least one provider key.
 
-Configuration is in `.env.example`.
+Configuration is in `.env.example` (copy to `.env` before running).
 
 ## The pages
 
