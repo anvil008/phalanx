@@ -1,22 +1,46 @@
-import { useState, useMemo, type CSSProperties, type ReactNode } from "react"
+import { useState, useMemo, type ComponentProps } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { Check, Copy } from "lucide-react"
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  Bot,
+  Brain,
+  Check,
+  CheckCircle2,
+  Copy,
+  Cpu,
+  FastForward,
+  FileCheck2,
+  FileCode,
+  GitFork,
+  KeyRound,
+  Layers,
+  Lock,
+  MessageSquare,
+  Network,
+  Radio,
+  Scale,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Terminal,
+  Users,
+  XCircle,
+} from "lucide-react"
+import { Badge } from "@foundry/ui/components/badge"
 import { Button } from "@foundry/ui/components/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@foundry/ui/components/card"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { SegmentedControl } from "@foundry/ui/components/segmented-control"
+import { Separator } from "@foundry/ui/components/separator"
+import { StatusDot } from "@foundry/ui/components/status-dot"
+import { cn } from "@foundry/ui/lib/utils"
 import { usePhalanx } from "@/lib/store"
 import { ClaudeLogo, GeminiLogo, OpenAILogo } from "@/components/provider-logos"
 
-/* How this works.
-   The one document in the product: a numbered eyebrow, a heading, a column of
-   prose at 62ch, and hairline rows wherever the argument turns into a list.
-   Same Inter scale as the dashboard, just given more room. */
-
-const HEADING: CSSProperties = { fontWeight: 600, fontSize: "1.5rem" }
-const BODY: CSSProperties = { fontSize: "0.8125rem" }
-
 /* --------------------------------------------------------------------------
-   CODE VIEWER
+   SYNTAX HIGHLIGHTED CODE VIEWER COMPONENT
    -------------------------------------------------------------------------- */
 
 interface CodeSnippetViewerProps {
@@ -39,16 +63,17 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
     }
   }
 
-  // Three token colours: the key, the value, everything else.
+  // Tokenize JSON lines for clean syntax coloration
   const renderFormattedLine = (line: string) => {
+    // String keys: "key":
     const keyMatch = line.match(/^(\s*)("([^"]+)")(\s*:\s*)(.*)$/)
     if (keyMatch) {
       const [, indent, , key, colon, value] = keyMatch
       return (
         <span>
           {indent}
-          <span className="text-accent-indigo">"{key}"</span>
-          <span className="text-muted-soft">{colon}</span>
+          <span className="text-primary">"{key}"</span>
+          <span className="text-muted">{colon}</span>
           {renderValueTokens(value)}
         </span>
       )
@@ -57,49 +82,77 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
   }
 
   const renderValueTokens = (val: string) => {
+    // Strings in quotes
     if (val.startsWith('"') && (val.endsWith('",') || val.endsWith('"'))) {
       const isComma = val.endsWith(",")
       const strContent = isComma ? val.slice(0, -1) : val
       return (
         <>
-          <span className="text-ink-soft">{strContent}</span>
-          {isComma && <span className="text-muted-soft">,</span>}
+          <span className="text-emerald-300">{strContent}</span>
+          {isComma && <span className="text-muted">,</span>}
         </>
       )
     }
-    if (/^\s*(true|false|null)\s*,?\s*$/.test(val) || /^\s*-?\d+(\.\d+)?\s*,?\s*$/.test(val)) {
-      return <span className="text-ink-soft">{val}</span>
+    // Booleans or numbers
+    if (/^\s*(true|false|null)\s*,?\s*$/.test(val)) {
+      return <span className="text-purple-400 font-semibold">{val}</span>
     }
-    return <span className="text-muted-foreground">{val}</span>
+    if (/^\s*-?\d+(\.\d+)?\s*,?\s*$/.test(val)) {
+      return <span className="text-amber-400 font-semibold">{val}</span>
+    }
+    return <span className="text-ink">{val}</span>
   }
 
   const lines = code.trim().split("\n")
 
   return (
-    <div className="border border-rule">
-      <div className="flex items-center justify-between gap-3 border-b border-rule-soft px-3 py-2">
-        <div className="meta-mono flex min-w-0 items-center gap-2">
-          <span className="truncate text-ink!">{title}</span>
-          {subtitle ? <span className="hidden truncate sm:inline">· {subtitle}</span> : null}
+    <div className="group relative overflow-hidden rounded-xl border border-rule-soft bg-card/60  transition-all hover:border-primary/40">
+      {/* Header Bar */}
+      <div className="flex items-center justify-between border-b border-rule-soft bg-card/60 px-4 py-2.5 ">
+        <div className="flex items-center gap-2.5">
+          <div className="flex gap-1.5">
+            <span className="size-2.5 rounded-full bg-destructive/60" />
+            <span className="size-2.5 rounded-full bg-warning/60" />
+            <span className="size-2.5 rounded-full bg-positive/60" />
+          </div>
+          <Separator orientation="vertical" className="h-3.5 mx-1" />
+          <span className="font-mono text-xs font-semibold text-ink">{title}</span>
+          {subtitle && <span className="hidden font-mono text-[11px] text-muted sm:inline">· {subtitle}</span>}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="sev-tag" data-tone="info">
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-[10px] text-primary">
             {badgeText}
-          </span>
-          <Button size="xs" variant="ghost" onClick={handleCopy} className="gap-1" title="Copy to clipboard">
-            {copied ? <Check className="size-3" /> : <Copy className="size-3" />}
-            <span>{copied ? "Copied" : "Copy"}</span>
+          </Badge>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleCopy}
+            className="h-7 cursor-pointer gap-1.5 rounded-md px-2 text-xs font-medium text-muted hover:bg-wash hover:text-ink"
+            title="Copy code to clipboard"
+          >
+            {copied ? (
+              <>
+                <Check className="size-3.5 text-positive" />
+                <span className="text-positive text-[11px] font-medium">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="size-3.5" />
+                <span className="text-[11px]">Copy</span>
+              </>
+            )}
           </Button>
         </div>
       </div>
 
-      <div className="max-h-[32rem] select-text overflow-auto p-3 font-mono text-[0.75rem] leading-relaxed">
+      {/* Code Body */}
+      <div className="max-h-[32rem] overflow-x-auto overflow-y-auto p-4 font-mono text-xs leading-relaxed select-text">
         <table className="w-full border-collapse">
           <tbody>
             {lines.map((line, idx) => (
-              <tr key={idx}>
-                <td className="w-8 select-none pr-3 text-right text-muted-soft">{idx + 1}</td>
-                <td className="whitespace-pre">{renderFormattedLine(line)}</td>
+              <tr key={idx} className="hover:bg-wash">
+                <td className="w-8 select-none pr-3 text-right font-mono text-[11px] text-muted/40">{idx + 1}</td>
+                <td className="whitespace-pre font-mono">{renderFormattedLine(line)}</td>
               </tr>
             ))}
           </tbody>
@@ -114,15 +167,19 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
    -------------------------------------------------------------------------- */
 
 const NAV_SECTIONS = [
-  { id: "overview", label: "Executive overview" },
-  { id: "architecture", label: "Architecture" },
-  { id: "unscripted-orchestration", label: "Unscripted command" },
-  { id: "a2a-protocol", label: "A2A protocol" },
-  { id: "a2ui-catalog", label: "A2UI surfaces" },
-  { id: "tool-estate", label: "Tool estate" },
-  { id: "model-support", label: "Models & replay" },
-  { id: "comparison", label: "Swarm vs SOAR" },
+  { id: "overview", label: "Executive Overview", icon: Shield },
+  { id: "architecture", label: "4-Tier Architecture", icon: Layers },
+  { id: "unscripted-orchestration", label: "Unscripted Command", icon: Brain },
+  { id: "a2a-protocol", label: "A2A Protocol", icon: Network },
+  { id: "a2ui-catalog", label: "A2UI Surfaces", icon: LayoutDashboardIcon },
+  { id: "tool-estate", label: "37 Tool Estate", icon: Terminal },
+  { id: "model-support", label: "Multi-Model & Replay", icon: Cpu },
+  { id: "comparison", label: "Swarm vs SOAR", icon: Scale },
 ]
+
+function LayoutDashboardIcon(props: ComponentProps<typeof Layers>) {
+  return <Layers {...props} />
+}
 
 interface ToolSpec {
   name: string
@@ -169,7 +226,7 @@ const TOOL_SPECS: ToolSpec[] = [
   // Detection & Assurance
   { name: "author_rule", category: "detection", clearance: "read", description: "Synthesize Sigma or YARA detection rules from incident telemetry and threat tradecraft.", agents: ["detect-loom"] },
   { name: "deploy_rule", category: "detection", clearance: "act", description: "Promote backtested detection rules into live collector pipelines across all SIEM agents.", agents: ["detect-loom"] },
-  { name: "verify_closure", category: "detection", clearance: "read", description: "Run automated re-attack simulations to prove remediation of the root exploit vector.", agents: ["verify-anchor"] },
+  { name: "verify_closure", category: "detection", clearance: "read", description: "Run automated re-attack simulations to mathematically prove remediation of root exploit vector.", agents: ["verify-anchor"] },
 
   // Incident Command & Orchestration
   { name: "a2a_discover", category: "command", clearance: "command", description: "Inspect active agent capability cards, skills, current queue load, and delegation guidance.", agents: ["ic-atlas", "ic-vesper", "ic-orrery", "ic-warden", "ic-marshal"] },
@@ -182,28 +239,10 @@ const TOOL_SPECS: ToolSpec[] = [
 
   // Governance & Stakeholder Comms
   { name: "request_authorisation", category: "governance", clearance: "read", description: "Submit high-blast-radius containment actions to human commander for explicit approval.", agents: ["contain-bulwark", "remedy-anvil"] },
-  { name: "draft_brief", category: "governance", clearance: "read", description: "Draft technical summaries and legal briefs separating facts from hypotheses.", agents: ["comms-herald"] },
+  { name: "draft_brief", category: "governance", clearance: "read", description: "Draft technical executive summaries and legal briefs separating facts from hypotheses.", agents: ["comms-herald"] },
   { name: "publish_status", category: "governance", clearance: "act", description: "Publish vetted public status updates with sanitized operational impact summaries.", agents: ["comms-herald"] },
   { name: "assess_obligations", category: "governance", clearance: "read", description: "Evaluate GDPR, SEC 4-day, and HIPAA regulatory disclosure clocks against compromised data.", agents: ["legal-scout"] },
 ]
-
-const TOOL_CATEGORIES = [
-  { id: "all", label: "All instruments (37)" },
-  { id: "telemetry", label: "Telemetry & sensors (6)" },
-  { id: "forensics", label: "Deep forensics (5)" },
-  { id: "intel", label: "Threat intel (4)" },
-  { id: "sandbox", label: "Sandboxing (2)" },
-  { id: "containment", label: "Containment (6)" },
-  { id: "detection", label: "Detection (3)" },
-  { id: "command", label: "Command (7)" },
-  { id: "governance", label: "Governance (4)" },
-]
-
-const CLEARANCE_TONE: Record<ToolSpec["clearance"], string> = {
-  command: "info",
-  act: "warning",
-  read: "muted",
-}
 
 /* --------------------------------------------------------------------------
    JSON CODE SAMPLES FOR A2A PROTOCOL & A2UI
@@ -365,6 +404,7 @@ export function AboutPage() {
   const navigate = useNavigate()
   const state = usePhalanx()
 
+  // Interactive state
   const [a2aTab, setA2aTab] = useState<"card" | "request" | "response">("card")
   const [toolCategory, setToolCategory] = useState<string>("all")
   const [activeModelTab, setActiveModelTab] = useState<"gemini" | "claude" | "openai" | "replay">("gemini")
@@ -385,251 +425,440 @@ export function AboutPage() {
     <PageContent className="phalanx-page-scroll-fade">
       <PageHeader
         title="Architecture & Mechanics"
-        subtitle={state.mode === "live" ? `active swarm · ${state.commanderModel}` : "replay · simulated estate"}
+        subtitle={state.mode === "live" ? `active swarm · ${state.commanderModel}` : "deterministic replay · zero-ground-truth"}
         actions={
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => navigate("/protocol")}>
-              <span className="hidden sm:inline">Inspect bus trace</span>
-              <span className="sm:hidden">Bus trace</span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/protocol")}
+              className="h-8 gap-1.5 border-rule-soft bg-wash text-xs font-medium hover:border-primary/40"
+            >
+              <Radio className="size-3.5 text-primary" />
+              <span className="hidden sm:inline">Inspect Bus Trace</span>
             </Button>
-            <Button size="sm" className="button-ink" onClick={() => navigate("/")}>
-              Launch Mission Control
+            <Button
+              size="sm"
+              onClick={() => navigate("/")}
+              className="h-8 gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 cursor-pointer"
+            >
+              <Activity className="size-3.5" />
+              <span>Launch Mission Control</span>
             </Button>
           </div>
         }
       />
 
-      {/* In-page contents: a quiet mono list, not a chip rail. */}
-      {/* -top-5 cancels the page gutter so the bar sits flush with the chrome when stuck. */}
-      <nav className="sticky -top-5 z-20 -mx-5 -mt-2 mb-4 border-b border-rule-soft bg-page px-5 py-2.5">
-        <div className="no-scrollbar meta-mono flex items-center gap-x-2 overflow-x-auto">
-          {NAV_SECTIONS.map((sec, idx) => (
-            <span key={sec.id} className="flex shrink-0 items-center gap-2">
-              {idx > 0 ? <span className="text-muted-soft">·</span> : null}
-              <button
-                type="button"
-                onClick={() => scrollToSection(sec.id)}
-                className="whitespace-nowrap transition-colors hover:text-ink!"
-              >
-                {sec.label}
-              </button>
-            </span>
+      {/* Quick Navigation Sticky Bar */}
+      <div className="sticky top-0 z-20 -mx-5 -mt-2 mb-6 border-b border-rule-soft bg-page px-5 py-2.5">
+        <div className="mx-auto flex max-w-5xl items-center gap-x-2 overflow-x-auto no-scrollbar">
+          <span className="mr-2 hidden text-xs font-semibold tracking-wider text-muted uppercase lg:inline">
+            Sections:
+          </span>
+          {NAV_SECTIONS.map((sec) => (
+            <button
+              key={sec.id}
+              type="button"
+              onClick={() => scrollToSection(sec.id)}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-rule-soft bg-wash px-3 py-1 text-xs font-medium text-muted transition-all duration-150 hover:border-primary/50 hover:bg-primary/10 hover:text-ink active:scale-95"
+            >
+              <sec.icon className="size-3 text-primary" />
+              <span>{sec.label}</span>
+            </button>
           ))}
         </div>
-      </nav>
+      </div>
 
-      <div className="flex w-full max-w-5xl flex-col gap-16 pb-20">
-        <p className="meta-mono">19 agents · 37 tools · A2A JSON-RPC 2.0 · A2UI</p>
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-16 pb-20">
 
-        {/* ---------------------------------------------------------------- 01 */}
-        <Section
-          id="overview"
-          number="01"
-          eyebrow="Executive overview"
-          meta="Core thesis"
-          title="Autonomous blue-team swarms against real-time intrusions"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            Modern cyber attacks execute at machine speed. Threat actors use automated recon, in-memory
-            process injection, zero-day chains, and stolen OAuth tokens to compromise infrastructure in
-            minutes. Meanwhile, human security operations centres remain throttled by alert fatigue,
-            context switching, and rigid SOAR scripts that break the moment an adversary deviates from
-            a pre-scripted playbook.
-          </p>
-
-          <dl className="flex flex-col">
-            <DefRow term="The paradigm shift">
-              Phalanx abandons fixed DAG workflows. Incident commanders are LLM agents equipped with
-              open-ended diagnostic tools, reasoning loops, and dynamic discovery, so they can form and
-              test hypotheses in real time.
-            </DefRow>
-            <DefRow term="Decentralized mesh">
-              No central orchestration bottleneck. Agents collaborate peer-to-peer over Google’s
-              Agent2Agent (A2A) protocol. Forensics specialists consult network analysts directly
-              without routing round-trips through the commander.
-            </DefRow>
-            <DefRow term="Epistemic isolation">
-              Zero ground-truth contamination. The blue team has no backdoor into the attack
-              generator’s internal state. Every finding, indicator, and containment action is derived
-              from simulated enterprise telemetry.
-            </DefRow>
-          </dl>
-        </Section>
-
-        {/* ---------------------------------------------------------------- 02 */}
-        <Section
-          id="architecture"
-          number="02"
-          eyebrow="System design"
-          meta="Four decoupled tiers"
-          title="A four-tier pipeline from telemetry to interface"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            Phalanx separates raw security telemetry, cognitive reasoning, decentralized agent
-            communication, and safe UI generation into four self-contained tiers.
-          </p>
-
-          <div className="flex flex-col">
-            <TierRow
-              number="01"
-              title="Telemetry & simulated estate"
-              lede="High-fidelity synthetic sensors and sandboxed actuators"
-              tags={["EDR process trees", "NetFlow & PCAP", "CloudTrail & IDP", "Memory triage"]}
-            >
-              Provides continuous synthetic sensor event streams without touching live infrastructure.
-              Includes 37 instruments ranging from SIEM free-text search to volatile RAM extraction, as
-              well as safe actuators that sever network adapters, sinkhole IP blocks, rotate
-              credentials, and rebuild hosts from golden images.
-            </TierRow>
-
-            <TierRow
-              number="02"
-              title="Cognitive blue specialist swarm"
-              lede="19 autonomous defence operators with scoped clearance"
-              tags={["5 commanders", "8 analysts", "3 response ops", "3 governance"]}
-            >
-              Domain-specific operators: incident commanders (Atlas, Vesper, Orrery, Warden, Marshal),
-              forensics (Cinder), network (Tide), malware reversing (Splice), threat intel (Oracle),
-              exploitability (Lathe), threat hunting (Drift), containment (Bulwark), and detection
-              engineering (Loom). Each agent is provisioned only with tools fitting its clearance.
-            </TierRow>
-
-            <TierRow
-              number="03"
-              title="Agent2Agent (A2A) coordination bus"
-              lede="Decentralized JSON-RPC 2.0 communication mesh"
-              tags={["JSON-RPC 2.0", "Google A2A v0.3", "Agent cards", "Peer-to-peer"]}
-            >
-              Every agent exposes an HTTP discovery card at{" "}
-              <code className="font-mono text-[0.8125rem] text-ink!">/.well-known/agent-card.json</code>.
-              Delegation, status tracking, artifact delivery, and peer-to-peer questioning are
-              dispatched as standard JSON-RPC messages, preserving the audit trail and avoiding a
-              central hub.
-            </TierRow>
-
-            <TierRow
-              number="04"
-              title="A2UI declarative interface runtime"
-              lede="Agent-authored operator surfaces with no client-side code execution"
-              tags={["A2UI v0.9", "Declarative JSON", "In-place updates", "Sanitized UI"]}
-            >
-              Commanders stream declarative UI specifications to the operator’s dashboard as JSON
-              operations. The frontend translates those abstract component tokens into native{" "}
-              <code className="font-mono text-[0.8125rem] text-ink!">@foundry/ui</code> React widgets. No
-              arbitrary JavaScript is ever executed, which removes prompt injection and XSS as a class.
-            </TierRow>
-          </div>
-        </Section>
-
-        {/* ---------------------------------------------------------------- 03 */}
-        <Section
-          id="unscripted-orchestration"
-          number="03"
-          eyebrow="Cognitive engine"
-          meta="The end of rigid DAGs"
-          title="Unscripted orchestration: why state machines fail in cyber defense"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            Traditional security orchestration, automation, and response (SOAR) platforms rely on
-            pre-programmed decision trees and directed acyclic graphs. During real intrusions, that
-            architecture breaks.
-          </p>
-
-          <div className="grid gap-8 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <h3 className="eyebrow" style={{ color: "var(--negative)" }}>
-                Where rigid SOAR fails
-              </h3>
-              <dl className="flex flex-col">
-                <ClaimRow tone="negative" term="Branch explosion">
-                  Adversaries constantly mutate tactics. Writing playbooks for every permutation of
-                  initial access, evasion, and persistence requires impossible manual upkeep.
-                </ClaimRow>
-                <ClaimRow tone="negative" term="Context blindness">
-                  SOAR playbooks execute sequentially. If an API times out or a host is already
-                  offline, the workflow stalls awaiting manual human triage.
-                </ClaimRow>
-                <ClaimRow tone="negative" term="No semantic synthesis">
-                  A hardcoded script cannot infer that an unusual DNS lookup on an internal proxy is
-                  linked to a memory-injected stager found on an API pod.
-                </ClaimRow>
-              </dl>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <h3 className="eyebrow" style={{ color: "var(--positive)" }}>
-                How Phalanx commanders adapt
-              </h3>
-              <dl className="flex flex-col">
-                <ClaimRow tone="positive" term="Dynamic discovery">
-                  The commander starts with no workflow. It calls{" "}
-                  <code className="font-mono text-[0.8125rem] text-ink!">a2a_discover</code> to read the
-                  live roster and selects specialists from their declared skills.
-                </ClaimRow>
-                <ClaimRow tone="positive" term="Hypothesis-driven investigation">
-                  The commander evaluates intermediate findings, holds competing theories, and adapts
-                  tasks as new telemetry arrives.
-                </ClaimRow>
-                <ClaimRow tone="positive" term="Blast-radius awareness">
-                  Destructive containment actions (
-                  <code className="font-mono text-[0.8125rem] text-ink!">isolate_host</code>,{" "}
-                  <code className="font-mono text-[0.8125rem] text-ink!">revoke_sessions</code>) require
-                  explicit risk justification, weighing downtime against dwell time.
-                </ClaimRow>
-              </dl>
+        {/* ------------------------------------------------------------------
+            HERO STAT STRIP
+            ------------------------------------------------------------------ */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
+            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Autonomous Agents</div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold tracking-tight text-ink font-mono">19</span>
+              <span className="text-xs text-primary font-medium">5 Cmdrs · 14 Specs</span>
             </div>
           </div>
-
-          <div className="flex flex-col gap-2 pt-2">
-            <h3 className="eyebrow">The commander’s OODA loop</h3>
-            <dl className="flex flex-col">
-              <DefRow term="01 · Observe — ingest & discover">
-                Parses detection alerts, calls{" "}
-                <code className="font-mono text-[0.8125rem] text-ink!">a2a_discover</code>, and inspects
-                the available specialists.
-              </DefRow>
-              <DefRow term="02 · Orient — synthesize evidence">
-                Correlates memory artifacts, outbound NetFlow, and CVE records to identify the
-                intrusion vector.
-              </DefRow>
-              <DefRow term="03 · Decide — delegate tasks">
-                Dispatches targeted tasks to specialists and calculates containment blast radius.
-              </DefRow>
-              <DefRow term="04 · Act — contain & backtest">
-                Authorizes isolation, deploys egress sinkholes, and authors new detection rules.
-              </DefRow>
-            </dl>
+          <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
+            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Security Instruments</div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold tracking-tight text-ink font-mono">37</span>
+              <span className="text-xs text-muted">SOC & EDR Stack</span>
+            </div>
           </div>
-        </Section>
+          <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
+            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Coordination Bus</div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold tracking-tight text-ink font-mono">A2A</span>
+              <span className="text-xs text-primary font-medium">JSON-RPC 2.0</span>
+            </div>
+          </div>
+          <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
+            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Dynamic Interface</div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold tracking-tight text-ink font-mono">A2UI</span>
+              <span className="text-xs text-positive font-medium">Zero Code Exec</span>
+            </div>
+          </div>
+          <div className="col-span-2 sm:col-span-1 rounded-xl border border-rule-soft bg-card/60 p-4  ">
+            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Mean Containment</div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold tracking-tight text-positive font-mono">&lt; 90s</span>
+              <span className="text-xs text-muted">Autonomous MTTC</span>
+            </div>
+          </div>
+        </div>
 
-        {/* ---------------------------------------------------------------- 04 */}
-        <Section
-          id="a2a-protocol"
-          number="04"
-          eyebrow="Wire protocol"
-          meta="Google Agent2Agent v0.3"
-          title="Peer-to-peer A2A, on the wire"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            Phalanx implements the Google Agent2Agent (A2A) specification over JSON-RPC 2.0. Rather
-            than calling internal function pointers, all inter-agent delegation moves as fully-formed
-            wire envelopes.
-          </p>
+        {/* ------------------------------------------------------------------
+            SECTION: #OVERVIEW
+            ------------------------------------------------------------------ */}
+        <section id="overview" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                EXECUTIVE OVERVIEW
+              </Badge>
+              <span className="text-xs text-muted">Core Thesis & Motivation</span>
+            </div>
+            <h2 className="text-3xl font-bold tracking-tight text-ink">
+              Autonomous Blue Team Swarms vs. Real-Time Cyber Intrusions
+            </h2>
+            <p className="text-base leading-relaxed text-muted">
+              Modern cyber attacks execute at machine speed. Advanced threat actors utilize automated recon, in-memory process
+              injection, zero-day chains, and stolen OAuth tokens to compromise infrastructure in minutes. Meanwhile, human Security
+              Operations Centers (SOCs) remain throttled by alert fatigue, context switching, and rigid SOAR scripts that break the
+              moment an adversary deviates from pre-scripted playbooks.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="border-rule-soft bg-card/60 transition-all hover:border-primary/30">
+              <CardHeader className="pb-2">
+                <div className="mb-2 size-8 rounded-lg border border-primary/40 bg-primary/10 p-1.5 text-primary">
+                  <Brain className="size-full" />
+                </div>
+                <CardTitle className="text-sm font-semibold">The Paradigm Shift</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs leading-relaxed text-muted">
+                Phalanx abandons fixed DAG workflows. Incident Commanders are LLM agents equipped with open-ended diagnostic
+                tools, reasoning loops, and dynamic discovery capabilities, allowing them to formulate and test hypotheses in
+                real time.
+              </CardContent>
+            </Card>
+
+            <Card className="border-rule-soft bg-card/60 transition-all hover:border-primary/30">
+              <CardHeader className="pb-2">
+                <div className="mb-2 size-8 rounded-lg border border-purple-500/30 bg-purple-500/10 p-1.5 text-purple-400">
+                  <Network className="size-full" />
+                </div>
+                <CardTitle className="text-sm font-semibold">Decentralized Mesh</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs leading-relaxed text-muted">
+                No central orchestration bottleneck. Agents collaborate peer-to-peer over Google’s Agent2Agent (A2A) protocol.
+                Forensics specialists consult network analysts directly without routing unnecessary round-trips through the commander.
+              </CardContent>
+            </Card>
+
+            <Card className="border-rule-soft bg-card/60 transition-all hover:border-primary/30">
+              <CardHeader className="pb-2">
+                <div className="mb-2 size-8 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-1.5 text-emerald-400">
+                  <Lock className="size-full" />
+                </div>
+                <CardTitle className="text-sm font-semibold">Strict Epistemic Isolation</CardTitle>
+              </CardHeader>
+              <CardContent className="text-xs leading-relaxed text-muted">
+                Zero ground-truth contamination. The blue team has no backdoor access to the attack generator’s internal state.
+                Every finding, IOC, and containment action is derived strictly from realistic, simulated enterprise telemetry.
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------------
+            SECTION: #ARCHITECTURE
+            ------------------------------------------------------------------ */}
+        <section id="architecture" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                SYSTEM DESIGN
+              </Badge>
+              <span className="text-xs text-muted">4-Tier Decoupled Flow</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              Visual 4-Tier Architectural Pipeline
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              Phalanx decouples raw security telemetry, autonomous cognitive reasoning, decentralized agent communication, and
+              safe UI generation into four distinct, self-contained architectural tiers.
+            </p>
+          </div>
 
           <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Tier 1 */}
+            <div className="relative rounded-xl border border-rule-soft bg-card/60 p-5 transition-all hover:border-primary/40">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 font-mono text-xs font-bold text-primary">
+                    01
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">Tier 1: Telemetry & Simulated Estate</h3>
+                    <p className="text-xs text-muted">High-fidelity synthetic sensors and sandboxed actuators</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">EDR Process Trees</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">NetFlow & PCAP</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">CloudTrail & IDP</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Memory Triage</Badge>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-muted">
+                Provides continuous synthetic sensor event streams without touching live infrastructure. Includes 37 instruments
+                ranging from SIEM free-text search to volatile RAM extraction, as well as safe actuators that sever network adapters,
+                sinkhole IP blocks, rotate credentials, and rebuild hosts from golden images.
+              </p>
+            </div>
+
+            {/* Connecting Connector */}
+            <div className="flex justify-center -my-2 text-primary/60">
+              <ArrowRight className="size-4 rotate-90" />
+            </div>
+
+            {/* Tier 2 */}
+            <div className="relative rounded-xl border border-rule-soft bg-card/60 p-5 transition-all hover:border-primary/40">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 font-mono text-xs font-bold text-primary">
+                    02
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">Tier 2: Cognitive Blue Specialist Swarm</h3>
+                    <p className="text-xs text-muted">19 autonomous AI defense operators with scoped clearance</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">5 Commanders</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">8 Analysts</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">3 Response Ops</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">3 Governance</Badge>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-muted">
+                Domain-specific AI operators: Incident Commanders (Atlas, Vesper, Orrery, Warden, Marshal), Forensics (Cinder),
+                Network (Tide), Malware Reversing (Splice), Threat Intel (Oracle), Exploitability (Lathe), Threat Hunter (Drift),
+                Containment (Bulwark), and Detection Engineers (Loom). Each agent is provisioned only with tools fitting its clearance.
+              </p>
+            </div>
+
+            {/* Connecting Connector */}
+            <div className="flex justify-center -my-2 text-primary/60">
+              <ArrowRight className="size-4 rotate-90" />
+            </div>
+
+            {/* Tier 3 */}
+            <div className="relative rounded-xl border border-rule-soft bg-card/60 p-5 transition-all hover:border-primary/40">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 font-mono text-xs font-bold text-primary">
+                    03
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">Tier 3: Agent2Agent (A2A) Coordination Bus</h3>
+                    <p className="text-xs text-muted">Open, decentralized JSON-RPC 2.0 communication mesh</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">JSON-RPC 2.0</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Google A2A v0.3</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Agent Cards</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Peer-to-Peer</Badge>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-muted">
+                Every agent exposes an HTTP discovery card at <code className="font-mono text-ink">/.well-known/agent-card.json</code>.
+                Delegation, status tracking, artifact delivery, and peer-to-peer questioning are dispatched as standard JSON-RPC
+                messages, preserving strict audit trails and zero central hub bottlenecks.
+              </p>
+            </div>
+
+            {/* Connecting Connector */}
+            <div className="flex justify-center -my-2 text-primary/60">
+              <ArrowRight className="size-4 rotate-90" />
+            </div>
+
+            {/* Tier 4 */}
+            <div className="relative rounded-xl border border-rule-soft bg-card/60 p-5 transition-all hover:border-primary/40">
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-9 items-center justify-center rounded-lg border border-primary/40 bg-primary/10 font-mono text-xs font-bold text-primary">
+                    04
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-ink">Tier 4: A2UI Declarative Interface Runtime</h3>
+                    <p className="text-xs text-muted">Agent-authored operator cockpits with zero client-side code execution</p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">A2UI v0.9</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Declarative JSON</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">In-Place Updates</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Sanitized UI</Badge>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-relaxed text-muted">
+                Commanders stream declarative UI specifications directly to the human operator’s dashboard via JSON operations.
+                The frontend translates these abstract component tokens into native <code className="font-mono text-ink">@foundry/ui</code> React
+                widgets. No arbitrary JavaScript is ever executed, eliminating prompt injection and XSS vulnerabilities completely.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------------
+            SECTION: #UNSCRIPTED-ORCHESTRATION
+            ------------------------------------------------------------------ */}
+        <section id="unscripted-orchestration" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                COGNITIVE ENGINE
+              </Badge>
+              <span className="text-xs text-muted">The End of Rigid DAGs</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              Unscripted Orchestration: Why State Machines Fail in Cyber Defense
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              Traditional Security Orchestration, Automation, and Response (SOAR) platforms rely on pre-programmed decision
+              trees and Directed Acyclic Graphs (DAGs). During real intrusions, this architecture inevitably breaks.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="flex flex-col gap-4 rounded-xl border border-destructive/30 bg-destructive/5 p-5">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="size-4" />
+                <h3 className="text-sm font-semibold">The Failure Mode of Rigid SOAR</h3>
+              </div>
+              <ul className="space-y-2.5 text-xs text-muted leading-relaxed">
+                <li className="flex items-start gap-2">
+                  <span className="text-destructive font-bold">✕</span>
+                  <span><strong>Branch Explosion:</strong> Adversaries constantly mutate tactics. Writing playbooks for every permutation of initial access, evasion, and persistence requires impossible manual upkeep.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-destructive font-bold">✕</span>
+                  <span><strong>Context Blindness:</strong> SOAR playbooks execute sequentially. If an unexpected error occurs (e.g. an API times out or a host is already offline), the workflow stalls awaiting manual human triage.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-destructive font-bold">✕</span>
+                  <span><strong>No Semantic Synthesis:</strong> A hardcoded script cannot infer that an unusual DNS lookup on an internal proxy is semantically linked to a memory-injected stager discovered on an API pod.</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="flex flex-col gap-4 rounded-xl border border-positive/30 bg-positive/5 p-5">
+              <div className="flex items-center gap-2 text-positive">
+                <ShieldCheck className="size-4" />
+                <h3 className="text-sm font-semibold">How Phalanx Commanders Adapt</h3>
+              </div>
+              <ul className="space-y-2.5 text-xs text-muted leading-relaxed">
+                <li className="flex items-start gap-2">
+                  <span className="text-positive font-bold">✓</span>
+                  <span><strong>Dynamic Discovery:</strong> The commander starts with zero workflow. It calls <code className="font-mono text-ink">a2a_discover</code> to read the live roster and dynamically selects specialists based on their declared skills.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-positive font-bold">✓</span>
+                  <span><strong>Hypothesis-Driven Investigation:</strong> The commander evaluates intermediate findings, formulates competing theories, and continuously adapts tasks as new telemetry sheds light on the adversary.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-positive font-bold">✓</span>
+                  <span><strong>Blast-Radius Awareness:</strong> Destructive containment actions (<code className="font-mono text-ink">isolate_host</code>, <code className="font-mono text-ink">revoke_sessions</code>) require explicit risk justification, weighing downtime against dwell time.</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <Card className="border-rule-soft bg-card/40">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">The Commander’s OODA Execution Loop</CardTitle>
+              <CardDescription className="text-xs">
+                How an LLM Incident Commander orchestrates defense under high uncertainty
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <div className="rounded-lg border border-rule-soft bg-card p-3">
+                  <div className="font-mono text-[11px] font-bold text-primary">01 · OBSERVE</div>
+                  <div className="mt-1 text-xs font-semibold text-ink">Ingest & Discover</div>
+                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                    Parses detection alerts, calls <code className="font-mono">a2a_discover</code>, and inspects available specialists.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-rule-soft bg-card p-3">
+                  <div className="font-mono text-[11px] font-bold text-primary">02 · ORIENT</div>
+                  <div className="mt-1 text-xs font-semibold text-ink">Synthesize Evidence</div>
+                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                    Correlates memory artifacts, outbound NetFlow, and CVE records to identify the intrusion vector.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-rule-soft bg-card p-3">
+                  <div className="font-mono text-[11px] font-bold text-primary">03 · DECIDE</div>
+                  <div className="mt-1 text-xs font-semibold text-ink">Task Delegation</div>
+                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                    Dispatches targeted tasks to specialists and calculates containment blast radius.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-rule-soft bg-card p-3">
+                  <div className="font-mono text-[11px] font-bold text-primary">04 · ACT</div>
+                  <div className="mt-1 text-xs font-semibold text-ink">Contain & Backtest</div>
+                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                    Authorizes isolation, deploys egress sinkholes, and authors new detection rules.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* ------------------------------------------------------------------
+            SECTION: #A2A-PROTOCOL
+            ------------------------------------------------------------------ */}
+        <section id="a2a-protocol" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                WIRE PROTOCOL
+              </Badge>
+              <span className="text-xs text-muted">Google Agent2Agent (A2A) v0.3</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              Peer-to-Peer A2A Protocol Deep Dive
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              Phalanx implements the Google Agent2Agent (A2A) protocol specification over JSON-RPC 2.0. Rather than invoking internal
+              function pointers, all inter-agent task delegation and communication moves as fully-formed wire envelopes.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <SegmentedControl<"card" | "request" | "response">
                 value={a2aTab}
                 onChange={setA2aTab}
                 options={[
-                  { value: "card", label: "Agent card" },
-                  { value: "request", label: "message/send" },
-                  { value: "response", label: "Task result" },
+                  { value: "card", label: "Agent Card (.well-known)", icon: <FileCode className="size-3.5" /> },
+                  { value: "request", label: "Delegation (message/send)", icon: <GitFork className="size-3.5" /> },
+                  { value: "response", label: "Task Result (TASK_COMPLETED)", icon: <FileCheck2 className="size-3.5" /> },
                 ]}
                 className="w-fit"
               />
-              <span className="meta-mono hidden sm:inline">
-                Endpoint /api/a2a/agents/&#123;id&#125;
+              <span className="hidden font-mono text-xs text-muted sm:inline">
+                Endpoint: <code className="text-primary">/api/a2a/agents/&#123;id&#125;</code>
               </span>
             </div>
 
@@ -637,7 +866,7 @@ export function AboutPage() {
               <CodeSnippetViewer
                 title="forensics-cinder / agent-card.json"
                 subtitle="GET /.well-known/agent-card.json"
-                badgeText="A2A card v0.3"
+                badgeText="A2A CARD v0.3"
                 code={CODE_AGENT_CARD}
               />
             )}
@@ -645,7 +874,7 @@ export function AboutPage() {
             {a2aTab === "request" && (
               <CodeSnippetViewer
                 title="ic-atlas → forensics-cinder / message/send"
-                subtitle="JSON-RPC 2.0 request"
+                subtitle="JSON-RPC 2.0 Request"
                 badgeText="JSON-RPC 2.0"
                 code={CODE_A2A_REQUEST}
               />
@@ -654,190 +883,259 @@ export function AboutPage() {
             {a2aTab === "response" && (
               <CodeSnippetViewer
                 title="forensics-cinder → ic-atlas / task result"
-                subtitle="JSON-RPC 2.0 success response"
-                badgeText="Task completed"
+                subtitle="JSON-RPC 2.0 Success Response"
+                badgeText="TASK_COMPLETED"
                 code={CODE_A2A_RESPONSE}
               />
             )}
           </div>
 
-          <dl className="flex flex-col">
-            <DefRow term="Decentralized discovery">
-              Specialists publish declared capabilities, parameters, and{" "}
-              <code className="font-mono text-[0.8125rem] text-ink!">delegateWhen</code> criteria. Agents
-              discover peers dynamically without hardcoded addresses.
-            </DefRow>
-            <DefRow term="Lateral communication">
-              Specialists query peers directly — forensics requests PCAP from the network analyst — to
-              accelerate analysis without congesting the commander.
-            </DefRow>
-            <DefRow term="Full auditability">
-              Every hop is logged with a unique{" "}
-              <code className="font-mono text-[0.8125rem] text-ink!">taskId</code> and{" "}
-              <code className="font-mono text-[0.8125rem] text-ink!">contextId</code>, so the whole run
-              replays on the Protocol Trace page.
-            </DefRow>
-          </dl>
-        </Section>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-rule-soft bg-card/40 p-3.5">
+              <div className="font-mono text-xs font-semibold text-primary">Decentralized Discovery</div>
+              <p className="mt-1 text-xs text-muted leading-relaxed">
+                Specialists publish declared capabilities, parameters, and <code className="font-mono text-ink">delegateWhen</code> criteria.
+                Agents discover peers dynamically without hardcoded addresses.
+              </p>
+            </div>
+            <div className="rounded-lg border border-rule-soft bg-card/40 p-3.5">
+              <div className="font-mono text-xs font-semibold text-primary">Lateral P2P Communication</div>
+              <p className="mt-1 text-xs text-muted leading-relaxed">
+                Specialists query peers directly (e.g. Forensics requests PCAP from Network Analyst) to accelerate analysis
+                without congesting the Commander.
+              </p>
+            </div>
+            <div className="rounded-lg border border-rule-soft bg-card/40 p-3.5">
+              <div className="font-mono text-xs font-semibold text-primary">Full Protocol Auditability</div>
+              <p className="mt-1 text-xs text-muted leading-relaxed">
+                Every hop is logged with unique <code className="font-mono text-ink">taskId</code> and <code className="font-mono text-ink">contextId</code>,
+                enabling complete replayability on the Protocol Trace page.
+              </p>
+            </div>
+          </div>
+        </section>
 
-        {/* ---------------------------------------------------------------- 05 */}
-        <Section
-          id="a2ui-catalog"
-          number="05"
-          eyebrow="Dynamic UI runtime"
-          meta="A2UI v0.9 specification"
-          title="A2UI v0.9 runtime surface generation"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            How can autonomous agents author operator dashboards without introducing cross-site
-            scripting or arbitrary code execution? Phalanx uses the A2UI v0.9 declarative
-            specification.
-          </p>
+        {/* ------------------------------------------------------------------
+            SECTION: #A2UI-CATALOG
+            ------------------------------------------------------------------ */}
+        <section id="a2ui-catalog" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                DYNAMIC UI RUNTIME
+              </Badge>
+              <span className="text-xs text-muted">A2UI v0.9 Specification</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              A2UI v0.9 Runtime Surface Generation
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              How can autonomous agents author dynamic, high-impact operator dashboards without introducing Cross-Site Scripting
+              (XSS) or arbitrary code execution vulnerabilities? Phalanx uses the A2UI v0.9 declarative specification.
+            </p>
+          </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-3 border-b border-rule-soft pb-1.5">
-                <span className="eyebrow">Agent-emitted payload</span>
-                <span className="meta-mono">updateComponents</span>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                  Agent Emitted A2UI Payload
+                </span>
+                <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">updateComponents</Badge>
               </div>
               <CodeSnippetViewer
                 title="surface / incident-inc-8841"
-                subtitle="Declarative component tree"
+                subtitle="Declarative Component Tree"
                 badgeText="A2UI v0.9"
                 code={CODE_A2UI_PAYLOAD}
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-3 border-b border-rule-soft pb-1.5">
-                <span className="eyebrow">Native render result</span>
-                <span className="meta-mono">No code executed</span>
+            <div className="flex flex-col">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                  Native Client Render Result
+                </span>
+                <Badge variant="outline" className="border-positive/30 bg-positive/10 text-positive font-mono text-[10px]">
+                  Zero Code Executed
+                </Badge>
               </div>
 
-              {/* The same payload, rendered by the client. */}
-              <div className="flex flex-1 flex-col justify-center border border-rule p-5">
-                <div className="flex items-start justify-between gap-3 border-b border-rule-soft pb-3">
-                  <div className="flex flex-col gap-1">
-                    <span className="eyebrow" style={{ color: "var(--negative)" }}>
-                      Critical action
+              {/* Rendered Mock Card matching A2UI */}
+              <div className="flex flex-1 flex-col justify-center rounded-xl border border-destructive/40 bg-card/80 p-5  ">
+                <div className="flex items-center justify-between border-b border-rule-soft pb-3">
+                  <div>
+                    <span className="font-mono text-[10px] font-bold tracking-widest text-destructive uppercase">
+                      CRITICAL ACTION
                     </span>
-                    <h4 className="title text-[1.0625rem]">Immediate containment required</h4>
+                    <h4 className="text-base font-bold text-ink">Immediate Containment Required</h4>
                   </div>
-                  <span className="sev-tag" data-tone="negative">
-                    sev-1
-                  </span>
+                  <StatusDot tone="negative" pulse />
                 </div>
 
-                <dl className="mt-4 grid grid-cols-3 gap-3">
-                  <MockMetric label="Threat vector" value="C2 beacon active" tone="var(--negative)" />
-                  <MockMetric label="Target host" value="app-api-21" tone="var(--warning)" />
-                  <MockMetric label="Blast radius" value="Single service pod" tone="var(--accent)" />
-                </dl>
+                <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg border border-rule-soft bg-card p-3">
+                  <div>
+                    <div className="text-[10px] text-muted uppercase">Threat Vector</div>
+                    <div className="font-mono text-xs font-bold text-destructive">C2 Beacon Active</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted uppercase">Target Host</div>
+                    <div className="font-mono text-xs font-bold text-warning">app-api-21</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted uppercase">Blast Radius</div>
+                    <div className="font-mono text-xs font-bold text-info">Single Service Pod</div>
+                  </div>
+                </div>
 
-                <p className="prose mt-3">
-                  Adversary implant actively communicating with external C2 185.121.44.19. Containment
-                  operator recommends network isolation.
+                <p className="mt-3 text-xs leading-relaxed text-muted">
+                  Adversary implant actively communicating with external C2 185.121.44.19. Containment operator recommends network isolation.
                 </p>
 
                 <div className="mt-4 flex items-center justify-end border-t border-rule-soft pt-3">
-                  <Button size="sm" variant="destructive">
-                    Authorize host isolation
+                  <Button size="sm" className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs font-semibold gap-1.5 cursor-pointer">
+                    <ShieldAlert className="size-3.5" />
+                    Authorize Host Isolation
                   </Button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <h3 className="eyebrow">Guarantees of an A2UI surface</h3>
-            <dl className="flex flex-col">
-              <DefRow term="Catalog enforcement">
-                Agents can only invoke elements pre-registered in{" "}
-                <code className="font-mono text-[0.8125rem] text-ink!">/api/a2ui/catalog.json</code> —
-                Card, MetricRow, Timeline.
-              </DefRow>
-              <DefRow term="In-place mutation">
-                Emitting an update with the same{" "}
-                <code className="font-mono text-[0.8125rem] text-ink!">cardId</code> mutates the existing
-                card in place, without jitter or scrolling away.
-              </DefRow>
-              <DefRow term="No DOM injection">
-                The client maps tokens into pre-compiled React components; no{" "}
-                <code className="font-mono text-[0.8125rem] text-ink!">eval()</code> or HTML string
-                rendering is permitted.
-              </DefRow>
-            </dl>
+          <div className="rounded-xl border border-rule-soft bg-card/40 p-4">
+            <h4 className="text-xs font-semibold text-ink uppercase tracking-wider mb-2">
+              Key Guarantees of A2UI Runtime Surfaces
+            </h4>
+            <div className="grid gap-3 sm:grid-cols-3 text-xs text-muted">
+              <div>
+                <strong className="text-ink">Catalog Enforcement:</strong> Agents can only invoke elements pre-registered in
+                <code className="font-mono text-primary"> /api/a2ui/catalog.json</code> (<code className="font-mono">Card</code>, <code className="font-mono">MetricRow</code>, <code className="font-mono">Timeline</code>).
+              </div>
+              <div>
+                <strong className="text-ink">In-Place Mutation:</strong> Emitting updates with the same <code className="font-mono text-ink">cardId</code> mutates
+                existing cards in place without screen jitter or scrolling away.
+              </div>
+              <div>
+                <strong className="text-ink">Zero DOM Injection:</strong> The client maps tokens directly into pre-compiled React components;
+                no <code className="font-mono text-ink">eval()</code> or HTML string rendering is permitted.
+              </div>
+            </div>
           </div>
-        </Section>
+        </section>
 
-        {/* ---------------------------------------------------------------- 06 */}
-        <Section
-          id="tool-estate"
-          number="06"
-          eyebrow="Instrumentation"
-          meta="37 simulated SOC instruments"
-          title="The simulated tool estate and zero-ground-truth isolation"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            Phalanx agents carry 37 simulated security instruments covering the full spectrum of SOC
-            operations. Agents are quarantined from the hidden scenario ground truth, which forces
-            genuine forensic deduction.
-          </p>
+        {/* ------------------------------------------------------------------
+            SECTION: #TOOL-ESTATE
+            ------------------------------------------------------------------ */}
+        <section id="tool-estate" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                INSTRUMENTATION
+              </Badge>
+              <span className="text-xs text-muted">37 Simulated SOC Instruments</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              The Simulated Tool Estate & Zero-Ground-Truth Isolation
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              Phalanx agents are equipped with 37 simulated security instruments covering the full spectrum of SOC operations.
+              Agents are strictly quarantined from hidden scenario ground truth, forcing realistic forensic deduction.
+            </p>
+          </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-rule-soft pb-2">
-            {TOOL_CATEGORIES.map((cat) => (
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              { id: "all", label: "All Instruments (37)" },
+              { id: "telemetry", label: "Telemetry & Sensors (6)" },
+              { id: "forensics", label: "Deep Forensics (5)" },
+              { id: "intel", label: "Threat Intel (4)" },
+              { id: "sandbox", label: "Sandboxing (2)" },
+              { id: "containment", label: "Containment (6)" },
+              { id: "detection", label: "Detection (3)" },
+              { id: "command", label: "Command (7)" },
+              { id: "governance", label: "Governance (4)" },
+            ].map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 onClick={() => setToolCategory(cat.id)}
-                className={`meta-mono -mb-2 whitespace-nowrap border-b pb-2 transition-colors ${
+                className={cn(
+                  "cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-all select-none",
                   toolCategory === cat.id
-                    ? "border-[var(--accent)] text-ink!"
-                    : "border-transparent hover:text-ink!"
-                }`}
+                    ? "border-primary bg-primary/15 text-primary font-semibold"
+                    : "border-rule-soft bg-wash text-muted hover:bg-wash hover:text-ink"
+                )}
               >
                 {cat.label}
               </button>
             ))}
           </div>
 
-          <div className="flex flex-col">
+          {/* Tools Grid */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filteredTools.map((tool) => (
               <div
                 key={tool.name}
-                className="rule-row md:grid-cols-[11rem_minmax(0,1fr)_minmax(0,0.5fr)]"
+                className="group flex flex-col justify-between rounded-xl border border-rule-soft bg-card/60 p-3.5 transition-all hover:border-primary/40 hover:bg-card/80"
               >
-                <code className="meta-mono text-accent-indigo!">{tool.name}</code>
-                <p className="prose max-w-[62ch]">{tool.description}</p>
-                <div className="flex flex-col items-start gap-1.5">
-                  <span className="sev-tag" data-tone={CLEARANCE_TONE[tool.clearance]}>
-                    {tool.clearance}
-                  </span>
-                  <span className="concepts">
-                    {tool.agents.map((ag) => (
-                      <span key={ag}>{ag}</span>
-                    ))}
-                  </span>
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <code className="font-mono text-xs font-bold text-primary group-hover:underline">
+                      {tool.name}
+                    </code>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "font-mono text-[9px] uppercase",
+                        tool.clearance === "command"
+                          ? "border-purple-500/40 text-purple-400 bg-purple-500/10"
+                          : tool.clearance === "act"
+                          ? "border-warning/40 text-warning bg-warning/10"
+                          : "border-rule-soft text-muted"
+                      )}
+                    >
+                      {tool.clearance}
+                    </Badge>
+                  </div>
+                  <p className="mt-2 text-xs leading-relaxed text-muted">
+                    {tool.description}
+                  </p>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-rule-soft pt-2 text-[10px] text-muted">
+                  <span className="font-semibold text-ink/70">Assigned:</span>
+                  {tool.agents.map((ag) => (
+                    <span key={ag} className="rounded border border-rule-soft bg-wash px-1 font-mono text-[10px] text-ink">
+                      {ag}
+                    </span>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
-        </Section>
+        </section>
 
-        {/* ---------------------------------------------------------------- 07 */}
-        <Section
-          id="model-support"
-          number="07"
-          eyebrow="Models & runtime"
-          meta="Frontier models and the replay engine"
-          title="Multi-model flexibility and deterministic replay"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            Security work demands vendor independence. Phalanx has a plug-and-play provider
-            architecture alongside an offline deterministic replay engine.
-          </p>
+        {/* ------------------------------------------------------------------
+            SECTION: #MODEL-SUPPORT
+            ------------------------------------------------------------------ */}
+        <section id="model-support" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                MODELS & RUNTIME
+              </Badge>
+              <span className="text-xs text-muted">Frontier AI & Replay Engine</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              Multi-Model Flexibility & Deterministic Replay
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              Enterprise security defense demands vendor independence. Phalanx features a plug-and-play provider architecture
+              supporting leading models alongside an offline deterministic replay engine.
+            </p>
+          </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="space-y-4">
             <SegmentedControl<"gemini" | "claude" | "openai" | "replay">
               value={activeModelTab}
               onChange={setActiveModelTab}
@@ -845,359 +1143,317 @@ export function AboutPage() {
                 { value: "gemini", label: "Google Gemini", icon: <GeminiLogo className="size-3.5" /> },
                 { value: "claude", label: "Anthropic Claude", icon: <ClaudeLogo className="size-3.5" /> },
                 { value: "openai", label: "OpenAI GPT-5", icon: <OpenAILogo className="size-3.5" /> },
-                { value: "replay", label: "Deterministic replay" },
+                { value: "replay", label: "Deterministic Replay", icon: <FastForward className="size-3.5 text-purple-400" /> },
               ]}
               className="w-fit"
             />
 
             {activeModelTab === "gemini" && (
-              <div className="flex flex-col gap-3">
-                <h3 className="title text-[1.125rem]">Google Gemini 3</h3>
-                <p className="prose max-w-[62ch]">
-                  A 2M token context window and native multi-turn tool calling.
-                </p>
-                <dl className="flex flex-col">
-                  <DefRow term="Commander — Gemini 3.1 Pro">
-                    Holds entire incident histories, multi-hour memory dumps, and inter-agent
-                    transcripts in context. Suits long-horizon campaign deconfliction.
-                  </DefRow>
-                  <DefRow term="Specialists — Gemini 3.8 Flash">
-                    Sub-second latency for high-frequency telemetry queries. Filters gigabytes of SIEM
-                    and NetFlow rows without stalling swarm momentum.
-                  </DefRow>
-                </dl>
-              </div>
+              <Card className="border-rule-soft bg-card/60">
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Brain className="size-4 text-primary" />
+                    Google Gemini 3 Architecture
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Massive 2M token context window and native multi-turn tool calling
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted leading-relaxed">
+                  <div className="rounded-lg border border-rule-soft bg-card p-4">
+                    <div className="font-semibold text-ink mb-1">Commander: Gemini 3.1 Pro</div>
+                    <p>
+                      Holds entire incident histories, multi-hour memory dumps, and complex inter-agent transcripts within its 2M
+                      token context. Excels at high-level reasoning and long-horizon campaign deconfliction.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-rule-soft bg-card p-4">
+                    <div className="font-semibold text-ink mb-1">Specialists: Gemini 3.8 Flash</div>
+                    <p>
+                      Sub-second latency and high throughput for high-frequency specialist telemetry queries. Rapidly filters gigabytes
+                      of SIEM and NetFlow rows without stalling swarm momentum.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {activeModelTab === "claude" && (
-              <div className="flex flex-col gap-3">
-                <h3 className="title text-[1.125rem]">Anthropic Claude 5</h3>
-                <p className="prose max-w-[62ch]">
-                  Hybrid thinking and long chain-of-thought forensic reasoning.
-                </p>
-                <dl className="flex flex-col">
-                  <DefRow term="Commander — Claude Sonnet 5">
-                    Uses extended thinking for forensic hypothesis testing, binary disassembly, and
-                    root-cause reconstruction. Good at weighing containment blast radius against
-                    operational impact.
-                  </DefRow>
-                  <DefRow term="Specialists — Claude Haiku 4.5">
-                    Fast and cheap execution for targeted indicator enrichment, CVE lookups, and log
-                    triage.
-                  </DefRow>
-                </dl>
-              </div>
+              <Card className="border-rule-soft bg-card/60">
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Bot className="size-4 text-amber-400" />
+                    Anthropic Claude 5 Architecture
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Hybrid thinking and rigorous chain-of-thought forensic reasoning
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted leading-relaxed">
+                  <div className="rounded-lg border border-rule-soft bg-card p-4">
+                    <div className="font-semibold text-ink mb-1">Commander: Claude Sonnet 5</div>
+                    <p>
+                      Utilizes extended thinking for deep forensic hypothesis testing, malware binary disassembly, and root-cause
+                      reconstruction. Uniquely skilled at weighing containment blast radius against operational impact.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-rule-soft bg-card p-4">
+                    <div className="font-semibold text-ink mb-1">Specialists: Claude Haiku 4.5</div>
+                    <p>
+                      Extremely fast and cost-effective execution for targeted indicator enrichment, CVE lookups, and log triage.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {activeModelTab === "openai" && (
-              <div className="flex flex-col gap-3">
-                <h3 className="title text-[1.125rem]">OpenAI GPT-5</h3>
-                <p className="prose max-w-[62ch]">
-                  Strict JSON schema adherence and tool orchestration.
-                </p>
-                <dl className="flex flex-col">
-                  <DefRow term="Commander — GPT-5">
-                    Reliable structured output, which keeps the A2A JSON-RPC 2.0 and A2UI schema
-                    contracts satisfied.
-                  </DefRow>
-                  <DefRow term="Specialists — GPT-5 mini">
-                    Lightweight execution for parallel telemetry parsing and regulatory notification
-                    clock evaluation.
-                  </DefRow>
-                </dl>
-              </div>
+              <Card className="border-rule-soft bg-card/60">
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Cpu className="size-4 text-emerald-400" />
+                    OpenAI GPT-5 Architecture
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Strict JSON schema adherence and enterprise tool orchestration
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted leading-relaxed">
+                  <div className="rounded-lg border border-rule-soft bg-card p-4">
+                    <div className="font-semibold text-ink mb-1">Commander: GPT-5</div>
+                    <p>
+                      Reliable structured output formatting ensuring 100% compliance with A2A JSON-RPC 2.0 and A2UI schema contracts.
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-rule-soft bg-card p-4">
+                    <div className="font-semibold text-ink mb-1">Specialists: GPT-5-mini</div>
+                    <p>
+                      Lightweight execution engine for parallel telemetry parsing and regulatory notification clock evaluation.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {activeModelTab === "replay" && (
-              <div className="flex flex-col gap-3">
-                <h3 className="title text-[1.125rem]">Deterministic replay engine</h3>
-                <p className="prose max-w-[62ch]">
-                  Phalanx ships a pre-recorded, millisecond-accurate replay director. It streams the
-                  authentic tool responses, A2A coordination messages, and A2UI dashboards with zero
-                  model API calls.
-                </p>
-                <dl className="flex flex-col">
-                  <DefRow term="No cloud dependency">
-                    Runs completely offline; suits conferences, air-gapped labs, and CI.
-                  </DefRow>
-                  <DefRow term="Reproducible benchmarking">
-                    Evaluates future model updates against identical scenarios.
-                  </DefRow>
-                  <DefRow term="No token cost">
-                    Lets you explore mission control and the protocol traces for free.
-                  </DefRow>
-                </dl>
-              </div>
+              <Card className="border-rule-soft bg-card/60">
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <FastForward className="size-4 text-purple-400" />
+                    Deterministic Replay Engine (Offline-First)
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Zero-token, 100% reproducible scientific benchmark and evaluation mode
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3 text-xs text-muted leading-relaxed">
+                  <p>
+                    Phalanx ships with a pre-recorded, millisecond-accurate deterministic replay director. It streams the authentic
+                    tool responses, A2A coordination messages, and dynamic A2UI dashboards with zero model API calls.
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-3 pt-1">
+                    <div className="rounded-lg border border-rule-soft bg-card p-3">
+                      <div className="font-semibold text-ink">Zero Cloud Dependency</div>
+                      <p className="mt-1 text-[11px]">Runs completely offline; perfect for conferences, air-gapped labs, and CI/CD testing.</p>
+                    </div>
+                    <div className="rounded-lg border border-rule-soft bg-card p-3">
+                      <div className="font-semibold text-ink">Scientific Benchmarking</div>
+                      <p className="mt-1 text-[11px]">Allows evaluating future model updates against identical, reproducible cyber scenarios.</p>
+                    </div>
+                    <div className="rounded-lg border border-rule-soft bg-card p-3">
+                      <div className="font-semibold text-ink">Zero Token Cost</div>
+                      <p className="mt-1 text-[11px]">Enables infinite exploration of the full mission control and protocol traces for free.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
-        </Section>
+        </section>
 
-        {/* ---------------------------------------------------------------- 08 */}
-        <Section
-          id="comparison"
-          number="08"
-          eyebrow="Comparative analysis"
-          meta="Architectural benchmarks"
-          title="Rigid SOAR playbooks versus autonomous multi-agent swarms"
-        >
-          <p className="prose max-w-[62ch]" style={BODY}>
-            An architectural comparison of the move from rigid automation to autonomous agentic
-            defense.
-          </p>
+        {/* ------------------------------------------------------------------
+            SECTION: #COMPARISON
+            ------------------------------------------------------------------ */}
+        <section id="comparison" className="scroll-mt-20 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
+                COMPARATIVE ANALYSIS
+              </Badge>
+              <span className="text-xs text-muted">Architectural Benchmarks</span>
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-ink">
+              Traditional SOAR Playbooks vs. Autonomous Multi-Agent Swarms
+            </h2>
+            <p className="text-sm leading-relaxed text-muted">
+              A detailed architectural comparison illustrating the transition from rigid automation to autonomous agentic cyber defense.
+            </p>
+          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
+          <div className="overflow-x-auto rounded-xl border border-rule-soft bg-card/40 ">
+            <table className="w-full border-collapse text-left text-xs">
               <thead>
-                <tr className="border-b border-rule">
-                  <th className="eyebrow py-2 pr-4 align-bottom">Dimension</th>
-                  <th className="eyebrow py-2 pr-4 align-bottom">Rigid SOAR playbooks</th>
-                  <th className="eyebrow py-2 align-bottom">Phalanx autonomous swarm</th>
+                <tr className="border-b border-rule-soft bg-card">
+                  <th className="p-3.5 font-semibold text-ink">Dimension</th>
+                  <th className="p-3.5 font-semibold text-muted">Rigid SOAR Playbooks</th>
+                  <th className="p-3.5 font-semibold text-primary">Phalanx Autonomous Swarm</th>
                 </tr>
               </thead>
-              <tbody>
-                <CompareRow
-                  dimension="Orchestration model"
-                  soar="Static DAG or BPMN state machines with hardcoded conditionals."
-                  swarm="Dynamic LLM incident commander with runtime skill discovery."
-                />
-                <CompareRow
-                  dimension="Novel or evasive attacks"
-                  soar="Fails on unmapped branches; requires human intervention."
-                  soarTone="var(--negative)"
-                  swarm="Synthesizes new investigation paths from live telemetry."
-                  swarmTone="var(--positive)"
-                />
-                <CompareRow
-                  dimension="Coordination topology"
-                  soar="Central hub-and-spoke bottleneck; sequential step execution."
-                  swarm="Decentralized peer-to-peer mesh over the A2A protocol."
-                />
-                <CompareRow
-                  dimension="Operator cockpit"
-                  soar="Static pre-built forms and manual ticketing queues."
-                  swarm="Runtime-authored A2UI v0.9 surfaces updating in place."
-                />
-                <CompareRow
-                  dimension="Cross-domain telemetry"
-                  soar="Fragmented scripts — an IP lookup with no host context."
-                  swarm="Correlation across EDR, NetFlow, memory, and cloud IAM."
-                />
-                <CompareRow
-                  dimension="Containment decisioning"
-                  soar="Blind automated triggers or manual escalation queues."
-                  swarm="Blast-radius aware reasoning, dwell time against service impact."
-                />
-                <CompareRow
-                  dimension="Post-incident hardening"
-                  soar="Manual post-mortem ticket written days or weeks later."
-                  swarm="Autonomous Sigma/YARA rule authoring and 30-day backtesting."
-                />
-                <CompareRow
-                  dimension="Extensibility"
-                  soar="Workflow refactoring and fragile custom integration code."
-                  swarm="Drop-in modularity: a new agent publishes an agent-card.json."
-                />
-                <CompareRow
-                  dimension="Offline benchmarking"
-                  soar="Rarely supported; requires active infrastructure connections."
-                  swarm="Fully offline deterministic replay for reproducible evaluation."
-                />
+              <tbody className="divide-y divide-border/60">
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Orchestration Model</td>
+                  <td className="p-3.5 text-muted">Static DAG / BPMN state machines with hardcoded conditionals.</td>
+                  <td className="p-3.5 font-medium text-ink">Dynamic LLM Incident Commander with runtime skill discovery.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Novel / Evasive Attacks</td>
+                  <td className="p-3.5 text-muted">
+                    <span className="inline-flex items-center gap-1 text-destructive font-medium">
+                      <XCircle className="size-3" /> Fails on unmapped branches; requires human intervention.
+                    </span>
+                  </td>
+                  <td className="p-3.5 font-medium text-ink">
+                    <span className="inline-flex items-center gap-1 text-positive font-medium">
+                      <CheckCircle2 className="size-3" /> Synthesizes new investigation paths from live telemetry evidence.
+                    </span>
+                  </td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Coordination Topology</td>
+                  <td className="p-3.5 text-muted">Central hub-and-spoke bottleneck; sequential step execution.</td>
+                  <td className="p-3.5 font-medium text-ink">Decentralized peer-to-peer mesh over Google A2A protocol.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Operator Cockpit</td>
+                  <td className="p-3.5 text-muted">Static pre-built forms and manual ticketing queues.</td>
+                  <td className="p-3.5 font-medium text-ink">Runtime-authored A2UI v0.9 declarative surfaces updating in place.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Cross-Domain Telemetry</td>
+                  <td className="p-3.5 text-muted">Fragmented scripts (isolated IP lookup without host context).</td>
+                  <td className="p-3.5 font-medium text-ink">Holistic correlation across EDR, NetFlow, memory, and Cloud IAM.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Containment Decisioning</td>
+                  <td className="p-3.5 text-muted">Blind automated triggers or manual escalation queues.</td>
+                  <td className="p-3.5 font-medium text-ink">Blast-radius aware reasoning balancing dwell time vs service impact.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Post-Incident Hardening</td>
+                  <td className="p-3.5 text-muted">Manual post-mortem ticket written days or weeks later.</td>
+                  <td className="p-3.5 font-medium text-ink">Autonomous Sigma/YARA rule authoring and 30-day backtesting.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Extensibility</td>
+                  <td className="p-3.5 text-muted">Complex workflow refactoring and fragile custom integration code.</td>
+                  <td className="p-3.5 font-medium text-ink">Drop-in modularity: new agents publish an <code className="font-mono text-xs">agent-card.json</code>.</td>
+                </tr>
+                <tr className="hover:bg-wash">
+                  <td className="p-3.5 font-semibold text-ink">Offline Benchmarking</td>
+                  <td className="p-3.5 text-muted">Rarely supported; requires active infrastructure connections.</td>
+                  <td className="p-3.5 font-medium text-ink">100% offline deterministic replay engine for scientific evaluation.</td>
+                </tr>
               </tbody>
             </table>
           </div>
-        </Section>
+        </section>
 
-        {/* ------------------------------------------------------------- next */}
-        <section className="flex flex-col gap-4 border-t border-rule pt-8">
-          <h3 className="title text-[1.25rem]">See the swarm run</h3>
-          <p className="prose max-w-[62ch]">
-            Run a scenario, inspect the agent skills, or point the swarm at a live model.
-          </p>
-
-          <div className="flex flex-col">
-            <NextRow
-              term="Mission Control"
-              description="Launch a simulated ransomware or lateral-movement attack and watch the swarm contain it."
-              action={
-                <Button size="sm" className="button-ink" onClick={() => navigate("/")}>
-                  Open Mission Control
-                </Button>
-              }
-            />
-            <NextRow
-              term="Agent roster"
-              description="Review all 19 agents, their declared skills, clearance, tools, and delegation criteria."
-              action={
-                <Button size="sm" variant="outline" onClick={() => navigate("/roster")}>
-                  View roster
-                </Button>
-              }
-            />
-            <NextRow
-              term="Model settings"
-              description="Configure Gemini, Claude, or GPT-5 API keys, and switch between live and replay."
-              action={
-                <Button size="sm" variant="outline" onClick={() => navigate("/settings")}>
-                  Open settings
-                </Button>
-              }
-            />
+        {/* ------------------------------------------------------------------
+            CALL TO ACTION CARDS
+            ------------------------------------------------------------------ */}
+        <section className="space-y-4 pt-4 border-t border-rule-soft">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-ink">Experience the Swarm in Action</h3>
+              <p className="text-xs text-muted">
+                Run scenarios, inspect agent skills, or test live AI model configurations.
+              </p>
+            </div>
           </div>
 
-          <div className="meta-mono flex flex-wrap items-center justify-between gap-3 border-t border-rule-soft pt-3">
-            <span>
-              The live JSON-RPC 2.0 stream is on the{" "}
-              <Link to="/protocol" className="underline decoration-rule hover:text-ink!">
-                Protocol Trace
-              </Link>{" "}
-              page.
-            </span>
-            <span>
-              The agents’ own discussion is on the{" "}
-              <Link to="/chat" className="underline decoration-rule hover:text-ink!">
-                Agent Chat
-              </Link>{" "}
-              page.
-            </span>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card className="group relative flex flex-col justify-between border-rule-soft bg-card/60 transition-all hover:border-primary/50 hover:bg-card/90">
+              <CardHeader className="pb-3">
+                <div className="mb-2 size-8 rounded-lg border border-primary/40 bg-primary/10 p-1.5 text-primary">
+                  <Activity className="size-full" />
+                </div>
+                <CardTitle className="text-sm font-semibold">Mission Control</CardTitle>
+                <CardDescription className="text-xs">
+                  Launch a simulated ransomware or lateral movement attack and observe the autonomous swarm contain it live.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/")}
+                  className="w-full gap-1.5 bg-primary font-semibold text-primary-foreground hover:bg-primary/90 cursor-pointer"
+                >
+                  <span>Open Mission Control</span>
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="group relative flex flex-col justify-between border-rule-soft bg-card/60 transition-all hover:border-primary/50 hover:bg-card/90">
+              <CardHeader className="pb-3">
+                <div className="mb-2 size-8 rounded-lg border border-purple-500/30 bg-purple-500/10 p-1.5 text-purple-400">
+                  <Users className="size-full" />
+                </div>
+                <CardTitle className="text-sm font-semibold">Inspect Agent Roster</CardTitle>
+                <CardDescription className="text-xs">
+                  Review all 19 autonomous agents, their declared skills, clearance levels, tool allocations, and delegation criteria.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate("/roster")}
+                  className="w-full gap-1.5 border-rule-soft hover:border-purple-500/50 hover:text-ink"
+                >
+                  <span>View Full Roster</span>
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="group relative flex flex-col justify-between border-rule-soft bg-card/60 transition-all hover:border-primary/50 hover:bg-card/90">
+              <CardHeader className="pb-3">
+                <div className="mb-2 size-8 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-1.5 text-emerald-400">
+                  <KeyRound className="size-full" />
+                </div>
+                <CardTitle className="text-sm font-semibold">Settings & Live API</CardTitle>
+                <CardDescription className="text-xs">
+                  Configure Gemini 3, Claude 5, or GPT-5 API keys, switch modes, and benchmark model response latencies.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate("/settings")}
+                  className="w-full gap-1.5 border-rule-soft hover:border-emerald-500/50 hover:text-ink"
+                >
+                  <span>Open Settings</span>
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rule-soft bg-wash px-4 py-3 text-xs text-muted">
+            <div className="flex items-center gap-2">
+              <Radio className="size-4 text-primary" />
+              <span>Deep dive into the live JSON-RPC 2.0 message stream on the <Link to="/protocol" className="text-ink underline decoration-primary/50 underline-offset-2 hover:text-primary">Protocol Trace</Link> page.</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="size-4 text-purple-400" />
+              <span>Read agent discussions in natural language on the <Link to="/chat" className="text-ink underline decoration-purple-400/50 underline-offset-2 hover:text-purple-400">Agent Chat</Link> page.</span>
+            </div>
           </div>
         </section>
+
       </div>
     </PageContent>
-  )
-}
-
-/* --------------------------------------------------------------------------
-   ROW PRIMITIVES
-   -------------------------------------------------------------------------- */
-
-function Section({
-  id,
-  number,
-  eyebrow,
-  meta,
-  title,
-  children,
-}: {
-  id: string
-  number: string
-  eyebrow: string
-  meta: string
-  title: string
-  children: ReactNode
-}) {
-  return (
-    <section id={id} className="flex scroll-mt-20 flex-col gap-5">
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-baseline gap-3 border-b border-rule pb-1.5">
-          <span className="eyebrow flex-1">
-            {number} — {eyebrow}
-          </span>
-          <span className="meta-mono">{meta}</span>
-        </div>
-        <h2 className="title max-w-[24ch]" style={HEADING}>
-          {title}
-        </h2>
-      </div>
-      {children}
-    </section>
-  )
-}
-
-function DefRow({ term, children }: { term: string; children: ReactNode }) {
-  return (
-    <div className="rule-row md:grid-cols-[14rem_minmax(0,1fr)]">
-      <dt className="title text-[0.9375rem]">{term}</dt>
-      <dd className="prose max-w-[62ch]">{children}</dd>
-    </div>
-  )
-}
-
-function ClaimRow({ tone, term, children }: { tone: "negative" | "positive"; term: string; children: ReactNode }) {
-  return (
-    <div className="rule-row gap-1!">
-      <dt className="meta-mono" style={{ color: `var(--${tone})` }}>
-        {term}
-      </dt>
-      <dd className="prose max-w-[62ch]">{children}</dd>
-    </div>
-  )
-}
-
-function TierRow({
-  number,
-  title,
-  lede,
-  tags,
-  children,
-}: {
-  number: string
-  title: string
-  lede: string
-  tags: string[]
-  children: ReactNode
-}) {
-  return (
-    <div className="rule-row md:grid-cols-[3rem_minmax(0,1.25fr)_minmax(0,0.55fr)]">
-      <span className="meta-mono">{number}</span>
-      <div className="flex flex-col gap-1.5">
-        <h3 className="title text-[0.9375rem]">{title}</h3>
-        <span className="meta-mono">{lede}</span>
-        <p className="prose max-w-[62ch]">{children}</p>
-      </div>
-      <span className="concepts">
-        {tags.map((tag) => (
-          <span key={tag}>{tag}</span>
-        ))}
-      </span>
-    </div>
-  )
-}
-
-function MockMetric({ label, value, tone }: { label: string; value: string; tone: string }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <dt className="eyebrow">{label}</dt>
-      <dd className="font-mono text-xs" style={{ color: tone }}>
-        {value}
-      </dd>
-    </div>
-  )
-}
-
-function CompareRow({
-  dimension,
-  soar,
-  soarTone,
-  swarm,
-  swarmTone,
-}: {
-  dimension: string
-  soar: string
-  soarTone?: string
-  swarm: string
-  swarmTone?: string
-}) {
-  return (
-    <tr className="border-b border-rule-soft transition-colors hover:bg-[var(--wash)]">
-      <td className="py-3 pr-4 align-top">
-        <span className="title text-[0.875rem]">{dimension}</span>
-      </td>
-      <td className="prose py-3 pr-4 align-top" style={soarTone ? { color: soarTone } : undefined}>
-        {soar}
-      </td>
-      <td className="prose py-3 align-top" style={swarmTone ? { color: swarmTone } : { color: "var(--ink-soft)" }}>
-        {swarm}
-      </td>
-    </tr>
-  )
-}
-
-function NextRow({ term, description, action }: { term: string; description: string; action: ReactNode }) {
-  return (
-    <div className="rule-row items-center md:grid-cols-[12rem_minmax(0,1fr)_auto]">
-      <span className="title text-[0.9375rem]">{term}</span>
-      <span className="prose max-w-[62ch]">{description}</span>
-      {action}
-    </div>
   )
 }
