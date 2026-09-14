@@ -841,7 +841,13 @@ async function replayIdentityCommand(incidentId: string, commanderId: string): P
    timer. This is the observe → decide → act → verify loop against real data. */
 
 function rangeSleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  const generation = store.generation
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (store.generation === generation) resolve()
+      else reject(new WorldResetError())
+    }, ms)
+  })
 }
 
 export async function replayRangeCommand(incidentId: string, commanderId: string): Promise<void> {

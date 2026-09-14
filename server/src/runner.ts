@@ -32,7 +32,13 @@ const running = new Set<string>()
 let supervisor: RangeSupervisor | null = null
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  const generation = store.generation
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (store.generation === generation) resolve()
+      else reject(new WorldResetError())
+    }, ms)
+  })
 }
 
 export function isRunning(): boolean {
@@ -108,12 +114,13 @@ export function refreshMissionControl(): void {
 
 /* ---- incident lifecycle ------------------------------------------------- */
 
-async function emitDetections(scenario: Scenario, tick: number): Promise<string[]> {
+async function emitDetections(scenario: Scenario, tick: number, generation: number): Promise<string[]> {
   const lines: string[] = []
   let previous = 0
   for (const detection of scenario.detections) {
+    store.assertGeneration(generation)
     await sleep(Math.max(0, ((detection.afterMs - previous) / 4200) * tick * 3))
-    previous = detection.afterMs
+    store.assertGeneration(generation)
     const record = store.recordDetection({
       source: detection.source,
       host: detection.host,
@@ -175,8 +182,10 @@ export async function runScenario(scenarioId: string): Promise<Incident | null> 
   store.log(`Scenario ${scenario.name} starting.`)
 
   try {
-    const detectionLines = await emitDetections(scenario, tick)
+    const detectionLines = await emitDetections(scenario, tick, generation)
+    store.assertGeneration(generation)
 
+    store.assertGeneration(generation)
     const incident = store.openIncident({
       code: scenario.code,
       title: scenario.title,
@@ -192,6 +201,7 @@ export async function runScenario(scenarioId: string): Promise<Incident | null> 
     }
     refreshMissionControl()
 
+    store.assertGeneration(generation)
     if (store.mode === "live") {
       await runAgentSession({
         agentId: scenario.commanderId,
@@ -245,10 +255,12 @@ export async function runCampaign(): Promise<void> {
   try {
     const first = runScenario("zero-day-edge")
     await sleep(Number(process.env.PHALANX_TICK_MS ?? process.env.ESPER_TICK_MS ?? 1500) * 6)
+    store.assertGeneration(generation)
     const second = runScenario("identity-front")
 
     // Give both commanders time to have something worth trading.
     await sleep(Number(process.env.PHALANX_TICK_MS ?? process.env.ESPER_TICK_MS ?? 1500) * 8)
+    store.assertGeneration(generation)
     await coordinateCommanders()
 
     await Promise.all([first, second])

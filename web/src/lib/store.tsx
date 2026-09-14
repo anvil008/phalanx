@@ -147,6 +147,10 @@ class PhalanxStore {
   }
 
   apply(event: PhalanxEvent): void {
+    if (event.kind !== "snapshot" && typeof event.generation === "number" && event.generation < this.state.generation) {
+      // Discard stale events from an earlier world generation
+      return
+    }
     switch (event.kind) {
       case "snapshot":
         this.applySnapshot(event.snapshot)

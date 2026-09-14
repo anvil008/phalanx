@@ -124,8 +124,12 @@ export function DemoHero({ className }: DemoHeroProps) {
     setBusyAction("reset")
     setNotice(null)
     setCampaignLaunched(false)
-    await phalanxApi.reset()
+    setActiveTab("simulated")
+    const result = await phalanxApi.reset()
     setBusyAction(null)
+    if (!result.ok) {
+      setNotice(result.reason ?? "Reset failed.")
+    }
   }
 
   return (

@@ -114,6 +114,9 @@ class Store {
   }
 
   emit(event: PhalanxEvent): void {
+    if (event.generation === undefined) {
+      event.generation = this.generation
+    }
     for (const listener of this.listeners) {
       try {
         listener(event)

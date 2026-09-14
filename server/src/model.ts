@@ -163,6 +163,15 @@ export interface Surface {
   root: string | null
 }
 
+export interface Posture {
+  threatLevel: "green" | "amber" | "red" | "black"
+  openIncidents: number
+  agentsEngaged: number
+  meanTimeToContainSec: number | null
+  containedToday: number
+  busMessagesPerMin: number
+}
+
 export interface WorldSnapshot {
   at: string
   /** Increments on every reset; clients use it to drop derived state. */
@@ -181,14 +190,7 @@ export interface WorldSnapshot {
   hosts: EstateHost[]
   surfaces: Surface[]
   rangeStatus: RangeStatus | null
-  posture: {
-    threatLevel: "green" | "amber" | "red" | "black"
-    openIncidents: number
-    agentsEngaged: number
-    meanTimeToContainSec: number | null
-    containedToday: number
-    busMessagesPerMin: number
-  }
+  posture: Posture
 }
 
 export interface RangeStatus {
@@ -213,18 +215,18 @@ export interface RangeStatus {
 }
 
 export type PhalanxEvent =
-  | { kind: "snapshot"; at: string; snapshot: WorldSnapshot }
-  | { kind: "posture"; at: string; posture: WorldSnapshot["posture"] }
-  | { kind: "incident.upsert"; at: string; incident: Incident }
-  | { kind: "incident.timeline"; at: string; incidentId: string; entry: IncidentTimelineEntry }
-  | { kind: "agent.runtime"; at: string; runtime: AgentRuntime }
-  | { kind: "bus.message"; at: string; message: BusMessage }
-  | { kind: "transcript"; at: string; entry: TranscriptEntry }
-  | { kind: "detection"; at: string; detection: Detection }
-  | { kind: "host"; at: string; host: EstateHost }
-  | { kind: "range"; at: string; status: RangeStatus | null }
-  | { kind: "a2ui"; at: string; surfaceId: string; message: A2UIMessage }
-  | { kind: "log"; at: string; level: "info" | "warn" | "error"; text: string }
+  | { kind: "snapshot"; at: string; generation?: number; snapshot: WorldSnapshot }
+  | { kind: "posture"; at: string; generation?: number; posture: Posture }
+  | { kind: "incident.upsert"; at: string; generation?: number; incident: Incident }
+  | { kind: "incident.timeline"; at: string; generation?: number; incidentId: string; entry: IncidentTimelineEntry }
+  | { kind: "agent.runtime"; at: string; generation?: number; runtime: AgentRuntime }
+  | { kind: "bus.message"; at: string; generation?: number; message: BusMessage }
+  | { kind: "transcript"; at: string; generation?: number; entry: TranscriptEntry }
+  | { kind: "detection"; at: string; generation?: number; detection: Detection }
+  | { kind: "host"; at: string; generation?: number; host: EstateHost }
+  | { kind: "range"; at: string; generation?: number; status: RangeStatus | null }
+  | { kind: "a2ui"; at: string; generation?: number; surfaceId: string; message: A2UIMessage }
+  | { kind: "log"; at: string; generation?: number; level: "info" | "warn" | "error"; text: string }
 
 export type EsperEvent = PhalanxEvent
 
