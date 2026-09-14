@@ -1,8 +1,6 @@
 import { useNavigate } from "react-router-dom"
-import { Button } from "@foundry/ui/components/button"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { StatusDot } from "@foundry/ui/components/status-dot"
-import { RotateCcw } from "lucide-react"
 import { A2UISurface } from "@/components/a2ui-surface"
 import { DemoHero } from "@/components/demo-hero"
 import { KillChain } from "@/components/kill-chain"
@@ -51,21 +49,10 @@ export function MissionControlPage() {
         title="Mission Control"
         subtitle={`${state.agents.length} defenders · ${state.mode === "live" ? state.commanderModel : "replay"}`}
         actions={
-          <div className="flex items-center gap-4">
-            <span className="meta-mono flex items-center gap-1.5">
-              <StatusDot tone={state.mode === "live" ? "positive" : "info"} pulse={state.mode === "live"} size="xs" />
-              <span>{state.mode === "live" ? "Live" : "Replay"}</span>
-            </span>
-            <Button
-              size="xs"
-              variant="outline"
-              onClick={() => void phalanxApi.reset()}
-              title="Reset environment to clean baseline"
-            >
-              <RotateCcw className="size-3 mr-1" />
-              Reset
-            </Button>
-          </div>
+          <span className="meta-mono flex items-center gap-1.5">
+            <StatusDot tone={state.mode === "live" ? "positive" : "info"} pulse={state.mode === "live"} size="xs" />
+            <span>{state.mode === "live" ? "Live" : "Replay"}</span>
+          </span>
         }
       />
 

@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Activity,
+  FlaskConical,
+  Square,
 } from "lucide-react"
 import { PhalanxProductMark } from "@/components/phalanx-mark"
 import { phalanxApi, usePhalanx } from "@/lib/store"
@@ -29,9 +31,18 @@ export function DemoHero({ className }: DemoHeroProps) {
   const [userCollapsed, setUserCollapsed] = useState<boolean | null>(null)
   const isCollapsed = userCollapsed ?? false
 
+  const [activeTab, setActiveTab] = useState<"simulated" | "range">("simulated")
   const [busyAction, setBusyAction] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [campaignLaunched, setCampaignLaunched] = useState(false)
   const [, setTick] = useState(0)
+
+  // Auto-switch to range when live range attack is running
+  useEffect(() => {
+    if (state.rangeStatus !== null) {
+      setActiveTab("range")
+    }
+  }, [state.rangeStatus])
 
   // Live timer tick when incidents are active
   useEffect(() => {
@@ -49,7 +60,32 @@ export function DemoHero({ className }: DemoHeroProps) {
 
   const isZeroDayActive = Boolean(zeroDayIncident && !zeroDayIncident.closedAt)
   const isIdentityActive = Boolean(identityIncident && !identityIncident.closedAt)
-  const isCampaignActive = isZeroDayActive || isIdentityActive
+  // Reset campaignLaunched on world reset (generation change) or when both fronts complete
+  const isCampaignCompleted = isZeroDayRan && isIdentityRan && !isZeroDayActive && !isIdentityActive
+
+  useEffect(() => {
+    setCampaignLaunched(false)
+  }, [state.generation])
+
+  useEffect(() => {
+    if (isCampaignCompleted) {
+      setCampaignLaunched(false)
+    }
+  }, [isCampaignCompleted])
+
+  // An incident has links when coordinated by a multi-front campaign
+  const hasCampaignLinks = incidents.some((inc) => inc.links && inc.links.length > 0)
+
+  // Campaign is active if:
+  // 1. It was explicitly launched via the campaign button and hasn't completed yet, OR
+  // 2. Both zero-day and identity fronts are actively open simultaneously, OR
+  // 3. The incidents are actively linked in a coordinated campaign
+  const isCampaignActive =
+    (campaignLaunched && (isZeroDayActive || isIdentityActive)) ||
+    (isZeroDayActive && isIdentityActive) ||
+    (hasCampaignLinks && (isZeroDayActive || isIdentityActive))
+
+  const isRangeActive = state.rangeStatus !== null
 
   // Determine earliest opened timestamp for elapsed timer
   const earliestOpened = incidents.reduce<number | null>((acc, inc) => {
@@ -70,17 +106,24 @@ export function DemoHero({ className }: DemoHeroProps) {
     setNotice(null)
     if (rerun) {
       await phalanxApi.reset()
+      if (id === "campaign") {
+        setCampaignLaunched(true)
+      }
     }
     const result = await action()
     setBusyAction(null)
     if (!result.ok) {
       setNotice(result.reason ?? "Scenario could not be started.")
+      if (id === "campaign") {
+        setCampaignLaunched(false)
+      }
     }
   }
 
   const handleReset = async () => {
     setBusyAction("reset")
     setNotice(null)
+    setCampaignLaunched(false)
     await phalanxApi.reset()
     setBusyAction(null)
   }
@@ -97,7 +140,12 @@ export function DemoHero({ className }: DemoHeroProps) {
                 Phalanx Command Deck
               </span>
               <span className="text-muted-foreground/50 text-xs">·</span>
-              {isRunning ? (
+              {isRangeActive && state.rangeStatus ? (
+                <span className="inline-flex items-center gap-1.5 border border-destructive/40 bg-destructive/10 text-destructive text-[10px] font-mono h-5 py-0 px-2 rounded">
+                  <StatusDot tone="negative" pulse size="xs" />
+                  <span>RANGE ACTIVE ({state.rangeStatus.attackStage.toUpperCase()})</span>
+                </span>
+              ) : isRunning ? (
                 <span className="inline-flex items-center gap-1.5 border border-warning/40 bg-warning/10 text-warning text-[10px] font-mono h-5 py-0 px-2 rounded">
                   <StatusDot tone="warning" pulse size="xs" />
                   <span>ENGAGED ({incidents.length} ACTIVE)</span>
@@ -112,7 +160,7 @@ export function DemoHero({ className }: DemoHeroProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="hidden sm:flex items-center gap-1.5">
+            <div className="hidden sm:flex items-center gap-1.5 flex-wrap">
               <Button
                 size="xs"
                 variant="outline"
@@ -147,7 +195,10 @@ export function DemoHero({ className }: DemoHeroProps) {
                 size="xs"
                 variant="outline"
                 disabled={busyAction !== null}
-                onClick={() => void launch("campaign", () => phalanxApi.runCampaign(), isZeroDayRan || isIdentityRan)}
+                onClick={() => {
+                  setCampaignLaunched(true)
+                  void launch("campaign", () => phalanxApi.runCampaign(), isZeroDayRan || isIdentityRan)
+                }}
                 className={cn(
                   "font-mono text-[11px] h-6.5 px-2.5 border-rule-soft transition-all",
                   isCampaignActive && "border-primary/70 bg-primary/15 text-primary",
@@ -157,6 +208,58 @@ export function DemoHero({ className }: DemoHeroProps) {
                 <Play className="size-2.5 mr-1" />
                 CAMPAIGN
               </Button>
+
+              <span className="h-4 w-px bg-rule-soft mx-0.5" aria-hidden />
+
+              <Button
+                size="xs"
+                variant="outline"
+                disabled={busyAction !== null || isRangeActive}
+                onClick={() => void launch("range-1", () => phalanxApi.runRange())}
+                className="font-mono text-[11px] h-6.5 px-2 border-rule-soft transition-all text-muted-foreground hover:text-foreground"
+                title="Execute Range: 1 Front (Single-Vector Gateway Zero-Day)"
+              >
+                <FlaskConical className="size-2.5 mr-1 text-destructive" />
+                1 Front
+              </Button>
+
+              <Button
+                size="xs"
+                variant="outline"
+                disabled={busyAction !== null || isRangeActive}
+                onClick={() => void launch("range-2", () => phalanxApi.runRangeCampaign())}
+                className="font-mono text-[11px] h-6.5 px-2 border-rule-soft transition-all text-muted-foreground hover:text-foreground"
+                title="Execute Range: 2 Fronts (Dual-Vector Gateway & Identity)"
+              >
+                <FlaskConical className="size-2.5 mr-1 text-warning" />
+                2 Fronts
+              </Button>
+
+              <Button
+                size="xs"
+                variant="outline"
+                disabled={busyAction !== null || isRangeActive}
+                onClick={() => void launch("range-4", () => phalanxApi.runRangeMultiFront())}
+                className="font-mono text-[11px] h-6.5 px-2 border-rule-soft transition-all text-muted-foreground hover:text-foreground"
+                title="Execute Range: 4 Fronts (Quad-Vector Multi-Front Range Pressure)"
+              >
+                <FlaskConical className="size-2.5 mr-1 text-primary" />
+                4 Fronts
+              </Button>
+
+              {isRangeActive ? (
+                <Button
+                  size="xs"
+                  variant="destructive"
+                  disabled={busyAction !== null}
+                  onClick={() => void launch("stop-range", () => phalanxApi.stopRange())}
+                  className="font-mono text-[11px] h-6.5 px-2 font-bold"
+                  title="Stop active range attack"
+                >
+                  <Square className="size-2.5 mr-1 fill-current" />
+                  STOP RANGE
+                </Button>
+              ) : null}
             </div>
 
             {/* Live engine mode indicator */}
@@ -266,6 +369,34 @@ export function DemoHero({ className }: DemoHeroProps) {
             </div>
           </div>
 
+          {/* Live Range Active Banner */}
+          {isRangeActive && state.rangeStatus ? (
+            <div className="rounded border border-destructive/60 bg-destructive/10 p-2.5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 flex-wrap font-mono text-xs">
+                <StatusDot tone="negative" pulse size="xs" />
+                <span className="font-bold text-destructive tracking-wide">
+                  LIVE RANGE ATTACK ACTIVE · STAGE: {state.rangeStatus.attackStage.toUpperCase()} · {state.rangeStatus.beaconCount} BEACONS · {(state.rangeStatus.exfilBytes / 1e6).toFixed(2)} MB EXFILTRATED
+                </span>
+              </div>
+
+              <Button
+                size="xs"
+                variant="destructive"
+                disabled={busyAction !== null}
+                onClick={() => void launch("stop-range", () => phalanxApi.stopRange())}
+                className="h-6.5 px-2.5 font-mono text-[11px] font-bold uppercase tracking-wider"
+                title="Stop active range attack"
+              >
+                {busyAction === "stop-range" ? (
+                  <Loader2 className="size-3 animate-spin mr-1" />
+                ) : (
+                  <Square className="size-2.5 mr-1 fill-current" />
+                )}
+                STOP RANGE
+              </Button>
+            </div>
+          ) : null}
+
           {/* Live Execution Status Bar (Displays prominently during active runs) */}
           {isRunning ? (
             <div className="rounded border border-warning/40 bg-warning/[0.06] p-2.5 flex flex-wrap items-center justify-between gap-3">
@@ -300,18 +431,56 @@ export function DemoHero({ className }: DemoHeroProps) {
             </div>
           ) : null}
 
-          {/* Tactical Operational Attack Scenario Dossiers */}
+          {/* Attack Vectors: Category Switcher & Dossier / Lab Cards */}
           <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <span className="font-mono text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                OPERATIONAL ATTACK DOSSIERS · MULTI-AGENT SCENARIOS
-              </span>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-rule-soft pb-2.5">
+              <div className="flex items-center gap-1 bg-wash p-0.5 rounded border border-rule-soft font-mono text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("simulated")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1 text-xs rounded transition-all cursor-pointer font-medium",
+                    activeTab === "simulated"
+                      ? "bg-card text-ink font-semibold border border-rule-soft shadow-xs"
+                      : "text-muted-foreground hover:text-foreground border border-transparent",
+                  )}
+                >
+                  <Play className="size-3" />
+                  <span>Simulated Scenarios</span>
+                  <span className="text-[10px] text-muted-foreground ml-0.5">(3)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("range")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1 text-xs rounded transition-all cursor-pointer font-medium",
+                    activeTab === "range"
+                      ? "bg-card text-ink font-semibold border border-rule-soft shadow-xs"
+                      : "text-muted-foreground hover:text-foreground border border-transparent",
+                  )}
+                >
+                  <FlaskConical className="size-3" />
+                  <span>Live Range Lab</span>
+                  {isRangeActive ? (
+                    <span className="inline-flex items-center gap-1 rounded bg-destructive/20 text-destructive px-1.5 py-0.2 text-[9px] font-bold">
+                      <span className="size-1.5 rounded-full bg-destructive animate-pulse" />
+                      ACTIVE
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground ml-0.5">(3)</span>
+                  )}
+                </button>
+              </div>
+
               <span className="font-mono text-[10px] text-muted-foreground/70 uppercase">
-                SELECT VECTOR TO DISPATCH AUTONOMOUS BLUE-TEAM DEFENSE
+                {activeTab === "simulated"
+                  ? "SELECT VECTOR TO DISPATCH AUTONOMOUS BLUE-TEAM DEFENSE"
+                  : "REAL 127.0.0.1 ATTACK INJECTIONS · LIVE OS TELEMETRY · AUTONOMOUS ISOLATION"}
               </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {activeTab === "simulated" ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
               {/* Scenario 1: OP-1041 Zero-Day */}
               <div
                 className={cn(
@@ -499,7 +668,7 @@ export function DemoHero({ className }: DemoHeroProps) {
                 className={cn(
                   "flex flex-col justify-between rounded border p-4 transition-all relative overflow-hidden",
                   isCampaignActive
-                    ? "border-primary/70 bg-primary/[0.08]"
+                    ? "border-primary/80 bg-primary/[0.12] shadow-[0_0_20px_rgba(121,167,255,0.15)]"
                     : isCampaignRan
                       ? "border-positive/40 bg-positive/[0.03]"
                       : "border-rule-soft bg-card/60 hover:border-rule",
@@ -511,8 +680,13 @@ export function DemoHero({ className }: DemoHeroProps) {
                     <span className="font-mono text-[10px] font-bold text-primary tracking-wider uppercase">
                       CAMPAIGN · SALT MERIDIAN
                     </span>
-                    <span className="rounded border border-primary/40 bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 font-mono">
-                      MULTI-FRONT CAMPAIGN
+                    <span className={cn(
+                      "rounded border text-[9px] font-bold px-1.5 py-0.5 font-mono uppercase tracking-wider transition-all",
+                      isCampaignActive
+                        ? "border-primary/70 bg-primary/25 text-primary animate-pulse"
+                        : "border-rule-soft bg-wash text-muted-foreground"
+                    )}>
+                      {isCampaignActive ? "CAMPAIGN IN PROGRESS" : "MULTI-FRONT CAMPAIGN"}
                     </span>
                   </div>
 
@@ -554,7 +728,10 @@ export function DemoHero({ className }: DemoHeroProps) {
                     size="sm"
                     variant="outline"
                     disabled={busyAction !== null}
-                    onClick={() => void launch("campaign", () => phalanxApi.runCampaign(), isZeroDayRan || isIdentityRan)}
+                    onClick={() => {
+                      setCampaignLaunched(true)
+                      void launch("campaign", () => phalanxApi.runCampaign(), isZeroDayRan || isIdentityRan)
+                    }}
                     className={cn(
                       "w-full h-7.5 text-[11px] font-mono border-rule-soft justify-center gap-1.5 transition-all",
                       isCampaignActive && "border-primary/70 bg-primary/20 text-primary hover:bg-primary/25",
@@ -587,9 +764,292 @@ export function DemoHero({ className }: DemoHeroProps) {
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Live Range Attack Vector Cards */
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              {/* Range Vector 1: 1 FRONT */}
+              <div
+                className={cn(
+                  "flex flex-col justify-between rounded border p-4 transition-all relative overflow-hidden",
+                  isRangeActive
+                    ? "border-destructive/70 bg-destructive/[0.08]"
+                    : "border-rule-soft bg-card/60 hover:border-rule",
+                )}
+              >
+                <div className="flex flex-col gap-2.5">
+                  {/* Header with tactical designation & severity */}
+                  <div className="flex items-center justify-between gap-2 border-b border-rule-soft pb-2">
+                    <span className="font-mono text-[10px] font-bold text-destructive tracking-wider uppercase">
+                      RANGE · 1 FRONT
+                    </span>
+                    <span className="rounded border border-destructive/40 bg-destructive/20 text-destructive text-[9px] font-bold px-1.5 py-0.5 font-mono">
+                      LIVE LAB ATTACK
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-ink tracking-tight font-sans">
+                    Single-Vector Gateway Zero-Day
+                  </h3>
+
+                  {/* MITRE ATT&CK codes & Target Host tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                    <span className="rounded border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-destructive font-semibold">
+                      TGT: edge-gw-01
+                    </span>
+                    <span className="rounded border border-rule-soft bg-wash px-1.5 py-0.5 text-muted-foreground">
+                      T1190 · Loopback 127.0.0.1
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
+                    Executes a real scripted zero-day against instrumented services on this host. Emits real telemetry; defenders isolate the gateway in real time.
+                  </p>
+
+                  {/* Tactical Flow Visualizer */}
+                  <div className="rounded border border-rule-soft bg-wash/60 p-2 font-mono text-[9px] text-muted-foreground flex flex-col gap-1">
+                    <span className="uppercase text-[8.5px] tracking-wider text-muted-foreground/70">
+                      TACTICAL DEFENSE FLOW:
+                    </span>
+                    <div className="flex items-center gap-1 text-foreground flex-wrap">
+                      <span className="text-primary font-bold">ATLAS (Cmd)</span>
+                      <ArrowRight className="size-2.5 text-muted-foreground/60" />
+                      <span className="text-accent-indigo">CINDER + SPECTRE</span>
+                      <ArrowRight className="size-2.5 text-muted-foreground/60" />
+                      <span className="text-positive font-bold">AEGIS (Isolate Host)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-rule-soft">
+                  {isRangeActive ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={busyAction !== null}
+                      onClick={() => void launch("stop-range", () => phalanxApi.stopRange())}
+                      className="w-full h-7.5 text-[11px] font-mono border-destructive/70 bg-destructive/20 text-destructive hover:bg-destructive/30 justify-center gap-1.5"
+                    >
+                      {busyAction === "stop-range" ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        <Square className="size-3 fill-current" />
+                      )}
+                      <span>STOP RANGE</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busyAction !== null}
+                      onClick={() => void launch("range-1", () => phalanxApi.runRange())}
+                      className="w-full h-7.5 text-[11px] font-mono border-rule-soft bg-wash hover:bg-rule-soft text-foreground hover:border-destructive/50 justify-center gap-1.5 transition-all"
+                    >
+                      {busyAction === "range-1" ? (
+                        <>
+                          <Loader2 className="size-3 animate-spin" />
+                          <span>DISPATCHING ATTACK...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="size-3" />
+                          <span>▷ RUN 1-FRONT ATTACK</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Range Vector 2: 2 FRONTS */}
+              <div
+                className={cn(
+                  "flex flex-col justify-between rounded border p-4 transition-all relative overflow-hidden",
+                  isRangeActive
+                    ? "border-warning/70 bg-warning/[0.08]"
+                    : "border-rule-soft bg-card/60 hover:border-rule",
+                )}
+              >
+                <div className="flex flex-col gap-2.5">
+                  {/* Header with tactical designation & severity */}
+                  <div className="flex items-center justify-between gap-2 border-b border-rule-soft pb-2">
+                    <span className="font-mono text-[10px] font-bold text-warning tracking-wider uppercase">
+                      RANGE · 2 FRONTS
+                    </span>
+                    <span className="rounded border border-warning/40 bg-warning/20 text-warning text-[9px] font-bold px-1.5 py-0.5 font-mono">
+                      COORDINATED CAMPAIGN
+                    </span>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-ink tracking-tight font-sans">
+                    Dual-Vector Gateway & Identity Breach
+                  </h3>
+
+                  {/* MITRE ATT&CK codes & Target Host tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                    <span className="rounded border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-warning font-semibold">
+                      TGTS: edge-gw-01 + corp-idp-01
+                    </span>
+                    <span className="rounded border border-rule-soft bg-wash px-1.5 py-0.5 text-muted-foreground">
+                      T1190 · T1098.005
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
+                    Two concurrent real attacks against gateway and identity services. Two commanders correlate separate signals into one unified campaign.
+                  </p>
+
+                  {/* Tactical Flow Visualizer */}
+                  <div className="rounded border border-rule-soft bg-wash/60 p-2 font-mono text-[9px] text-muted-foreground flex flex-col gap-1">
+                    <span className="uppercase text-[8.5px] tracking-wider text-muted-foreground/70">
+                      TACTICAL DEFENSE FLOW:
+                    </span>
+                    <div className="flex items-center gap-1 text-foreground flex-wrap">
+                      <span className="text-primary font-bold">ATLAS + VESPER</span>
+                      <ArrowRight className="size-2.5 text-muted-foreground/60" />
+                      <span className="text-warning font-bold">KEYSTONE + ORRERY</span>
+                      <ArrowRight className="size-2.5 text-muted-foreground/60" />
+                      <span className="text-positive font-bold">DEFENDERS</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-rule-soft">
+                  {isRangeActive ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={busyAction !== null}
+                      onClick={() => void launch("stop-range", () => phalanxApi.stopRange())}
+                      className="w-full h-7.5 text-[11px] font-mono border-destructive/70 bg-destructive/20 text-destructive hover:bg-destructive/30 justify-center gap-1.5"
+                    >
+                      {busyAction === "stop-range" ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        <Square className="size-3 fill-current" />
+                      )}
+                      <span>STOP RANGE</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busyAction !== null}
+                      onClick={() => void launch("range-2", () => phalanxApi.runRangeCampaign())}
+                      className="w-full h-7.5 text-[11px] font-mono border-rule-soft bg-wash hover:bg-rule-soft text-foreground hover:border-warning/50 justify-center gap-1.5 transition-all"
+                    >
+                      {busyAction === "range-2" ? (
+                        <>
+                          <Loader2 className="size-3 animate-spin" />
+                          <span>DISPATCHING CAMPAIGN...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="size-3" />
+                          <span>▷ RUN 2-FRONT CAMPAIGN</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Range Vector 3: 4 FRONTS */}
+              <div
+                className={cn(
+                  "flex flex-col justify-between rounded border p-4 transition-all relative overflow-hidden",
+                  isRangeActive
+                    ? "border-primary/70 bg-primary/[0.08]"
+                    : "border-rule-soft bg-card/60 hover:border-rule",
+                )}
+              >
+                <div className="flex flex-col gap-2.5">
+                  {/* Header with tactical designation & severity */}
+                  <div className="flex items-center justify-between gap-2 border-b border-rule-soft pb-2">
+                    <span className="font-mono text-[10px] font-bold text-primary tracking-wider uppercase">
+                      RANGE · 4 FRONTS
+                    </span>
+                    <span className="rounded border border-primary/40 bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 font-mono">
+                      FULL ESTATE PRESSURE
+                    </span>
+                  </div>
+
+                    <h3 className="text-sm font-bold text-ink tracking-tight font-sans">
+                      Quad-Vector Multi-Front Range Pressure
+                    </h3>
+
+                  {/* MITRE ATT&CK codes & Target Host tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                    <span className="rounded border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-primary font-semibold">
+                      TGTS: 4 estate services
+                    </span>
+                    <span className="rounded border border-rule-soft bg-wash px-1.5 py-0.5 text-muted-foreground">
+                      Full Swarm Stress
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] leading-relaxed text-muted-foreground font-sans">
+                    Four concurrent real attacks handled across the range by four commanders simultaneously, stressing arbitration and containment.
+                  </p>
+
+                  {/* Tactical Flow Visualizer */}
+                  <div className="rounded border border-rule-soft bg-wash/60 p-2 font-mono text-[9px] text-muted-foreground flex flex-col gap-1">
+                    <span className="uppercase text-[8.5px] tracking-wider text-muted-foreground/70">
+                      TACTICAL DEFENSE FLOW:
+                    </span>
+                    <div className="flex items-center gap-1 text-foreground flex-wrap">
+                      <span className="text-accent-indigo font-bold">SWARM COMMAND</span>
+                      <ArrowRight className="size-2.5 text-muted-foreground/60" />
+                      <span className="text-primary font-bold">4 FRONT COMMANDERS</span>
+                      <ArrowRight className="size-2.5 text-muted-foreground/60" />
+                      <span className="text-positive font-bold">ALL SPECIALISTS</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-rule-soft">
+                  {isRangeActive ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={busyAction !== null}
+                      onClick={() => void launch("stop-range", () => phalanxApi.stopRange())}
+                      className="w-full h-7.5 text-[11px] font-mono border-destructive/70 bg-destructive/20 text-destructive hover:bg-destructive/30 justify-center gap-1.5"
+                    >
+                      {busyAction === "stop-range" ? (
+                        <Loader2 className="size-3 animate-spin" />
+                      ) : (
+                        <Square className="size-3 fill-current" />
+                      )}
+                      <span>STOP RANGE</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={busyAction !== null}
+                      onClick={() => void launch("range-4", () => phalanxApi.runRangeMultiFront())}
+                      className="w-full h-7.5 text-[11px] font-mono border-rule-soft bg-wash hover:bg-rule-soft text-foreground hover:border-primary/50 justify-center gap-1.5 transition-all"
+                    >
+                      {busyAction === "range-4" ? (
+                        <>
+                          <Loader2 className="size-3 animate-spin" />
+                          <span>DISPATCHING ATTACK...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="size-3" />
+                          <span>▷ RUN 4-FRONT ATTACK</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  )
+      </div>
+    )}
+  </div>
+)
 }

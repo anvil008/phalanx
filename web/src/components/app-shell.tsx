@@ -1,6 +1,5 @@
 import { Suspense } from "react"
 import { NavLink, Outlet, useMatch, useResolvedPath } from "react-router-dom"
-import { Button } from "@foundry/ui/components/button"
 import { PageChromeBar, PageChromeProvider } from "@foundry/ui/components/page-chrome"
 import { StatusDot } from "@foundry/ui/components/status-dot"
 import {
@@ -21,7 +20,7 @@ import {
 import { cn } from "@foundry/ui/lib/utils"
 import { PhalanxProductMark } from "@/components/phalanx-mark"
 import { NAV_SECTIONS, type NavItem } from "@/lib/nav"
-import { phalanxApi, usePhalanx } from "@/lib/store"
+import { usePhalanx } from "@/lib/store"
 
 function NavButton({ item }: { item: NavItem }) {
   const resolved = useResolvedPath(item.to)
@@ -121,15 +120,6 @@ function AppSidebar() {
           </span>
         </div>
 
-        <Button
-          size="sm"
-          variant="ghost"
-          className="mt-1 h-6.5 justify-start px-0 font-mono text-[0.6875rem]"
-          title="Clear every incident, message and surface"
-          onClick={() => void phalanxApi.reset()}
-        >
-          Reset world
-        </Button>
       </SidebarFooter>
     </Sidebar>
   )
