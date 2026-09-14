@@ -58,7 +58,7 @@ function AppSidebar() {
           brand, and only expands the rail when it is the sole thing visible. */}
       <SidebarHeader
         className={cn(
-          "flex h-14 flex-row items-center px-4",
+          "flex h-14 flex-row items-center justify-start px-6",
           isCollapsed && "justify-center px-0",
         )}
       >
@@ -137,7 +137,10 @@ function AppSidebar() {
 
 export function AppShell() {
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      width="var(--phalanx-sidebar-width)"
+      iconWidth="var(--phalanx-sidebar-width-icon)"
+    >
       <AppSidebar />
       <SidebarInset className="bg-page">
         <PageChromeProvider>

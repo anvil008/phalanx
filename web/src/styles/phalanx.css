@@ -109,8 +109,10 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--rule-soft);
   --sidebar-ring: var(--accent);
-  --sidebar-width: 12rem;
-  --sidebar-width-icon: 3.25rem;
+  /* SidebarProvider writes --sidebar-width/--sidebar-width-icon inline, so the
+     rail dimensions reach it as props rather than from here. */
+  --phalanx-sidebar-width: 15.25rem;
+  --phalanx-sidebar-width-icon: 3.25rem;
 
   --radius: 0.25rem;
   --control-radius: 0.125rem;
@@ -666,8 +668,9 @@ a {
 }
 
 [data-slot="sidebar-header"] {
+  /* Horizontal padding is the header's own, so the brand can line up with the
+     nav when expanded and centre on the rail when collapsed. */
   min-height: var(--chrome-height);
-  padding: 0 1rem;
   border-bottom: 1px solid var(--rule-soft);
 }
 
