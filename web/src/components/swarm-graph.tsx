@@ -301,16 +301,85 @@ function computeIncidentFocusPositions(
     return positions
   }
 
-  // Active clusters: if focusedId is specified and matches a cluster, focus on that one;
-  // otherwise show all clusters in the campaign.
-  const activeClusters = clusters
+  // 1. Single Incident Mode: Left Standby Roster Column (x: 60 .. 340) + Right Stage (x: 380 .. 1200)
+  if (clusters.length === 1) {
+    const cluster = clusters[0]!
+    const centerX = 780
+    const centerY = 310
+    const placedIds = new Set<string>()
 
-  // Track placed nodes
+    // Commander at exact center of cluster halo
+    const commander = nodes.find(
+      (n) => n.kind === "commander" && n.incidentIds.includes(cluster.incidentId),
+    ) || nodes.find((n) => n.id === cluster.commanderId)
+
+    if (commander) {
+      positions.set(commander.id, { x: centerX, y: centerY })
+      placedIds.add(commander.id)
+    }
+
+    // Active specialists orbiting inside cluster.radius
+    const clusterSpecs = nodes.filter(
+      (n) => n.kind !== "commander" && n.incidentIds.includes(cluster.incidentId),
+    )
+    const count = clusterSpecs.length
+    if (count > 0) {
+      const baseR = 145
+      clusterSpecs.forEach((spec, idx) => {
+        const angle = (idx / count) * 2 * Math.PI - Math.PI / 2
+        const stagger = idx % 2 === 0 ? -16 : 20
+        const r = baseR + stagger
+        positions.set(spec.id, {
+          x: centerX + Math.cos(angle) * r,
+          y: centerY + Math.sin(angle) * (r * 0.85),
+        })
+        placedIds.add(spec.id)
+      })
+    }
+
+    // Extra commanders attached to this incident or linked
+    const extraCommanders = nodes.filter(
+      (n) => n.kind === "commander" && !placedIds.has(n.id) && n.incidentIds.length > 0,
+    )
+    extraCommanders.forEach((cmd, idx) => {
+      const x = centerX + (idx - (extraCommanders.length - 1) / 2) * 160
+      const y = Math.max(60, centerY - 210 - 40)
+      positions.set(cmd.id, { x, y })
+      placedIds.add(cmd.id)
+    })
+
+    // Standby agents: clean 2-column vertical roster on the left side
+    const unassigned = nodes.filter((n) => !placedIds.has(n.id))
+    const classOrder = ["command", "analysis", "action", "comms"]
+    const sortedUnassigned = [...unassigned].sort((a, b) => {
+      const byClass = classOrder.indexOf(a.agentClass) - classOrder.indexOf(b.agentClass)
+      return byClass !== 0 ? byClass : a.label.localeCompare(b.label)
+    })
+
+    sortedUnassigned.forEach((node, i) => {
+      const col = i % 2
+      const row = Math.floor(i / 2)
+      const x = col === 0 ? 130 : 250
+      const y = 95 + row * 65
+      positions.set(node.id, { x, y })
+      placedIds.add(node.id)
+    })
+
+    // Fallback for any remaining nodes
+    nodes.forEach((node) => {
+      if (!positions.has(node.id)) {
+        positions.set(node.id, { x: node.x, y: node.y })
+      }
+    })
+
+    return positions
+  }
+
+  // 2. Multi-Cluster Campaign Mode (clusters.length >= 2): Keep dual-cluster layout
+  const activeClusters = clusters
   const placedIds = new Set<string>()
 
-  // Position nodes for each incident cluster
   for (const cluster of activeClusters) {
-    // 1. Commander at the center of the cluster halo
     const commander = nodes.find(
       (n) => n.kind === "commander" && n.incidentIds.includes(cluster.incidentId),
     ) || nodes.find((n) => n.id === cluster.commanderId)
@@ -320,7 +389,6 @@ function computeIncidentFocusPositions(
       placedIds.add(commander.id)
     }
 
-    // 2. Specialists exclusive to this incident cluster
     const clusterSpecs = nodes.filter(
       (n) =>
         n.kind !== "commander" &&
@@ -334,7 +402,6 @@ function computeIncidentFocusPositions(
       const baseRadius = cluster.radius * (clusters.length > 1 ? 0.68 : 0.70)
       clusterSpecs.forEach((spec, idx) => {
         const angle = (idx / specCount) * (Math.PI * 2) - Math.PI / 2
-        // Radial stagger: alternate distance so adjacent specialists never collide
         const stagger = idx % 2 === 0 ? -16 : 20
         const r = baseRadius + stagger
         positions.set(spec.id, {
@@ -346,7 +413,6 @@ function computeIncidentFocusPositions(
     }
   }
 
-  // 3. Shared agents bridging multiple incidents (e.g. multi-front correlation)
   const sharedNodes = nodes.filter(
     (n) => (n.incidentIds.length > 1 || n.shared) && !placedIds.has(n.id),
   )
@@ -362,7 +428,6 @@ function computeIncidentFocusPositions(
     })
   }
 
-  // 4. Extra commanders (e.g. Campaign Commander ic-orrery overseeing both fronts)
   const extraCommanders = nodes.filter((n) => n.kind === "commander" && !placedIds.has(n.id))
   if (extraCommanders.length > 0) {
     const avgX = clusters.reduce((sum, c) => sum + c.x, 0) / clusters.length
@@ -375,7 +440,6 @@ function computeIncidentFocusPositions(
     })
   }
 
-  // 5. Unassigned / reserve agents: 2-row staggered bench at the bottom to prevent overlapping labels
   const unassigned = nodes.filter((n) => !placedIds.has(n.id))
   if (unassigned.length > 0) {
     const row1 = unassigned.filter((_, i) => i % 2 === 0)
@@ -398,7 +462,6 @@ function computeIncidentFocusPositions(
     })
   }
 
-  // Fallback for any remaining nodes
   nodes.forEach((node) => {
     if (!positions.has(node.id)) {
       positions.set(node.id, { x: node.x, y: node.y })
@@ -633,6 +696,28 @@ export function SwarmGraph({
         }
         context.restore()
       } else if (modeRef.current === "focus") {
+        if (current.clusters.length === 1) {
+          // Subtle vertical divider between left standby roster and right active incident
+          const divTop = project({ x: 360, y: 60 })
+          const divBottom = project({ x: 360, y: 580 })
+          context.save()
+          context.strokeStyle = withAlpha(palette.foreground, 0.06)
+          context.setLineDash([4, 6])
+          context.lineWidth = 1
+          context.beginPath()
+          context.moveTo(divTop.x, divTop.y)
+          context.lineTo(divBottom.x, divBottom.y)
+          context.stroke()
+          context.restore()
+
+          // Header for the standby roster column
+          const hdr = project({ x: 190, y: 55 })
+          context.fillStyle = withAlpha(palette.muted, 0.5)
+          context.font = "500 10px 'Roboto Mono', ui-monospace, monospace"
+          context.textAlign = "center"
+          context.fillText("STANDBY ROSTER", hdr.x, hdr.y)
+        }
+
         // Incident cluster halos
         for (const cluster of current.clusters) {
           const centre = project(cluster)
@@ -819,8 +904,8 @@ export function SwarmGraph({
         context.fillText(node.label, point.x, labelY)
       }
 
-      // Reserve shelf label
-      if (current.reserveLabel && modeRef.current === "focus") {
+      // Reserve shelf label (only for multi-cluster, since single-cluster has STANDBY ROSTER on left)
+      if (current.reserveLabel && modeRef.current === "focus" && current.clusters.length > 1) {
         context.fillStyle = withAlpha(palette.muted, 0.55)
         context.font = "400 10px 'Roboto Mono', ui-monospace, monospace"
         context.textAlign = "center"

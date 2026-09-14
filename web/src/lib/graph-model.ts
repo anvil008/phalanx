@@ -112,7 +112,7 @@ function makeNode(
 function clusterCentres(count: number): { x: number; y: number }[] {
   const cx = VIRTUAL.width / 2
   const cy = VIRTUAL.height / 2 - 10
-  if (count <= 1) return [{ x: cx, y: cy }]
+  if (count <= 1) return [{ x: 780, y: 310 }]
   if (count === 2) {
     return [
       { x: cx - 348, y: cy },
@@ -154,6 +154,21 @@ function nudgeClear(
   return { x, y }
 }
 
+function layoutReserveLeft(agents: AgentDef[], runtime: Map<string, AgentRuntime>): GraphNode[] {
+  if (agents.length === 0) return []
+  const sorted = sortAgents(agents)
+  return sorted.map((agent, index) => {
+    const col = index % 2
+    const row = Math.floor(index / 2)
+    const x = col === 0 ? 130 : 250
+    const y = 95 + row * 65
+    return makeNode(agent, runtime, x, y, {
+      reserve: true,
+      incidentIds: [],
+    })
+  })
+}
+
 function layoutReserve(agents: AgentDef[], runtime: Map<string, AgentRuntime>): GraphNode[] {
   if (agents.length === 0) return []
   const sorted = sortAgents(agents)
@@ -189,8 +204,8 @@ export function buildIncidentLayout(input: LayoutInput & { incidentId: string })
     return { nodes: [], nodeById: new Map(), edges: [], clusters: [], reserveLabel: null }
   }
 
-  const cx = VIRTUAL.width / 2
-  const cy = VIRTUAL.height / 2 - 18
+  const cx = 780
+  const cy = 310
 
   const commander = byId.get(incident.commanderId)
   if (commander) nodes.push(makeNode(commander, input.runtime, cx, cy, { incidentIds: [incident.id] }))
@@ -202,12 +217,12 @@ export function buildIncidentLayout(input: LayoutInput & { incidentId: string })
   enrolledIds.delete(incident.commanderId)
 
   const enrolled = sortAgents([...enrolledIds].map((id) => byId.get(id)).filter((each): each is AgentDef => Boolean(each)))
-  const ring = 196
+  const ring = 145
   enrolled.forEach((agent, index) => {
     const angle = (index / Math.max(1, enrolled.length)) * Math.PI * 2 - Math.PI / 2
-    const stagger = index % 2 === 0 ? 0 : 46
+    const stagger = index % 2 === 0 ? -16 : 20
     nodes.push(
-      makeNode(agent, input.runtime, cx + Math.cos(angle) * (ring + stagger), cy + Math.sin(angle) * (ring + stagger) * 0.78, {
+      makeNode(agent, input.runtime, cx + Math.cos(angle) * (ring + stagger), cy + Math.sin(angle) * (ring + stagger) * 0.85, {
         incidentIds: [incident.id],
       }),
     )
@@ -220,9 +235,10 @@ export function buildIncidentLayout(input: LayoutInput & { incidentId: string })
   peers.forEach((peer, index) => {
     const peerAgent = byId.get(peer.commanderId)
     if (!peerAgent || nodes.some((node) => node.id === peerAgent.id)) return
-    const side = index % 2 === 0 ? -1 : 1
+    const x = cx + (index - (peers.length - 1) / 2) * 160
+    const y = Math.max(60, cy - 210 - 40)
     nodes.push(
-      makeNode(peerAgent, input.runtime, cx + side * 468, cy - 132 + index * 44, { incidentIds: [peer.id] }),
+      makeNode(peerAgent, input.runtime, x, y, { incidentIds: [peer.id] }),
     )
     edges.push({ id: `camp:${incident.commanderId}:${peerAgent.id}`, from: incident.commanderId, to: peerAgent.id, incidentId: null, kind: "campaign" })
   })
@@ -236,11 +252,11 @@ export function buildIncidentLayout(input: LayoutInput & { incidentId: string })
     commanderId: incident.commanderId,
     x: cx,
     y: cy,
-    radius: ring + 76,
+    radius: 210,
   })
 
   const placed = new Set(nodes.map((node) => node.id))
-  const reserve = layoutReserve(input.agents.filter((agent) => !placed.has(agent.id)), input.runtime)
+  const reserve = layoutReserveLeft(input.agents.filter((agent) => !placed.has(agent.id)), input.runtime)
   nodes.push(...reserve)
 
   return {
@@ -273,7 +289,7 @@ export function buildCampaignLayout(input: LayoutInput): GraphLayout {
     commanderId: incident.commanderId,
     x: centres[index]!.x,
     y: centres[index]!.y,
-    radius: incidents.length <= 2 ? 196 : 158,
+    radius: incidents.length <= 1 ? 210 : incidents.length === 2 ? 196 : 158,
   }))
   const clusterById = new Map(clusters.map((cluster) => [cluster.incidentId, cluster]))
 
@@ -320,9 +336,12 @@ export function buildCampaignLayout(input: LayoutInput): GraphLayout {
     const members = sortAgents(perCluster.get(cluster.incidentId) ?? [])
     members.forEach((agent, index) => {
       const angle = (index / Math.max(1, members.length)) * Math.PI * 2 - Math.PI / 2
-      const stagger = index % 2 === 0 ? 0 : 34
+      const baseR = incidents.length <= 1 ? 145 : cluster.radius * 0.72
+      const stagger = incidents.length <= 1 ? (index % 2 === 0 ? -16 : 20) : (index % 2 === 0 ? 0 : 34)
+      const r = baseR + stagger
+      const yRatio = incidents.length <= 1 ? 0.85 : 0.62
       nodes.push(
-        makeNode(agent, input.runtime, cluster.x + Math.cos(angle) * (cluster.radius * 0.72 + stagger), cluster.y + Math.sin(angle) * (cluster.radius * 0.62 + stagger), {
+        makeNode(agent, input.runtime, cluster.x + Math.cos(angle) * r, cluster.y + Math.sin(angle) * (r * yRatio), {
           incidentIds: [cluster.incidentId],
         }),
       )
@@ -386,7 +405,10 @@ export function buildCampaignLayout(input: LayoutInput): GraphLayout {
   })
 
   const placed = new Set(nodes.map((node) => node.id))
-  const reserve = layoutReserve(input.agents.filter((agent) => !placed.has(agent.id)), input.runtime)
+  const unassigned = input.agents.filter((agent) => !placed.has(agent.id))
+  const reserve = incidents.length <= 1
+    ? layoutReserveLeft(unassigned, input.runtime)
+    : layoutReserve(unassigned, input.runtime)
   nodes.push(...reserve)
 
   return {
