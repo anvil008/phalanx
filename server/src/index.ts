@@ -39,7 +39,7 @@ import { handleOperatorAsk } from "./agents/operator-ask.ts"
 
 const here = dirname(fileURLToPath(import.meta.url))
 const WEBDIST = join(here, "..", "webdist")
-const PORT = Number(process.env.PHALANX_PORT ?? process.env.ESPER_PORT ?? 8095)
+const PORT = Number(process.env.PHALANX_PORT ?? 8095)
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -437,7 +437,7 @@ if (store.mode === "live") {
   store.log(`Live mode — provider: ${store.activeProvider}, commanders on ${store.commanderModel}, specialists on ${store.specialistModel}.`)
 } else {
   registerReplayHandlers()
-  pace.factor = Math.max(0.25, Number(process.env.PHALANX_TICK_MS ?? process.env.ESPER_TICK_MS ?? 1500) / 600)
+  pace.factor = Math.max(0.25, Number(process.env.PHALANX_TICK_MS ?? 1500) / 600)
   store.log("Replay mode — deterministic director, no model calls.")
 }
 refreshMissionControl()

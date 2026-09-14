@@ -178,7 +178,7 @@ export async function runScenario(scenarioId: string): Promise<Incident | null> 
   running.add(scenarioId)
   const generation = store.generation
 
-  const tick = Number(process.env.PHALANX_TICK_MS ?? process.env.ESPER_TICK_MS ?? 1500)
+  const tick = Number(process.env.PHALANX_TICK_MS ?? 1500)
   store.log(`Scenario ${scenario.name} starting.`)
 
   try {
@@ -254,12 +254,12 @@ export async function runCampaign(): Promise<void> {
   const generation = store.generation
   try {
     const first = runScenario("zero-day-edge")
-    await sleep(Number(process.env.PHALANX_TICK_MS ?? process.env.ESPER_TICK_MS ?? 1500) * 6)
+    await sleep(Number(process.env.PHALANX_TICK_MS ?? 1500) * 6)
     store.assertGeneration(generation)
     const second = runScenario("identity-front")
 
     // Give both commanders time to have something worth trading.
-    await sleep(Number(process.env.PHALANX_TICK_MS ?? process.env.ESPER_TICK_MS ?? 1500) * 8)
+    await sleep(Number(process.env.PHALANX_TICK_MS ?? 1500) * 8)
     store.assertGeneration(generation)
     await coordinateCommanders()
 

@@ -2,7 +2,7 @@ import type { EstateHost } from "../model.ts"
 
 /* The estate.
    Everything the agents can observe is synthetic and lives here. No tool in
-   Esper touches a real network, a real credential store, or a real host — the
+   Phalanx touches a real network, a real credential store, or a real host — the
    swarm reasons over a simulated enterprise so the demo is safe to run
    anywhere and reproducible when it matters. */
 

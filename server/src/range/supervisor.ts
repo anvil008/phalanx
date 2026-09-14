@@ -14,7 +14,7 @@ import { emptyState, readEvents, readState, type RangeEvent, type RangeState } f
    callback and lets the runner decide what to do with them. */
 
 const here = dirname(fileURLToPath(import.meta.url))
-const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? process.env.ESPER_RANGE_BASE_PORT ?? 8110)
+const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? 8110)
 const CONTROL_PORT = BASE + 9
 
 export interface DetectionSignal {
@@ -95,11 +95,8 @@ export class RangeSupervisor {
     return {
       ...process.env,
       PHALANX_RANGE_BASE_PORT: String(BASE),
-      PHALANX_RANGE_BEACON_MS: process.env.PHALANX_RANGE_BEACON_MS ?? process.env.ESPER_RANGE_BEACON_MS ?? "1500",
-      PHALANX_RANGE_STEP_MS: process.env.PHALANX_RANGE_STEP_MS ?? process.env.ESPER_RANGE_STEP_MS ?? "2600",
-      ESPER_RANGE_BASE_PORT: String(BASE),
-      ESPER_RANGE_BEACON_MS: process.env.PHALANX_RANGE_BEACON_MS ?? process.env.ESPER_RANGE_BEACON_MS ?? "1500",
-      ESPER_RANGE_STEP_MS: process.env.PHALANX_RANGE_STEP_MS ?? process.env.ESPER_RANGE_STEP_MS ?? "2600",
+      PHALANX_RANGE_BEACON_MS: process.env.PHALANX_RANGE_BEACON_MS ?? "1500",
+      PHALANX_RANGE_STEP_MS: process.env.PHALANX_RANGE_STEP_MS ?? "2600",
     }
   }
 
@@ -130,7 +127,7 @@ export class RangeSupervisor {
     }
     this.callbacks.onLog(`range online — launching ${this.vectors.length > 1 ? "concurrent attacks" : "the attack script"}`)
     for (const vector of this.vectors) {
-      const child = this.spawnChild("attack.ts", { PHALANX_RANGE_VECTOR: vector, ESPER_RANGE_VECTOR: vector })
+      const child = this.spawnChild("attack.ts", { PHALANX_RANGE_VECTOR: vector })
       if (!this.attacker) this.attacker = child
       this.attackers.push(child)
     }

@@ -1,5 +1,5 @@
 /* Agent2Agent (A2A) core objects, v0.3 shape.
-   Esper speaks the real protocol between its own agents rather than calling
+   Phalanx speaks the real protocol between its own agents rather than calling
    them through function pointers: every delegation is a JSON-RPC `message/send`
    against an agent card, so the trace on the Protocol page is the wire, not a
    rendering of it. */
@@ -81,7 +81,7 @@ export interface AgentCard {
   defaultInputModes: string[]
   defaultOutputModes: string[]
   skills: AgentSkill[]
-  /** Esper extension: presentation metadata the graph reads. */
+  /** Phalanx extension: presentation metadata the graph reads. */
   metadata: {
     agentId: string
     discipline: string

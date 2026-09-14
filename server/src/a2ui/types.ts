@@ -1,5 +1,5 @@
 /* A2UI v0.9 — the agent describes an interface as declarative JSON against a
-   published catalog, and the client renders it with native components. Esper
+   published catalog, and the client renders it with native components. Phalanx
    uses it for exactly the thing it is good at: the commander decides what the
    operator needs to see next and emits the card, instead of the frontend
    guessing from a fixed schema. */
@@ -87,6 +87,4 @@ export const PHALANX_CATALOG = {
     ActionRow: { children: "component[]" },
   },
 } as const
-
-export const ESPER_CATALOG = PHALANX_CATALOG
 

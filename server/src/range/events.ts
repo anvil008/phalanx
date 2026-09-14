@@ -38,7 +38,7 @@ export interface RangeEvent {
 }
 
 export function rangeDir(): string {
-  return process.env.PHALANX_RANGE_DIR ?? process.env.ESPER_RANGE_DIR ?? join(homedir(), ".phalanx-range")
+  return process.env.PHALANX_RANGE_DIR ?? join(homedir(), ".phalanx-range")
 }
 
 export function eventsPath(): string {

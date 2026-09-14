@@ -11,7 +11,7 @@ import { emit, ensureRangeDir, eventsPath, emptyState, statePath, writeState, ty
    loop, the exfil bytes, the containment actuators — is real network activity
    over 127.0.0.1, confined to this process tree. */
 
-const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? process.env.ESPER_RANGE_BASE_PORT ?? 8110)
+const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? 8110)
 const PORTS = {
   "edge-gw-01": BASE,
   "app-api-21": BASE + 1,
@@ -23,8 +23,8 @@ const PORTS = {
   control: BASE + 9,
 } as const
 
-const BEACON_MS = Number(process.env.PHALANX_RANGE_BEACON_MS ?? process.env.ESPER_RANGE_BEACON_MS ?? 1500)
-const ENUM_MS = Number(process.env.PHALANX_RANGE_ENUM_MS ?? process.env.ESPER_RANGE_ENUM_MS ?? 1400)
+const BEACON_MS = Number(process.env.PHALANX_RANGE_BEACON_MS ?? 1500)
+const ENUM_MS = Number(process.env.PHALANX_RANGE_ENUM_MS ?? 1400)
 
 const state: RangeState = emptyState()
 
@@ -156,7 +156,7 @@ function startRansom(): void {
     state.filesEncrypted += 137
     void persist()
     void log({ front: "ransomware", source: "edr", host: "corp-fs-03", kind: "file", detail: `files encrypted on corp-fs-03 (${state.filesEncrypted} total) and renamed .rvlock`, tags: ["ransomware", "encrypt"] })
-  }, Number(process.env.PHALANX_RANGE_RANSOM_MS ?? process.env.ESPER_RANGE_RANSOM_MS ?? 1300))
+  }, Number(process.env.PHALANX_RANGE_RANSOM_MS ?? 1300))
 }
 
 function stopRansom(): void {
@@ -188,7 +188,7 @@ function startBruteforce(): void {
     } else {
       void log({ front: "bruteforce", source: "idp", host: "corp-idp-01", kind: "auth", detail: `${state.failedLogins} failed logins from 203.0.113.44 — password spray in progress`, tags: ["bruteforce", "spray"] })
     }
-  }, Number(process.env.PHALANX_RANGE_BRUTE_MS ?? process.env.ESPER_RANGE_BRUTE_MS ?? 1300))
+  }, Number(process.env.PHALANX_RANGE_BRUTE_MS ?? 1300))
 }
 
 function stopBruteforce(): void {

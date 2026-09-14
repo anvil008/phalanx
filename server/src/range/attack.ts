@@ -9,9 +9,9 @@ import { emit, ensureRangeDir } from "./events.ts"
    treat as a foothold. The point is that every log the defenders read was
    produced by this script actually running, not by a fixture. */
 
-const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? process.env.ESPER_RANGE_BASE_PORT ?? 8110)
-const STEP_MS = Number(process.env.PHALANX_RANGE_STEP_MS ?? process.env.ESPER_RANGE_STEP_MS ?? 2500)
-const VECTOR = process.env.PHALANX_RANGE_VECTOR ?? process.env.ESPER_RANGE_VECTOR ?? "gateway"
+const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? 8110)
+const STEP_MS = Number(process.env.PHALANX_RANGE_STEP_MS ?? 2500)
+const VECTOR = process.env.PHALANX_RANGE_VECTOR ?? "gateway"
 const PORTS = {
   edge: BASE,
   api: BASE + 1,

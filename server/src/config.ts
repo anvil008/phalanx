@@ -103,10 +103,10 @@ export function loadSettings(): PhalanxSettings {
   }
 
   // Environment variable overrides
-  const envMode = (process.env.PHALANX_MODE ?? process.env.ESPER_MODE ?? "").toLowerCase()
+  const envMode = (process.env.PHALANX_MODE ?? "").toLowerCase()
   if (envMode === "live" || envMode === "replay") settings.mode = envMode
 
-  const envProvider = (process.env.PHALANX_PROVIDER ?? process.env.ESPER_PROVIDER ?? "").toLowerCase()
+  const envProvider = (process.env.PHALANX_PROVIDER ?? "").toLowerCase()
   if (["gemini", "anthropic", "openai", "replay"].includes(envProvider)) {
     settings.activeProvider = envProvider as ProviderName
     explicitProvider = true

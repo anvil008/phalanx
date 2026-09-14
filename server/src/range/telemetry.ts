@@ -9,7 +9,7 @@ import { readEvents, readState, type RangeEvent } from "./events.ts"
    POST to the range's control plane, so containment is real: isolating
    edge-gw-01 stops the beacon loop, and the next SIEM read shows it stopped. */
 
-const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? process.env.ESPER_RANGE_BASE_PORT ?? 8110)
+const BASE = Number(process.env.PHALANX_RANGE_BASE_PORT ?? 8110)
 const CONTROL_PORT = BASE + 9
 
 function fmt(rows: RangeEvent[]): string {

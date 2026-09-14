@@ -53,8 +53,6 @@ export interface PhalanxState {
   revision: number
 }
 
-export type EsperState = PhalanxState
-
 const INITIAL: PhalanxState = {
   connected: false,
   generation: 0,
@@ -351,6 +349,3 @@ export const phalanxApi = {
   },
 }
 
-export const EsperProvider = PhalanxProvider
-export const useEsper = usePhalanx
-export const esperApi = phalanxApi

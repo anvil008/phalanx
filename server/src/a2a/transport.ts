@@ -73,7 +73,7 @@ function collectData(message: Message): Record<string, unknown> {
 
 /**
  * Serve one JSON-RPC request against one agent. Every inter-agent call in
- * Esper lands here — the internal client and the HTTP endpoint share this
+ * Phalanx lands here — the internal client and the HTTP endpoint share this
  * path, so the protocol trace is complete by construction.
  */
 export async function dispatch(agentId: string, request: JsonRpcRequest): Promise<JsonRpcResponse> {

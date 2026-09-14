@@ -238,7 +238,6 @@ export type PhalanxEvent =
   | { kind: "a2ui"; at: string; generation?: number; surfaceId: string; message: A2UIMessage }
   | { kind: "log"; at: string; generation?: number; level: "info" | "warn" | "error"; text: string }
 
-export type EsperEvent = PhalanxEvent
 
 export interface ProviderModels {
   commander: string

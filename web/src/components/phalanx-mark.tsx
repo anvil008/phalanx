@@ -74,5 +74,3 @@ export function PhalanxProductBrand({
     </span>
   )
 }
-
-export const EsperProductMark = PhalanxProductMark

@@ -7,7 +7,7 @@ import { GROUND_TRUTH } from "../tools/world.ts"
 import { agentDef, ROSTER } from "./roster.ts"
 
 /* Deterministic director.
-   Esper is meant to be demonstrable on a laptop with no credentials and no
+   Phalanx is meant to be demonstrable on a laptop with no credentials and no
    spend, and to produce the same run twice when someone is comparing a change.
    These handlers drive the same tools, the same A2A transport, and the same
    A2UI surfaces as the live sessions — only the reasoning is pre-decided. */
