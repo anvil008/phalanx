@@ -251,36 +251,33 @@ function computeHexConstellationPositions(nodes: GraphNode[]): Map<string, { x: 
   if (commanders.length === 1) {
     positions.set(commanders[0]!.id, { x: cx, y: cy })
   } else if (commanders.length === 2) {
-    positions.set(commanders[0]!.id, { x: cx - 64, y: cy })
-    positions.set(commanders[1]!.id, { x: cx + 64, y: cy })
-  } else if (commanders.length > 2) {
+    positions.set(commanders[0]!.id, { x: cx - 75, y: cy })
+    positions.set(commanders[1]!.id, { x: cx + 75, y: cy })
+  } else if (commanders.length >= 3) {
     commanders.forEach((cmd, idx) => {
       const angle = (idx * Math.PI * 2) / commanders.length - Math.PI / 2
-      positions.set(cmd.id, { x: cx + 55 * Math.cos(angle), y: cy + 55 * Math.sin(angle) })
+      positions.set(cmd.id, { x: cx + 105 * Math.cos(angle), y: cy + 105 * Math.sin(angle) })
     })
   }
 
-  // Position specialists in two concentric rings
-  const innerRingRadius = 175
-  const outerRingRadius = 285
-
-  // Take up to 6 specialists in inner ring (wave 1)
+  // Inner specialists (first 6): Hexagonal ring at radius 200
   const innerSpecialists = specialists.slice(0, 6)
   const outerSpecialists = specialists.slice(6)
 
   innerSpecialists.forEach((spec, idx) => {
     const angle = (idx * Math.PI * 2) / innerSpecialists.length - Math.PI / 6
     positions.set(spec.id, {
-      x: cx + innerRingRadius * Math.cos(angle),
-      y: cy + innerRingRadius * Math.sin(angle),
+      x: cx + 200 * Math.cos(angle),
+      y: cy + 200 * Math.sin(angle),
     })
   })
 
+  // Outer specialists (remaining): Outer ring at radius 290
   outerSpecialists.forEach((spec, idx) => {
-    const angle = (idx * Math.PI * 2) / outerSpecialists.length - Math.PI / 12
+    const angle = (idx * Math.PI * 2) / Math.max(1, outerSpecialists.length) - Math.PI / 12
     positions.set(spec.id, {
-      x: cx + outerRingRadius * Math.cos(angle),
-      y: cy + outerRingRadius * Math.sin(angle),
+      x: cx + 290 * Math.cos(angle),
+      y: cy + 290 * Math.sin(angle),
     })
   })
 
@@ -301,7 +298,7 @@ function computeIncidentFocusPositions(
     return positions
   }
 
-  // 1. Single Incident Mode: Left Standby Roster Column (x: 60 .. 340) + Right Stage (x: 380 .. 1200)
+  // 1. Single Incident Mode: Left Standby Roster Column + Right Stage
   if (clusters.length === 1) {
     const cluster = clusters[0]!
     const centerX = 780
@@ -337,13 +334,13 @@ function computeIncidentFocusPositions(
       })
     }
 
-    // Extra commanders attached to this incident or linked
+    // Peer commanders attached to this incident or linked: spread horizontally (260px) above cluster
     const extraCommanders = nodes.filter(
       (n) => n.kind === "commander" && !placedIds.has(n.id) && n.incidentIds.length > 0,
     )
     extraCommanders.forEach((cmd, idx) => {
-      const x = centerX + (idx - (extraCommanders.length - 1) / 2) * 160
-      const y = Math.max(60, centerY - 210 - 40)
+      const x = centerX + (idx - (extraCommanders.length - 1) / 2) * 260
+      const y = Math.max(50, centerY - 210 - 45)
       positions.set(cmd.id, { x, y })
       placedIds.add(cmd.id)
     })
@@ -359,7 +356,7 @@ function computeIncidentFocusPositions(
     sortedUnassigned.forEach((node, i) => {
       const col = i % 2
       const row = Math.floor(i / 2)
-      const x = col === 0 ? 130 : 250
+      const x = col === 0 ? 95 : 205
       const y = 95 + row * 65
       positions.set(node.id, { x, y })
       placedIds.add(node.id)
@@ -375,17 +372,21 @@ function computeIncidentFocusPositions(
     return positions
   }
 
-  // 2. Multi-Cluster Campaign Mode (clusters.length >= 2): Keep dual-cluster layout
-  const activeClusters = clusters
+  // 2. Multi-Cluster Campaign Mode (clusters.length >= 2):
+  // Standby roster on left (x = 95 and 205), Incident 1 at 510, Incident 2 at 980, shared at 745
   const placedIds = new Set<string>()
 
-  for (const cluster of activeClusters) {
+  // Position each cluster's commander and exclusive specialists
+  clusters.forEach((cluster, clusterIdx) => {
+    const cx = clusterIdx === 0 ? 510 : clusterIdx === 1 ? 980 : cluster.x
+    const cy = 310
+
     const commander = nodes.find(
       (n) => n.kind === "commander" && n.incidentIds.includes(cluster.incidentId),
     ) || nodes.find((n) => n.id === cluster.commanderId)
 
     if (commander && !placedIds.has(commander.id)) {
-      positions.set(commander.id, { x: cluster.x, y: cluster.y })
+      positions.set(commander.id, { x: cx, y: cy })
       placedIds.add(commander.id)
     }
 
@@ -399,69 +400,63 @@ function computeIncidentFocusPositions(
 
     const specCount = clusterSpecs.length
     if (specCount > 0) {
-      const baseRadius = cluster.radius * (clusters.length > 1 ? 0.68 : 0.70)
+      const baseRadius = 125
       clusterSpecs.forEach((spec, idx) => {
         const angle = (idx / specCount) * (Math.PI * 2) - Math.PI / 2
         const stagger = idx % 2 === 0 ? -16 : 20
         const r = baseRadius + stagger
         positions.set(spec.id, {
-          x: cluster.x + Math.cos(angle) * r,
-          y: cluster.y + Math.sin(angle) * (r * 0.85),
+          x: cx + Math.cos(angle) * r,
+          y: cy + Math.sin(angle) * (r * 0.85),
         })
         placedIds.add(spec.id)
       })
     }
-  }
+  })
 
+  // Shared specialists in multiple incidents or shared: bridge column at x = 745
   const sharedNodes = nodes.filter(
     (n) => (n.incidentIds.length > 1 || n.shared) && !placedIds.has(n.id),
   )
   if (sharedNodes.length > 0) {
+    const bridgeX = 745
     sharedNodes.forEach((node, idx) => {
-      const servingClusters = clusters.filter((c) => node.incidentIds.includes(c.incidentId))
-      const targetClusters = servingClusters.length > 0 ? servingClusters : clusters
-      const avgX = targetClusters.reduce((sum, c) => sum + c.x, 0) / targetClusters.length
-      const avgY = targetClusters.reduce((sum, c) => sum + c.y, 0) / targetClusters.length
-      const yOffset = (idx - (sharedNodes.length - 1) / 2) * 52
-      positions.set(node.id, { x: avgX, y: avgY + yOffset })
+      const y = 310 + (idx - (sharedNodes.length - 1) / 2) * 58
+      positions.set(node.id, { x: bridgeX, y })
       placedIds.add(node.id)
     })
   }
 
-  const extraCommanders = nodes.filter((n) => n.kind === "commander" && !placedIds.has(n.id))
-  if (extraCommanders.length > 0) {
-    const avgX = clusters.reduce((sum, c) => sum + c.x, 0) / clusters.length
-    const minY = Math.min(...clusters.map((c) => c.y))
-    extraCommanders.forEach((cmd, idx) => {
-      const x = avgX + (idx - (extraCommanders.length - 1) / 2) * 160
-      const y = Math.max(60, minY - 130)
-      positions.set(cmd.id, { x, y })
+  // Linked commanders (extra commanders engaged in campaign): bridge column above
+  const linkedCommanders = nodes.filter(
+    (n) => n.kind === "commander" && !placedIds.has(n.id) && n.incidentIds.length > 0,
+  )
+  if (linkedCommanders.length > 0) {
+    const bridgeX = 745
+    linkedCommanders.forEach((cmd, idx) => {
+      const y = Math.max(50, 310 - 210 - 45 + (idx - (linkedCommanders.length - 1) / 2) * 45)
+      positions.set(cmd.id, { x: bridgeX, y })
       placedIds.add(cmd.id)
     })
   }
 
+  // All remaining unassigned agents go to the left standby roster
   const unassigned = nodes.filter((n) => !placedIds.has(n.id))
-  if (unassigned.length > 0) {
-    const row1 = unassigned.filter((_, i) => i % 2 === 0)
-    const row2 = unassigned.filter((_, i) => i % 2 === 1)
+  const classOrder = ["command", "analysis", "action", "comms"]
+  const sortedUnassigned = [...unassigned].sort((a, b) => {
+    const byClass = classOrder.indexOf(a.agentClass) - classOrder.indexOf(b.agentClass)
+    return byClass !== 0 ? byClass : a.label.localeCompare(b.label)
+  })
+  sortedUnassigned.forEach((node, i) => {
+    const col = i % 2
+    const row = Math.floor(i / 2)
+    const x = col === 0 ? 95 : 205
+    const y = 95 + row * 65
+    positions.set(node.id, { x, y })
+    placedIds.add(node.id)
+  })
 
-    const span1 = Math.min(VIRTUAL.width - 240, row1.length * 120)
-    const start1 = (VIRTUAL.width - span1) / 2
-    row1.forEach((node, idx) => {
-      const x = row1.length === 1 ? VIRTUAL.width / 2 : start1 + (span1 * idx) / (row1.length - 1)
-      positions.set(node.id, { x, y: 525 })
-      placedIds.add(node.id)
-    })
-
-    const span2 = Math.min(VIRTUAL.width - 280, row2.length * 130)
-    const start2 = (VIRTUAL.width - span2) / 2
-    row2.forEach((node, idx) => {
-      const x = row2.length === 1 ? VIRTUAL.width / 2 : start2 + (span2 * idx) / Math.max(1, row2.length - 1)
-      positions.set(node.id, { x, y: 565 })
-      placedIds.add(node.id)
-    })
-  }
-
+  // Fallback for any unpositioned nodes
   nodes.forEach((node) => {
     if (!positions.has(node.id)) {
       positions.set(node.id, { x: node.x, y: node.y })
@@ -680,26 +675,34 @@ export function SwarmGraph({
 
 
 
-      // 3. Mode-specific structures (Hex Constellation spokes, Incident blast halos)
+      // 3. Mode-specific structures (Hex Constellation rings/spokes, Incident blast halos & divider)
       if (modeRef.current === "hex") {
-        // Draw constellation lattice edges connecting center to nodes
         context.save()
-        context.strokeStyle = withAlpha(palette.foreground, 0.07)
+        context.strokeStyle = withAlpha(palette.foreground, 0.05)
         context.lineWidth = 0.8
-        for (const node of current.nodes) {
-          const coord = animCoordsRef.current.get(node.id) || node
-          const pt = project(coord)
+        context.setLineDash([3, 5])
+        // 3 subtle concentric constellation guide rings
+        for (const r of [105, 200, 290]) {
           context.beginPath()
-          context.moveTo(centerScreen.x, centerScreen.y)
-          context.lineTo(pt.x, pt.y)
+          context.arc(centerScreen.x, centerScreen.y, r * scale, 0, Math.PI * 2)
+          context.stroke()
+        }
+        // 6 subtle spoke rays from hub to outer ring
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI) / 3
+          const rInner = 105 * scale
+          const rOuter = 290 * scale
+          context.beginPath()
+          context.moveTo(centerScreen.x + Math.cos(angle) * rInner, centerScreen.y + Math.sin(angle) * rInner)
+          context.lineTo(centerScreen.x + Math.cos(angle) * rOuter, centerScreen.y + Math.sin(angle) * rOuter)
           context.stroke()
         }
         context.restore()
       } else if (modeRef.current === "focus") {
-        if (current.clusters.length === 1) {
-          // Subtle vertical divider between left standby roster and right active incident
-          const divTop = project({ x: 360, y: 60 })
-          const divBottom = project({ x: 360, y: 580 })
+        if (current.clusters.length >= 1) {
+          // Subtle vertical divider between left standby roster and right active incident(s)
+          const divTop = project({ x: 280, y: 60 })
+          const divBottom = project({ x: 280, y: 580 })
           context.save()
           context.strokeStyle = withAlpha(palette.foreground, 0.06)
           context.setLineDash([4, 6])
@@ -711,7 +714,7 @@ export function SwarmGraph({
           context.restore()
 
           // Header for the standby roster column
-          const hdr = project({ x: 190, y: 55 })
+          const hdr = project({ x: 150, y: 55 })
           context.fillStyle = withAlpha(palette.muted, 0.5)
           context.font = "500 10px 'Roboto Mono', ui-monospace, monospace"
           context.textAlign = "center"
@@ -888,14 +891,31 @@ export function SwarmGraph({
         context.font = "400 10px 'Roboto Mono', ui-monospace, monospace"
         context.textAlign = "center"
 
-        // Avoid overlapping labels: specialists in the upper half of their cluster
-        // have their label drawn above the node, pointing outwards.
+        // Avoid overlapping labels:
+        // 1. In hex mode: upper hemisphere labels above, lower hemisphere labels below
+        // 2. In focus / incident layout:
+        //    - Standby nodes on the left: ALWAYS draw label BELOW node for uniform vertical alignment
+        //    - Peer commanders above cluster: draw label ABOVE node
+        //    - Assigned specialists in upper half of their cluster: draw label ABOVE node
+        const isStandby = node.reserve || coord.x < 280
         const cluster = current.clusters.find((c) => node.incidentIds.includes(c.incidentId))
-        const drawAbove =
+        const isPeerAboveCluster =
+          node.kind === "commander" &&
+          cluster &&
+          coord.y < cluster.y - 80 &&
+          coord.y < 200
+        const isAssignedUpperSector =
           node.kind !== "commander" &&
           cluster &&
-          coord.y < cluster.y - 18 &&
-          modeRef.current === "focus"
+          node.incidentIds.includes(cluster.incidentId) &&
+          coord.y < cluster.y - 20
+
+        let drawAbove = false
+        if (modeRef.current === "hex") {
+          drawAbove = coord.y < VIRTUAL.height / 2 - 15
+        } else if (!isStandby) {
+          drawAbove = Boolean(isPeerAboveCluster || isAssignedUpperSector)
+        }
 
         const labelY = drawAbove
           ? point.y - radius - 5
@@ -904,8 +924,8 @@ export function SwarmGraph({
         context.fillText(node.label, point.x, labelY)
       }
 
-      // Reserve shelf label (only for multi-cluster, since single-cluster has STANDBY ROSTER on left)
-      if (current.reserveLabel && modeRef.current === "focus" && current.clusters.length > 1) {
+      // Reserve shelf label (only when not in focus mode, since focus mode has STANDBY ROSTER on the left)
+      if (current.reserveLabel && modeRef.current !== "focus") {
         context.fillStyle = withAlpha(palette.muted, 0.55)
         context.font = "400 10px 'Roboto Mono', ui-monospace, monospace"
         context.textAlign = "center"

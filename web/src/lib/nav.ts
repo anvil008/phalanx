@@ -17,7 +17,6 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Operations",
     items: [
       { to: "/", label: "Mission Control", icon: Radar, end: true },
-      { to: "/simulations", label: "Simulation Lab", icon: FlaskConical },
       { to: "/incidents", label: "Incident Response Team", icon: ShieldAlert },
       { to: "/chat", label: "Agent Chat", icon: MessagesSquare },
     ],
@@ -27,6 +26,12 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { to: "/roster", label: "Agent Roster", icon: Boxes },
       { to: "/protocol", label: "Protocol Trace", icon: Network },
+    ],
+  },
+  {
+    label: "System",
+    items: [
+      { to: "/simulations", label: "Simulation Lab", icon: FlaskConical },
       { to: "/about", label: "How this works", icon: ScrollText },
       { to: "/settings", label: "Model Settings", icon: Settings },
     ],

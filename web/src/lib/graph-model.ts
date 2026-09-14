@@ -115,8 +115,8 @@ function clusterCentres(count: number): { x: number; y: number }[] {
   if (count <= 1) return [{ x: 780, y: 310 }]
   if (count === 2) {
     return [
-      { x: cx - 348, y: cy },
-      { x: cx + 348, y: cy },
+      { x: 510, y: 310 },
+      { x: 980, y: 310 },
     ]
   }
   if (count === 3) {
@@ -160,7 +160,7 @@ function layoutReserveLeft(agents: AgentDef[], runtime: Map<string, AgentRuntime
   return sorted.map((agent, index) => {
     const col = index % 2
     const row = Math.floor(index / 2)
-    const x = col === 0 ? 130 : 250
+    const x = col === 0 ? 95 : 205
     const y = 95 + row * 65
     return makeNode(agent, runtime, x, y, {
       reserve: true,
@@ -169,28 +169,6 @@ function layoutReserveLeft(agents: AgentDef[], runtime: Map<string, AgentRuntime
   })
 }
 
-function layoutReserve(agents: AgentDef[], runtime: Map<string, AgentRuntime>): GraphNode[] {
-  if (agents.length === 0) return []
-  const sorted = sortAgents(agents)
-  const useTwoRows = sorted.length > 8
-  const row1 = useTwoRows ? sorted.filter((_, i) => i % 2 === 0) : sorted
-  const row2 = useTwoRows ? sorted.filter((_, i) => i % 2 === 1) : []
-  const span = Math.min(VIRTUAL.width - 240, sorted.length * 92)
-  const start = (VIRTUAL.width - span) / 2
-
-  const nodes: GraphNode[] = []
-  row1.forEach((agent, i) => {
-    const x = row1.length === 1 ? VIRTUAL.width / 2 : start + (span * i) / Math.max(1, row1.length - 1)
-    const y = useTwoRows ? VIRTUAL.height - 46 : VIRTUAL.height - 30
-    nodes.push(makeNode(agent, runtime, x, y, { reserve: true, incidentIds: [] }))
-  })
-  row2.forEach((agent, i) => {
-    const x = row2.length === 1 ? VIRTUAL.width / 2 : start + (span * (i + 0.5)) / Math.max(1, row1.length)
-    const y = VIRTUAL.height - 18
-    nodes.push(makeNode(agent, runtime, x, y, { reserve: true, incidentIds: [] }))
-  })
-  return nodes
-}
 
 /** One incident: its commander at the centre of its own team. */
 export function buildIncidentLayout(input: LayoutInput & { incidentId: string }): GraphLayout {
@@ -235,8 +213,9 @@ export function buildIncidentLayout(input: LayoutInput & { incidentId: string })
   peers.forEach((peer, index) => {
     const peerAgent = byId.get(peer.commanderId)
     if (!peerAgent || nodes.some((node) => node.id === peerAgent.id)) return
-    const x = cx + (index - (peers.length - 1) / 2) * 160
-    const y = Math.max(60, cy - 210 - 40)
+    // Spread peer commanders horizontally (260px spread) so they never crowd the cluster title at cx
+    const x = cx + (index - (peers.length - 1) / 2) * 260
+    const y = Math.max(50, cy - 210 - 45)
     nodes.push(
       makeNode(peerAgent, input.runtime, x, y, { incidentIds: [peer.id] }),
     )
@@ -405,10 +384,7 @@ export function buildCampaignLayout(input: LayoutInput): GraphLayout {
   })
 
   const placed = new Set(nodes.map((node) => node.id))
-  const unassigned = input.agents.filter((agent) => !placed.has(agent.id))
-  const reserve = incidents.length <= 1
-    ? layoutReserveLeft(unassigned, input.runtime)
-    : layoutReserve(unassigned, input.runtime)
+  const reserve = layoutReserveLeft(input.agents.filter((agent) => !placed.has(agent.id)), input.runtime)
   nodes.push(...reserve)
 
   return {
