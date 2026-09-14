@@ -157,15 +157,24 @@ function nudgeClear(
 function layoutReserve(agents: AgentDef[], runtime: Map<string, AgentRuntime>): GraphNode[] {
   if (agents.length === 0) return []
   const sorted = sortAgents(agents)
-  const y = VIRTUAL.height - 30
-  const span = Math.min(VIRTUAL.width - 180, sorted.length * 92)
+  const useTwoRows = sorted.length > 8
+  const row1 = useTwoRows ? sorted.filter((_, i) => i % 2 === 0) : sorted
+  const row2 = useTwoRows ? sorted.filter((_, i) => i % 2 === 1) : []
+  const span = Math.min(VIRTUAL.width - 240, sorted.length * 92)
   const start = (VIRTUAL.width - span) / 2
-  return sorted.map((agent, index) =>
-    makeNode(agent, runtime, sorted.length === 1 ? VIRTUAL.width / 2 : start + (span * index) / (sorted.length - 1), y, {
-      reserve: true,
-      incidentIds: [],
-    }),
-  )
+
+  const nodes: GraphNode[] = []
+  row1.forEach((agent, i) => {
+    const x = row1.length === 1 ? VIRTUAL.width / 2 : start + (span * i) / Math.max(1, row1.length - 1)
+    const y = useTwoRows ? VIRTUAL.height - 46 : VIRTUAL.height - 30
+    nodes.push(makeNode(agent, runtime, x, y, { reserve: true, incidentIds: [] }))
+  })
+  row2.forEach((agent, i) => {
+    const x = row2.length === 1 ? VIRTUAL.width / 2 : start + (span * (i + 0.5)) / Math.max(1, row1.length)
+    const y = VIRTUAL.height - 18
+    nodes.push(makeNode(agent, runtime, x, y, { reserve: true, incidentIds: [] }))
+  })
+  return nodes
 }
 
 /** One incident: its commander at the centre of its own team. */
