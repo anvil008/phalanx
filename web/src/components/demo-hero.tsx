@@ -325,7 +325,7 @@ export function DemoHero({ className }: DemoHeroProps) {
                   {/* Header with tactical designation & severity */}
                   <div className="flex items-center justify-between gap-2 border-b border-rule-soft pb-2">
                     <span className="font-mono text-[10px] font-bold text-destructive tracking-wider uppercase">
-                      OP-1041 // ZERO-DAY INGRESS
+                      OP-1041 · ZERO-DAY INGRESS
                     </span>
                     <span className="rounded border border-destructive/40 bg-destructive/20 text-destructive text-[9px] font-bold px-1.5 py-0.5 font-mono">
                       SEV-1 CRITICAL
@@ -416,7 +416,7 @@ export function DemoHero({ className }: DemoHeroProps) {
                   {/* Header with tactical designation & severity */}
                   <div className="flex items-center justify-between gap-2 border-b border-rule-soft pb-2">
                     <span className="font-mono text-[10px] font-bold text-warning tracking-wider uppercase">
-                      OP-1042 // IDENTITY CONSENT
+                      OP-1042 · IDENTITY CONSENT
                     </span>
                     <span className="rounded border border-warning/40 bg-warning/20 text-warning text-[9px] font-bold px-1.5 py-0.5 font-mono">
                       SEV-2 HIGH
@@ -508,8 +508,8 @@ export function DemoHero({ className }: DemoHeroProps) {
                 <div className="flex flex-col gap-2.5">
                   {/* Header with tactical designation & severity */}
                   <div className="flex items-center justify-between gap-2 border-b border-rule-soft pb-2">
-                    <span className="font-mono text-[10px] font-bold text-accent tracking-wider uppercase">
-                      CAMPAIGN // SALT MERIDIAN
+                    <span className="font-mono text-[10px] font-bold text-primary tracking-wider uppercase">
+                      CAMPAIGN · SALT MERIDIAN
                     </span>
                     <span className="rounded border border-primary/40 bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 font-mono">
                       MULTI-FRONT CAMPAIGN
