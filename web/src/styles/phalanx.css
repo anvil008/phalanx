@@ -1,46 +1,47 @@
-@import "@fontsource-variable/newsreader/index.css";
+@import "@fontsource-variable/inter/index.css";
 @import "@fontsource/space-mono/index.css";
 @import "@fontsource/space-mono/700.css";
 @import "@foundry/ui/globals.css";
 @import "./controls.css";
 
 /*
- * Phalanx theme boundary: the editorial palette, density, radii, and custom
+ * Phalanx theme boundary: the palette, density, radii, and custom
  * constellation colors all live here rather than in page components.
- * The language is anvilpalamattam.com: obsidian page, Newsreader for titles and
- * prose, Space Mono for labels and data, indigo accent, hairline rules, and no
- * glass, grain, gradient, glow or shadow anywhere.
+ * Black page, Inter for everything read as language, Space Mono for labels and
+ * data, indigo accent, hairline rules, panels for grouping, and no glass,
+ * grain, gradient, glow or shadow anywhere.
  */
 @source "../";
 
 :root {
   color-scheme: dark;
 
-  /* Editorial scale, verbatim from the site. --muted and --accent are the
-     site's text/brand colors; the Foundary *surface* tokens of the same name
-     are remapped to --wash in the @theme block below. */
-  --page: #080908;
-  --ink: #f1f0e9;
-  --ink-soft: #d8d8d0;
-  --muted: #aaa99f;
-  --muted-soft: #85877f;
+  /* Neutral dark scale: a black page, grey ink, and no warm cast. --muted and
+     --accent are text/brand colors; the Foundary *surface* tokens of the same
+     name are remapped to --wash in the @theme block below. */
+  --page: #000000;
+  --ink: #f2f2f2;
+  --ink-soft: #d6d6d6;
+  --muted: #9a9a9a;
+  --muted-soft: #6f6f6f;
   --accent: #79a7ff;
   --accent-on-ink: #9abaff;
-  --rule: rgb(241 240 233 / 18%);
-  --rule-soft: rgb(241 240 233 / 11%);
-  --wash: rgb(241 240 233 / 4%);
+  --rule: rgb(255 255 255 / 14%);
+  --rule-soft: rgb(255 255 255 / 8%);
+  --wash: rgb(255 255 255 / 4%);
 
-  --phalanx-font-sans: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --phalanx-font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --phalanx-font-mono: "Space Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
   --font-sans: var(--phalanx-font-sans);
   --font-mono: var(--phalanx-font-mono);
   --font-brand: var(--phalanx-font-sans);
 
-  /* Foundary semantic surfaces. Every one of them is the flat page: definition
-     comes from a 1px rule, never from a fill, a blur or an elevation. */
+  /* Foundary semantic surfaces. The page and the sidebar are black; grouped
+     surfaces lift by one or two values and a hairline, never by a blur, a
+     gradient or an elevation. */
   --background: var(--page);
-  --card: var(--page);
-  --popover: var(--page);
+  --card: #0a0a0a;
+  --popover: #0f0f0f;
   --sidebar: var(--page);
   --foreground: var(--ink);
   --strong: var(--ink);
@@ -56,15 +57,16 @@
   --subtle: var(--muted);
   --border: var(--rule-soft);
   --hairline: var(--rule-soft);
-  --input: rgb(241 240 233 / 0%);
+  --input: transparent;
 
   --brand-phalanx: var(--accent);
   --brand-phalanx-hover: var(--accent-on-ink);
-  --brand-phalanx-foreground: var(--page);
+  --brand-phalanx-foreground: #0b1020;
   --accent-indigo: var(--accent);
 
   --primary: var(--accent);
-  --primary-foreground: var(--page);
+  /* Dark ink on the indigo tile: the brand glyph has to stay readable. */
+  --primary-foreground: #0b1020;
   --primary-surface: transparent;
   --primary-surface-hover: var(--wash);
   --primary-surface-foreground: var(--muted);
@@ -97,7 +99,7 @@
   --update-surface-hover: var(--wash);
 
   --ring: var(--accent);
-  --overlay-backdrop: rgb(8 9 8 / 82%);
+  --overlay-backdrop: rgb(0 0 0 / 82%);
 
   --sidebar-foreground: var(--ink);
   --sidebar-muted-foreground: var(--muted);
@@ -120,11 +122,11 @@
   --control-height: 2rem;
 
   --phalanx-scrollbar-width: 6px;
-  --phalanx-scrollbar-thumb: rgb(241 240 233 / 10%);
-  --phalanx-scrollbar-thumb-hover: rgb(241 240 233 / 20%);
+  --phalanx-scrollbar-thumb: rgb(255 255 255 / 10%);
+  --phalanx-scrollbar-thumb-hover: rgb(255 255 255 / 20%);
 
   --phalanx-canvas: var(--page);
-  --phalanx-grid: rgb(241 240 233 / 5%);
+  --phalanx-grid: rgb(255 255 255 / 5%);
   --phalanx-control-border: var(--rule-soft);
   --phalanx-control-border-active: var(--rule);
   --phalanx-attention: transparent;
@@ -274,7 +276,9 @@ body,
 body {
   font-size: 13px;
   font-family: var(--phalanx-font-sans);
-  font-weight: 300;
+  font-weight: 400;
+  /* Tabular numerals: every reading in the product is in a column. */
+  font-feature-settings: "cv11", "ss01", "tnum";
   background: var(--page);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
@@ -324,7 +328,8 @@ body {
 }
 
 /* ---------------------------------------------------------------- typography
-   The six classes below are the whole type system. Pages compose them; they do
+   The classes below are the whole type system: Inter for anything read as
+   language, Space Mono for anything read as data. Pages compose them; they do
    not invent sizes. `.eyebrow` is the only place uppercase is permitted. */
 
 .eyebrow {
@@ -337,20 +342,20 @@ body {
   text-transform: uppercase;
 }
 
-.title-serif {
+.title {
   color: var(--ink);
   font-family: var(--phalanx-font-sans);
-  font-weight: 400;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  line-height: 1.15;
+  line-height: 1.2;
   text-transform: none;
 }
 
-.prose-serif {
+.prose {
   color: var(--muted);
   font-family: var(--phalanx-font-sans);
-  font-size: 0.9375rem;
-  font-weight: 300;
+  font-size: 0.8125rem;
+  font-weight: 400;
   line-height: 1.5;
 }
 
@@ -400,6 +405,45 @@ body {
 a.rule-row:hover,
 button.rule-row:hover,
 .rule-row[data-interactive="true"]:hover {
+  background: var(--wash);
+  color: var(--ink);
+}
+
+/* The dashboard grouping surface: a card value lifted off black by a hairline.
+   Lists, forms and scenarios sit inside one instead of running full bleed. */
+.panel {
+  border: 1px solid var(--rule-soft);
+  border-radius: 0.375rem;
+  background: var(--card);
+}
+
+/* An eyebrow and its meta, on the panel's top edge. */
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--rule-soft);
+}
+
+/* A row inside a panel: dashboard density, separated from its neighbour by a
+   hairline rather than by whitespace. */
+.panel-row {
+  display: grid;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.panel-row + .panel-row,
+li + li > .panel-row {
+  border-top: 1px solid var(--rule-soft);
+}
+
+a.panel-row:hover,
+button.panel-row:hover {
   background: var(--wash);
   color: var(--ink);
 }
@@ -462,8 +506,8 @@ a {
 [data-slot="page-chrome"] h1 {
   color: var(--ink);
   font-family: var(--phalanx-font-sans);
-  font-size: 1.25rem;
-  font-weight: 400;
+  font-size: 0.9375rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
@@ -526,15 +570,15 @@ a {
 }
 
 /* ----------------------------------------------------------------- surfaces
-   Every panel is the page plus a hairline. No blur, no grain, no gradient, no
-   shadow, no inset highlight, no radius worth noticing. */
+   Every surface is a flat fill plus a hairline. No blur, no grain, no
+   gradient, no shadow, no inset highlight. */
 
 [data-slot="card"],
 [data-slot="alert"],
 [data-slot="empty"] {
   border: 1px solid var(--rule-soft);
-  border-radius: var(--shell-radius);
-  background: var(--page);
+  border-radius: 0.375rem;
+  background: var(--card);
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -550,7 +594,7 @@ a {
 .dialog-glass {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
-  background: var(--page);
+  background: var(--popover);
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -568,7 +612,7 @@ a {
 .dropdown-glass {
   border: 1px solid var(--rule);
   border-radius: var(--item-radius);
-  background: var(--page);
+  background: var(--popover);
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -929,7 +973,7 @@ a {
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--rule);
   border-radius: var(--item-radius);
-  background: var(--page);
+  background: var(--popover);
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;

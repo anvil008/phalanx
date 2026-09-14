@@ -7,9 +7,9 @@ import { phalanxApi, usePhalanx } from "@/lib/store"
 import type { PublicSettings } from "@/lib/model"
 
 /* Model & API settings.
-   Hairline sections rather than cards: an eyebrow, a serif heading, the prose
-   that explains the choice, then the fields. The current selection is a 1px
-   accent rule on the left, never a lit border. */
+   One panel per decision: an eyebrow, a heading, the prose that explains the
+   choice, then the fields. The current selection is a 1px accent rule on the
+   left, never a lit border. */
 
 const FIELD =
   "h-8 w-full rounded-[0.125rem] border border-rule bg-transparent px-2.5 font-mono text-xs text-ink placeholder:text-muted-soft focus:outline-none"
@@ -169,14 +169,14 @@ export function SettingsPage() {
         }
       />
 
-      <div className="flex w-full max-w-4xl flex-col gap-10 pb-24">
+      <div className="flex w-full max-w-4xl flex-col gap-3 pb-24">
         {savedMessage ? <Notice tone="positive" message={savedMessage} /> : null}
         {errorMessage ? <Notice tone="negative" message={errorMessage} /> : null}
 
         {/* ---------------------------------------------------------- mode */}
-        <section className="flex flex-col gap-4">
+        <section className="panel flex flex-col gap-3 p-3.5">
           <SectionLabel eyebrow="Execution mode" meta={selectedMode === "live" ? "Live swarm" : "Replay simulation"} />
-          <p className="prose-serif max-w-[62ch]">
+          <p className="prose max-w-[62ch] text-[0.75rem]!">
             Choose between deterministic replay and real-time orchestration of live LLM agents.
           </p>
 
@@ -215,7 +215,7 @@ export function SettingsPage() {
                       {prov === "gemini" ? <GeminiLogo className="size-4 shrink-0 text-muted-foreground" /> : null}
                       {prov === "anthropic" ? <ClaudeLogo className="size-4 shrink-0 text-muted-foreground" /> : null}
                       {prov === "openai" ? <OpenAILogo className="size-4 shrink-0 text-muted-foreground" /> : null}
-                      <span className={`title-serif text-base ${selectedProvider === prov ? "" : "opacity-70"}`}>
+                      <span className={`title text-[0.8125rem] ${selectedProvider === prov ? "" : "opacity-70"}`}>
                         {label}
                       </span>
                     </span>
@@ -228,7 +228,7 @@ export function SettingsPage() {
         </section>
 
         {/* -------------------------------------------------------- gemini */}
-        <section className="flex flex-col gap-4">
+        <section className="panel flex flex-col gap-3 p-3.5">
           <SectionLabel
             eyebrow="Provider"
             meta={
@@ -248,11 +248,11 @@ export function SettingsPage() {
             }
           />
 
-          <h2 className="title-serif flex items-center gap-2.5 text-[1.375rem]">
+          <h2 className="title flex items-center gap-2.5 text-[0.9375rem]">
             <GeminiLogo className="size-4 text-muted-foreground" />
             Google Gemini
           </h2>
-          <p className="prose-serif max-w-[62ch]">
+          <p className="prose max-w-[62ch] text-[0.75rem]!">
             Supports Gemini 3.1 Pro and Gemini 3.8 Flash with native function calling and streaming.
           </p>
 
@@ -315,7 +315,7 @@ export function SettingsPage() {
         </section>
 
         {/* ----------------------------------------------------- anthropic */}
-        <section className="flex flex-col gap-4">
+        <section className="panel flex flex-col gap-3 p-3.5">
           <SectionLabel
             eyebrow="Provider"
             meta={
@@ -335,11 +335,11 @@ export function SettingsPage() {
             }
           />
 
-          <h2 className="title-serif flex items-center gap-2.5 text-[1.375rem]">
+          <h2 className="title flex items-center gap-2.5 text-[0.9375rem]">
             <ClaudeLogo className="size-4 text-muted-foreground" />
             Anthropic Claude
           </h2>
-          <p className="prose-serif max-w-[62ch]">
+          <p className="prose max-w-[62ch] text-[0.75rem]!">
             Claude Sonnet 5 and Haiku 4.5 over the tool-calling API, or a local Claude CLI agent profile.
           </p>
 
@@ -402,7 +402,7 @@ export function SettingsPage() {
         </section>
 
         {/* -------------------------------------------------------- openai */}
-        <section className="flex flex-col gap-4">
+        <section className="panel flex flex-col gap-3 p-3.5">
           <SectionLabel
             eyebrow="Provider"
             meta={
@@ -422,11 +422,11 @@ export function SettingsPage() {
             }
           />
 
-          <h2 className="title-serif flex items-center gap-2.5 text-[1.375rem]">
+          <h2 className="title flex items-center gap-2.5 text-[0.9375rem]">
             <OpenAILogo className="size-4 text-muted-foreground" />
             OpenAI
           </h2>
-          <p className="prose-serif max-w-[62ch]">
+          <p className="prose max-w-[62ch] text-[0.75rem]!">
             Supports GPT-5, GPT-5 mini, and o3 with tool execution.
           </p>
 
@@ -493,7 +493,7 @@ export function SettingsPage() {
             <span className="meta-mono">
               Target {selectedMode === "live" ? `live · ${selectedProvider}` : "deterministic replay"}
             </span>
-            <span className="prose-serif">Changes take effect immediately across all active agent listeners.</span>
+            <span className="prose text-[0.75rem]!">Changes take effect immediately across all active agent listeners.</span>
           </div>
           <Button className="button-ink gap-1.5" onClick={handleSave} disabled={saving || loading}>
             {saving ? <Loader2 className="size-3.5 animate-spin" /> : null}
@@ -532,8 +532,8 @@ function ModeRow({
       className={`rule-row w-full gap-1! border-l-2 text-left ${selected ? "border-l-[var(--accent)]" : "border-l-transparent"}`}
       style={{ paddingLeft: "0.75rem" }}
     >
-      <span className={`title-serif text-base ${selected ? "" : "opacity-70"}`}>{name}</span>
-      <span className="prose-serif max-w-[62ch]">{description}</span>
+      <span className={`title text-[0.8125rem] ${selected ? "" : "opacity-70"}`}>{name}</span>
+      <span className="prose max-w-[62ch] text-[0.75rem]!">{description}</span>
     </button>
   )
 }

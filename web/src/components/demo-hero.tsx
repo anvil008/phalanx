@@ -5,10 +5,11 @@ import { Loader2 } from "lucide-react"
 import { SectionHeader } from "@/components/section-header"
 import { phalanxApi, usePhalanx } from "@/lib/store"
 
-/* The scenario list.
+/* The scenario deck.
    The page chrome already carries the product name, the mode and reset, so all
-   this owns is the run surface: one quiet line while the swarm is engaged, and
-   the three scenarios as rows — number, what it is, what answers it. */
+   this owns is the run surface: one quiet mono strip while the swarm is
+   engaged, and the three scenarios as panels — what it is, what it touches,
+   who answers it, and the button that starts it. */
 
 interface DemoHeroProps {
   className?: string
@@ -17,7 +18,7 @@ interface DemoHeroProps {
 const SCENARIOS = [
   {
     id: "zero-day-edge",
-    eyebrow: "01 — Zero-day ingress",
+    eyebrow: "01 · Zero-day ingress",
     title: "Ingress zero-day and exfiltration",
     tone: "negative",
     severity: "Sev 1",
@@ -30,7 +31,7 @@ const SCENARIOS = [
   },
   {
     id: "identity-front",
-    eyebrow: "02 — Identity consent",
+    eyebrow: "02 · Identity consent",
     title: "Corporate identity consent abuse",
     tone: "warning",
     severity: "Sev 2",
@@ -43,7 +44,7 @@ const SCENARIOS = [
   },
   {
     id: "campaign",
-    eyebrow: "03 — Salt Meridian campaign",
+    eyebrow: "03 · Salt Meridian",
     title: "Coordinated multi-front campaign",
     tone: "info",
     severity: "Two fronts",
@@ -134,9 +135,9 @@ export function DemoHero({ className }: DemoHeroProps) {
   }
 
   return (
-    <div className={cn("flex flex-col gap-4 shrink-0", className)}>
+    <div className={cn("flex flex-col gap-3 shrink-0", className)}>
       {isRunning ? (
-        <p className="meta-mono flex flex-wrap items-center gap-x-5 gap-y-1 border-y border-rule-soft py-2">
+        <p className="meta-mono flex flex-wrap items-center gap-x-5 gap-y-1 border-y border-rule-soft py-1.5">
           <span className="text-ink">
             Swarm engaged · {incidents.length} active incident{incidents.length > 1 ? "s" : ""}
           </span>
@@ -148,46 +149,39 @@ export function DemoHero({ className }: DemoHeroProps) {
 
       {notice ? <p className="meta-mono text-[color:var(--warning)]!">{notice}</p> : null}
 
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-2">
         <SectionHeader title="Scenarios">
           <span>Choose a scenario to run</span>
         </SectionHeader>
 
-        <ul className="flex flex-col">
+        <ul className="grid gap-3 md:grid-cols-3">
           {SCENARIOS.map((scenario) => {
             const { ran, active, start } = runState(scenario.id)
             return (
-              <li
-                key={scenario.id}
-                className="rule-row grid-cols-1 lg:grid-cols-[9rem_minmax(0,1.5fr)_minmax(0,1fr)]"
-              >
-                <span className="eyebrow">{scenario.eyebrow}</span>
-
-                <div className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                    <h3 className="title-serif text-[1.125rem]">{scenario.title}</h3>
-                    <span className="sev-tag" data-tone={scenario.tone}>
-                      {scenario.severity}
-                    </span>
-                  </div>
-                  <p className="prose-serif max-w-[62ch]">{scenario.summary}</p>
-                  <p className="meta-mono">{scenario.target}</p>
-                  <p className="concepts">
-                    {scenario.concepts.map((concept) => (
-                      <span key={concept}>{concept}</span>
-                    ))}
-                  </p>
+              <li key={scenario.id} className="panel flex flex-col gap-2 p-3.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="eyebrow truncate">{scenario.eyebrow}</span>
+                  <span className="sev-tag shrink-0" data-tone={scenario.tone}>
+                    {scenario.severity}
+                  </span>
                 </div>
 
-                <div className="flex flex-col gap-2 lg:items-start">
-                  <span className="eyebrow">Response plan</span>
-                  <p className="meta-mono text-ink-soft!">{scenario.plan.join(" → ")}</p>
+                <h3 className="title text-[0.875rem]">{scenario.title}</h3>
+                <p className="prose line-clamp-3 text-[0.75rem]!">{scenario.summary}</p>
+
+                <p className="meta-mono">
+                  {scenario.target} · {scenario.concepts.join(" · ")}
+                </p>
+
+                <p className="meta-mono mt-auto pt-1 text-ink-soft!">Plan {scenario.plan.join(" → ")}</p>
+
+                <div className="flex justify-end">
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={busyAction !== null}
                     onClick={() => void start()}
-                    className={cn("mt-1 justify-center gap-1.5", active && "button-ink")}
+                    className={cn("justify-center gap-1.5", active && "button-ink")}
                   >
                     {busyAction === scenario.id ? (
                       <>

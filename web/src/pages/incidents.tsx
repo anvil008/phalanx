@@ -6,7 +6,7 @@ import { StatusDot } from "@foundry/ui/components/status-dot"
 import { AgentDetail } from "@/components/agent-detail"
 import { BusTrace } from "@/components/bus-trace"
 import { RunControls } from "@/components/run-controls"
-import { SectionHeader } from "@/components/section-header"
+import { PanelSection, SectionHeader } from "@/components/section-header"
 import { BusLegend, ClassLegend, SwarmGraph } from "@/components/swarm-graph"
 import { duration, relative } from "@/lib/format"
 import { buildCampaignLayout } from "@/lib/graph-model"
@@ -56,22 +56,21 @@ export function IncidentsPage() {
         subtitle={`${incidents.filter((each) => each.status !== "resolved").length} active breaches · ${engagedCount} specialists dispatched`}
       />
 
-      {/* The run controls are their own hairline row, reset included: the chrome
-          bar keeps the title, and one busy signal gates every button. */}
-      <div className="border-b border-rule-soft pb-3">
+      {/* The run controls are their own panel, reset included: the chrome bar
+          keeps the title, and one busy signal gates every button. */}
+      <div className="panel px-3 py-2.5">
         <RunControls />
       </div>
 
       {/* Active incidents */}
-      <div className="flex flex-col">
-        <SectionHeader title="Engagements">
-          <span>Select an incident to inspect its swarm mesh</span>
-        </SectionHeader>
-
+      <PanelSection
+        title="Engagements"
+        meta={<span>Select an incident to inspect its swarm mesh</span>}
+      >
         {incidents.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-12 text-center">
-            <p className="title-serif text-[1.125rem]">No active security incidents</p>
-            <p className="prose-serif max-w-[52ch]">
+          <div className="flex flex-col items-center gap-2 px-3 py-10 text-center">
+            <p className="title text-[0.875rem]">No active security incidents</p>
+            <p className="prose max-w-[52ch] text-[0.75rem]!">
               Run an attack scenario or a multi-front campaign to watch autonomous incident commanders coordinate their
               response squads.
             </p>
@@ -93,7 +92,7 @@ export function IncidentsPage() {
             ))}
           </ul>
         )}
-      </div>
+      </PanelSection>
 
       {/* Swarm graph */}
       <div className="flex flex-col gap-3">
@@ -132,25 +131,24 @@ export function IncidentsPage() {
       </div>
 
       {/* Coordination & traffic */}
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-3 xl:grid-cols-2">
         <div className="flex flex-col gap-3">
-          <SectionHeader title="Commander arbitration" />
-
-          {commanderTraffic.length === 0 ? (
-            <p className="prose-serif max-w-[62ch]">
-              Commanders have not needed cross-incident arbitration yet. Indicator correlation starts when a campaign
-              crosses infrastructure zones.
-            </p>
-          ) : (
-            <BusTrace messages={commanderTraffic} agents={agents} onSelectAgent={setSelectedAgent} limit={12} />
-          )}
+          <PanelSection title="Commander arbitration" meta={<span>{commanderTraffic.length} hops</span>}>
+            {commanderTraffic.length === 0 ? (
+              <p className="prose max-w-[62ch] px-3 py-2.5 text-[0.75rem]!">
+                Commanders have not needed cross-incident arbitration yet. Indicator correlation starts when a campaign
+                crosses infrastructure zones.
+              </p>
+            ) : (
+              <BusTrace messages={commanderTraffic} agents={agents} onSelectAgent={setSelectedAgent} limit={12} />
+            )}
+          </PanelSection>
 
           {sharedAgents.length > 0 ? (
-            <div className="mt-2 flex flex-col">
-              <SectionHeader title="Shared responders" />
+            <PanelSection title="Shared responders" meta={<span>{sharedAgents.length} agents</span>}>
               <ul className="flex flex-col">
                 {sharedAgents.map((node) => (
-                  <li key={node.id} className="rule-row grid-cols-[1fr_auto] items-center">
+                  <li key={node.id} className="panel-row grid-cols-[1fr_auto]">
                     <span className="meta-mono flex min-w-0 items-center gap-2">
                       <StatusDot tone="warning" />
                       <span className="text-ink">{node.label}</span>
@@ -160,14 +158,13 @@ export function IncidentsPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </PanelSection>
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-3">
-          <SectionHeader title="Bus traffic" />
+        <PanelSection title="Bus traffic" meta={<span>{state.bus.length} messages</span>}>
           <BusTrace messages={state.bus} agents={agents} onSelectAgent={setSelectedAgent} limit={16} />
-        </div>
+        </PanelSection>
       </div>
     </PageContent>
   )
@@ -192,7 +189,7 @@ function IncidentRow({
 
   return (
     <li
-      className={`rule-row grid-cols-1 lg:grid-cols-[9rem_minmax(0,1.5fr)_minmax(0,1fr)] ${focused ? "bg-wash" : ""}`}
+      className={`panel-row items-start gap-y-3 grid-cols-1 lg:grid-cols-[8rem_minmax(0,1.5fr)_minmax(0,1fr)] ${focused ? "bg-wash" : ""}`}
     >
       <div className="flex flex-col gap-1.5">
         <span className="eyebrow">{incident.code}</span>
@@ -202,8 +199,8 @@ function IncidentRow({
       </div>
 
       <div className="flex min-w-0 flex-col gap-2">
-        <h3 className="title-serif text-[1.125rem]">{incident.title}</h3>
-        <p className="prose-serif max-w-[62ch] line-clamp-2">{incident.summary}</p>
+        <h3 className="title text-[0.875rem]">{incident.title}</h3>
+        <p className="prose line-clamp-2 max-w-[62ch] text-[0.75rem]!">{incident.summary}</p>
         <p className="meta-mono flex flex-wrap gap-x-4">
           <span>
             Commander <span className="text-ink">{commanderName}</span>

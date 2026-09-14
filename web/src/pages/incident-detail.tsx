@@ -8,7 +8,7 @@ import { A2UISurface } from "@/components/a2ui-surface"
 import { RangePanel } from "@/components/range-panel"
 import { AgentDetail } from "@/components/agent-detail"
 import { BusTrace } from "@/components/bus-trace"
-import { SectionHeader } from "@/components/section-header"
+import { PanelSection, SectionHeader } from "@/components/section-header"
 import { BusLegend, ClassLegend, SwarmGraph } from "@/components/swarm-graph"
 import { duration, shortTime } from "@/lib/format"
 import { buildIncidentLayout } from "@/lib/graph-model"
@@ -58,7 +58,7 @@ export function IncidentDetailPage() {
       <PageContent>
         <PageHeader title="Incident dossier" />
         <div className="flex flex-col items-center gap-4 py-12 text-center">
-          <p className="title-serif text-[1.125rem]">Incident not found in active memory</p>
+          <p className="title text-[0.875rem]">Incident not found in active memory</p>
           <Button size="sm" variant="outline" onClick={() => navigate("/incidents")}>
             Return to the incident response team
           </Button>
@@ -87,7 +87,7 @@ export function IncidentDetailPage() {
       />
 
       {/* Status strip */}
-      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-y border-rule-soft py-3">
+      <div className="panel flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-3 py-2.5">
         <div className="flex flex-wrap items-center gap-4">
           <span className="sev-tag" data-tone={SEV_TONE[incident.severity]}>
             {severityLabel(incident.severity)}
@@ -134,7 +134,7 @@ export function IncidentDetailPage() {
         </div>
       </div>
 
-      <p className="prose-serif max-w-[72ch]">{incident.summary}</p>
+      <p className="prose max-w-[72ch] text-[0.8125rem]!">{incident.summary}</p>
 
       {incident.links.length > 0 ? (
         <p className="meta-mono text-[color:var(--warning)]!">
@@ -151,7 +151,7 @@ export function IncidentDetailPage() {
         </p>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         {/* Left column: swarm graph, tasking, incident bus */}
         <div className="flex flex-col gap-4">
           <SectionHeader title="Swarm topology">
@@ -181,16 +181,15 @@ export function IncidentDetailPage() {
           <BusLegend />
 
           {/* Commander tasking */}
-          <div className="flex flex-col">
-            <SectionHeader title="Tasking" />
+          <PanelSection title="Tasking" meta={<span>{incident.assignments.length} specialists</span>}>
             {incident.assignments.length === 0 ? (
-              <p className="meta-mono pt-3">The commander has not tasked specialists yet</p>
+              <p className="meta-mono px-3 py-2.5">The commander has not tasked specialists yet</p>
             ) : (
               <ul className="flex flex-col">
                 {incident.assignments.map((assignment) => {
                   const assignee = agents.get(assignment.agentId)
                   return (
-                    <li key={assignment.agentId} className="rule-row grid-cols-[7rem_minmax(0,1fr)] items-baseline">
+                    <li key={assignment.agentId} className="panel-row grid-cols-[7rem_minmax(0,1fr)] items-baseline">
                       <button
                         type="button"
                         className="meta-mono flex items-center gap-1.5 text-left text-ink! hover:text-accent-indigo!"
@@ -202,17 +201,16 @@ export function IncidentDetailPage() {
                         />
                         <span>{assignee?.callsign ?? assignment.agentId}</span>
                       </button>
-                      <p className="prose-serif">{assignment.objective}</p>
+                      <p className="prose text-[0.75rem]!">{assignment.objective}</p>
                     </li>
                   )
                 })}
               </ul>
             )}
-          </div>
+          </PanelSection>
 
           {/* Incident A2A traffic */}
-          <div className="flex flex-col gap-3">
-            <SectionHeader title={`Bus traffic · ${incident.code}`} />
+          <PanelSection title={`Bus traffic · ${incident.code}`} meta={<span>{incidentBus.length} hops</span>}>
             <BusTrace
               messages={incidentBus}
               agents={agents}
@@ -220,7 +218,7 @@ export function IncidentDetailPage() {
               emptyText="No A2A messages on this incident bus yet."
               limit={40}
             />
-          </div>
+          </PanelSection>
         </div>
 
         {/* Right column: commander surface, timeline, scope & evidence */}
@@ -238,16 +236,15 @@ export function IncidentDetailPage() {
           />
 
           {/* Timeline */}
-          <div className="flex flex-col">
-            <SectionHeader title="Timeline" />
+          <PanelSection title="Timeline" meta={<span>{incident.timeline.length} events</span>}>
             {incident.timeline.length === 0 ? (
-              <p className="meta-mono pt-3">No timeline events recorded</p>
+              <p className="meta-mono px-3 py-2.5">No timeline events recorded</p>
             ) : (
               <ol className="flex flex-col">
                 {[...incident.timeline].reverse().map((entry) => (
-                  <li key={entry.id} className="rule-row grid-cols-[4.5rem_minmax(0,1fr)] items-baseline">
+                  <li key={entry.id} className="panel-row grid-cols-[4.5rem_minmax(0,1fr)] items-baseline">
                     <span className="meta-mono">{shortTime(entry.at)}</span>
-                    <p className="prose-serif">
+                    <p className="prose text-[0.75rem]!">
                       <span className="meta-mono mr-1.5 text-ink!">{entry.actorName}</span>
                       <span className={TONE_TEXT[entry.tone]}>{entry.text}</span>
                     </p>
@@ -255,13 +252,12 @@ export function IncidentDetailPage() {
                 ))}
               </ol>
             )}
-          </div>
+          </PanelSection>
 
           {/* Scope & assets */}
           {incident.indicators.length > 0 || incident.assets.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              <SectionHeader title="Assets and indicators" />
-
+            <PanelSection title="Assets and indicators">
+              <div className="flex flex-col gap-3 px-3 py-2.5">
               {incident.assets.length > 0 ? (
                 <div className="flex flex-col gap-1.5">
                   <span className="eyebrow">Affected assets</span>
@@ -283,7 +279,8 @@ export function IncidentDetailPage() {
                   </p>
                 </div>
               ) : null}
-            </div>
+              </div>
+            </PanelSection>
           ) : null}
 
           <IncidentEvidence incident={incident} />

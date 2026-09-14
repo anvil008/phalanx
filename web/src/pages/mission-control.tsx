@@ -8,15 +8,15 @@ import { DemoHero } from "@/components/demo-hero"
 import { KillChain } from "@/components/kill-chain"
 import { RangePanel } from "@/components/range-panel"
 import { BusTrace } from "@/components/bus-trace"
-import { SectionHeader } from "@/components/section-header"
+import { PanelSection, SectionHeader } from "@/components/section-header"
 import { relative, shortTime } from "@/lib/format"
 import type { IncidentSeverity } from "@/lib/model"
 import { phalanxApi, useAgentIndex, usePhalanx, useIncidentList } from "@/lib/store"
 
 /* Mission Control.
    The standing posture of the estate, the scenarios you can run against it,
-   and the cards the agents write while they work. Editorial page language:
-   hairline rows, serif titles, mono for anything measured. */
+   and the cards the agents write while they work. Dashboard language: panels
+   group, hairlines separate, and mono carries anything measured. */
 
 const THREAT_TONE = {
   green: "neutral",
@@ -71,8 +71,8 @@ export function MissionControlPage() {
 
       <DemoHero />
 
-      {/* Posture, as one hairline strip of readings */}
-      <div className="grid shrink-0 grid-cols-2 gap-px border-y border-rule-soft bg-rule-soft sm:grid-cols-3 xl:grid-cols-6">
+      {/* Posture, as one panel of readings divided by hairlines */}
+      <div className="panel grid shrink-0 grid-cols-2 gap-px overflow-hidden bg-rule-soft sm:grid-cols-3 xl:grid-cols-6">
         <Stat
           label="Threat level"
           value={state.posture.threatLevel}
@@ -101,8 +101,8 @@ export function MissionControlPage() {
 
       <KillChain state={state} />
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] shrink-0">
-        <div className="flex flex-col gap-4">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] shrink-0">
+        <div className="flex flex-col gap-3">
           {state.rangeStatus ? <RangePanel status={state.rangeStatus} compact /> : null}
 
           <div className="flex flex-col gap-3">
@@ -114,9 +114,9 @@ export function MissionControlPage() {
               surface={surface}
               onAction={(actionId, payload) => void phalanxApi.action("mission-control", actionId, payload)}
               empty={
-                <div className="py-8">
-                  <p className="title-serif text-[1.125rem]">Telemetry on standby</p>
-                  <p className="prose-serif mt-1.5 max-w-[62ch]">
+                <div className="panel px-3 py-6">
+                  <p className="title text-[0.875rem]">Telemetry on standby</p>
+                  <p className="prose mt-1 max-w-[62ch] text-[0.75rem]!">
                     All 19 blue-team defenders are watching estate ingress and identity logs. Run a scenario above to
                     watch the containment cards arrive.
                   </p>
@@ -126,30 +126,28 @@ export function MissionControlPage() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
           {/* Incidents feed */}
-          <div className="flex flex-col">
-            <SectionHeader title="Incidents" />
-
+          <PanelSection title="Incidents" meta={<span>{incidents.length} open</span>}>
             {incidents.length === 0 ? (
-              <p className="meta-mono pt-3">No incidents open · perimeter secure</p>
+              <p className="meta-mono px-3 py-2.5">No incidents open · perimeter secure</p>
             ) : (
               <ul className="flex flex-col">
                 {incidents.slice(0, 4).map((incident) => (
                   <li key={incident.id}>
                     <button
                       type="button"
-                      className="rule-row w-full grid-cols-[1fr_auto] text-left"
+                      className="panel-row w-full grid-cols-[1fr_auto] text-left"
                       onClick={() => navigate(`/incidents/${incident.id}`)}
                     >
-                      <span className="flex flex-col gap-1">
+                      <span className="flex min-w-0 flex-col gap-1">
                         <span className="flex items-center gap-2">
                           <span className="sev-tag" data-tone={SEV_TONE[incident.severity]}>
                             {severityLabel(incident.severity)}
                           </span>
                           <span className="meta-mono text-ink!">{incident.code}</span>
                         </span>
-                        <span className="title-serif text-[0.9375rem] truncate">{incident.title}</span>
+                        <span className="title truncate text-[0.8125rem]">{incident.title}</span>
                       </span>
                       <span className="meta-mono self-center">{incident.phase}</span>
                     </button>
@@ -157,17 +155,16 @@ export function MissionControlPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </PanelSection>
 
           {/* Detections feed */}
-          <div className="flex flex-col">
-            <SectionHeader title="Detections" />
+          <PanelSection title="Detections" meta={<span>{state.detections.length} recorded</span>}>
             {state.detections.length === 0 ? (
-              <p className="meta-mono pt-3">No adversary anomalies recorded</p>
+              <p className="meta-mono px-3 py-2.5">No adversary anomalies recorded</p>
             ) : (
               <ul className="flex flex-col">
                 {state.detections.slice(0, 6).map((detection) => (
-                  <li key={detection.id} className="rule-row grid-cols-[minmax(0,1fr)_auto]">
+                  <li key={detection.id} className="panel-row grid-cols-[minmax(0,1fr)_auto] items-start">
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <span className="meta-mono flex items-center gap-2 text-ink!">
                         <StatusDot
@@ -191,15 +188,14 @@ export function MissionControlPage() {
                 ))}
               </ul>
             )}
-          </div>
+          </PanelSection>
 
           {/* Affected estate */}
           {affectedHosts.length > 0 ? (
-            <div className="flex flex-col">
-              <SectionHeader title="Affected hosts" />
+            <PanelSection title="Affected hosts" meta={<span>{affectedHosts.length} touched</span>}>
               <ul className="flex flex-col">
                 {affectedHosts.map((host) => (
-                  <li key={host.id} className="rule-row grid-cols-[minmax(0,1fr)_auto] items-center">
+                  <li key={host.id} className="panel-row grid-cols-[minmax(0,1fr)_auto]">
                     <span className="meta-mono flex min-w-0 items-center gap-2">
                       <StatusDot
                         tone={host.status === "compromised" ? "negative" : host.status === "isolated" ? "warning" : "positive"}
@@ -216,29 +212,27 @@ export function MissionControlPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </PanelSection>
           ) : null}
         </div>
       </div>
 
       {/* Coordination bus & fleet strip */}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] shrink-0">
-        <div className="flex flex-col gap-3">
-          <SectionHeader title="A2A coordination bus" />
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] shrink-0">
+        <PanelSection title="A2A coordination bus" meta={<span>{state.bus.length} messages</span>}>
           <BusTrace messages={state.bus} agents={agents} limit={14} emptyText="No agent-to-agent traffic recorded." />
-        </div>
+        </PanelSection>
 
-        <div className="flex flex-col">
-          <SectionHeader title="Responders" />
+        <PanelSection title="Responders" meta={<span>{engaged.length} engaged</span>}>
           {engaged.length === 0 ? (
-            <p className="meta-mono pt-3">All 19 specialists on standby</p>
+            <p className="meta-mono px-3 py-2.5">All 19 specialists on standby</p>
           ) : (
             <ul className="flex flex-col">
               {engaged.map((runtime) => {
                 const agent = agents.get(runtime.id)
                 if (!agent) return null
                 return (
-                  <li key={runtime.id} className="rule-row grid-cols-[minmax(0,1fr)_auto] items-center">
+                  <li key={runtime.id} className="panel-row grid-cols-[minmax(0,1fr)_auto]">
                     <span className="meta-mono flex min-w-0 items-center gap-2">
                       <span
                         className="inline-block size-1.5 rounded-full"
@@ -253,7 +247,7 @@ export function MissionControlPage() {
               })}
             </ul>
           )}
-        </div>
+        </PanelSection>
       </div>
     </PageContent>
   )
@@ -273,9 +267,9 @@ function Stat({
   const colour = tone === "warning" ? "text-warning" : tone === "negative" ? "text-destructive" : "text-ink"
 
   return (
-    <div className="flex flex-col gap-1 bg-page px-4 py-3">
+    <div className="flex flex-col gap-0.5 bg-card px-3 py-2.5">
       <span className="eyebrow">{label}</span>
-      <span className={`font-mono text-xl font-normal ${colour}`}>{value}</span>
+      <span className={`font-mono text-[1.125rem] leading-tight font-normal ${colour}`}>{value}</span>
       {subtext ? <span className="meta-mono truncate">{subtext}</span> : null}
     </div>
   )

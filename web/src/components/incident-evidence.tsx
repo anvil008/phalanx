@@ -142,7 +142,7 @@ export function IncidentEvidence({ incident }: IncidentEvidenceProps) {
       {activeTab === "iocs" && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
-            <span className="title-serif text-[0.9375rem]">Threat intelligence and extracted IOCs</span>
+            <span className="title text-[0.875rem]">Threat intelligence and extracted IOCs</span>
             <span className="meta-mono text-accent-indigo!">Swarm verified</span>
           </div>
           <div>
@@ -166,7 +166,7 @@ export function IncidentEvidence({ incident }: IncidentEvidenceProps) {
                       </button>
                       <span className="meta-mono">{ioc.mitreTactic}</span>
                     </div>
-                    <span className="prose-serif">{ioc.type}</span>
+                    <span className="prose text-[0.75rem]!">{ioc.type}</span>
                     <span className="meta-mono text-[color:var(--positive)]!">{ioc.containment}</span>
                   </div>
                 </li>
@@ -180,7 +180,7 @@ export function IncidentEvidence({ incident }: IncidentEvidenceProps) {
       {activeTab === "waf" && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
-            <span className="title-serif text-[0.9375rem]">{isZeroDay ? "Perimeter ingress HTTP desync artifact" : "Azure AD consent grant event"}</span>
+            <span className="title text-[0.875rem]">{isZeroDay ? "Perimeter ingress HTTP desync artifact" : "Azure AD consent grant event"}</span>
             <span className="meta-mono text-[color:var(--negative)]!">Rule {isZeroDay ? "HTTP-DESYNC-HEURISTIC" : "UNKNOWN-APP-CONSENT"}</span>
           </div>
           <div>
@@ -243,7 +243,7 @@ Content-Type: application/json
       {activeTab === "edr" && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
-            <span className="title-serif text-[0.9375rem]">{isZeroDay ? "Host EDR process lineage and memory dump" : "Graph API audit trail"}</span>
+            <span className="title text-[0.875rem]">{isZeroDay ? "Host EDR process lineage and memory dump" : "Graph API audit trail"}</span>
             <span className="meta-mono text-[color:var(--warning)]!">{isZeroDay ? "Host edge-gw-01" : "Host corp-fs-03"}</span>
           </div>
           <div>
@@ -287,7 +287,7 @@ Content-Type: application/json
       {activeTab === "netflow" && (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
-            <span className="title-serif text-[0.9375rem]">{isZeroDay ? "NetFlow packet and cadence analysis" : "Exfiltration bandwidth and data flow"}</span>
+            <span className="title text-[0.875rem]">{isZeroDay ? "NetFlow packet and cadence analysis" : "Exfiltration bandwidth and data flow"}</span>
             <span className="meta-mono">Rule {isZeroDay ? "PERIODIC-EGRESS" : "BULK-OBJECT-READ"}</span>
           </div>
           <div>

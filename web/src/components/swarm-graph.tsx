@@ -840,7 +840,7 @@ export function SwarmGraph({
             <span>{hover.node.id}</span>
           </div>
 
-          <div className="title-serif mt-2 text-[0.9375rem]">{hoverDef?.name || hover.node.name}</div>
+          <div className="title mt-2 text-[0.875rem]">{hoverDef?.name || hover.node.name}</div>
           <div className="meta-mono">
             {hoverDef ? `${hoverDef.discipline} · ${hoverDef.class}` : hover.node.agentClass}
           </div>

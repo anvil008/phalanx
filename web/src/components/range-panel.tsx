@@ -52,16 +52,16 @@ export function RangePanel({ status, compact = false }: { status: RangeStatus; c
   const multi = [identityActive, ransomActive, bruteActive].filter(Boolean).length >= 1
 
   return (
-    <div className="flex flex-col gap-3 border border-rule-soft p-4">
+    <div className="panel flex flex-col gap-3 p-3.5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="flex items-center gap-2">
           <StatusDot tone={contained ? "positive" : "negative"} pulse={!contained} />
-          <span className="title-serif text-[1.125rem]">Live range</span>
+          <span className="title text-[0.875rem]">Live range</span>
         </span>
         <span className="meta-mono ml-auto">isolated estate · loopback only</span>
       </div>
 
-      <p className="prose-serif max-w-[62ch]">
+      <p className="prose max-w-[62ch] text-[0.75rem]!">
         {multi
           ? "Several real attacks are running at once against instrumented services on this host. Every reading comes from the lab's own logs; the agents read the same bytes."
           : "A real attack script is running against instrumented services on this host. Every reading comes from the lab's own logs; the agents read the same bytes."}
@@ -166,7 +166,7 @@ function Front({
   return (
     <div className="flex flex-col gap-2 border-t border-rule-soft pt-2.5">
       <div className="flex items-baseline gap-2">
-        <span className="title-serif text-[0.9375rem]">{title}</span>
+        <span className="title text-[0.875rem]">{title}</span>
         <span className="meta-mono ml-auto">{commander}</span>
       </div>
       <div className="grid grid-cols-3 gap-3">

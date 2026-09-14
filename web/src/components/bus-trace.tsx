@@ -3,7 +3,8 @@ import { shortTime } from "@/lib/format"
 
 /* The coordination bus, as a list.
    The graph shows that agents are talking; this shows what they said and in
-   which direction, which is the part you need when something looks wrong. */
+   which direction, which is the part you need when something looks wrong.
+   The rows are panel density; the caller supplies the panel. */
 
 const KIND_TONE: Record<string, string> = {
   task: "info",
@@ -32,7 +33,7 @@ export function BusTrace({
 }) {
   const recent = messages.slice(-limit).reverse()
   if (recent.length === 0) {
-    return <p className="meta-mono">{emptyText}</p>
+    return <p className="meta-mono px-3 py-2.5">{emptyText}</p>
   }
   return (
     <ol className="flex flex-col">
@@ -40,7 +41,7 @@ export function BusTrace({
         const from = agents.get(message.fromAgentId)
         const to = message.toAgentId ? agents.get(message.toAgentId) : null
         return (
-          <li key={message.id} className="rule-row grid-cols-[4.5rem_6rem_minmax(0,1fr)] items-baseline">
+          <li key={message.id} className="panel-row grid-cols-[4.5rem_6rem_minmax(0,1fr)] items-baseline">
             <span className="meta-mono">{shortTime(message.at)}</span>
             <span className="sev-tag w-fit" data-tone={KIND_TONE[message.kind] ?? "muted"}>
               {message.kind}
@@ -59,7 +60,7 @@ export function BusTrace({
                   <span>everyone</span>
                 )}
               </div>
-              <p className="prose-serif mt-0.5">{message.summary}</p>
+              <p className="prose mt-0.5 text-[0.75rem]!">{message.summary}</p>
             </div>
           </li>
         )

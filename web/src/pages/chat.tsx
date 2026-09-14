@@ -72,7 +72,7 @@ function formatMessageText(text: string) {
 }
 
 /* Agents paste raw instrument output into their reports. Those lines are data,
-   so they get the mono face; the sentences around them stay in the serif. */
+   so they get the mono face; the sentences around them stay in the sans. */
 const DATA_LINE = /^\s*\d{4}-\d{2}-\d{2}T/
 
 function renderBody(text: string, rich: boolean, bodyClass: string) {
@@ -219,12 +219,12 @@ export function ChatPage() {
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="relative flex min-h-0 flex-1 flex-col overflow-y-auto"
+        className="panel relative flex min-h-0 flex-1 flex-col overflow-y-auto"
       >
         {entries.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
-            <p className="title-serif text-[1.125rem]">No agent traffic yet.</p>
-            <p className="prose-serif max-w-md">
+            <p className="title text-[0.875rem]">No agent traffic yet.</p>
+            <p className="prose max-w-md text-[0.75rem]!">
               Start a scenario, a live-range attack, or use the operator console below to query
               incident commanders and specialists.
             </p>
@@ -258,7 +258,7 @@ export function ChatPage() {
       </div>
 
       {/* Operator console: intervene in, or query, the swarm. */}
-      <div className="flex flex-col gap-2 border-t border-rule pt-3">
+      <div className="panel flex flex-col gap-2 p-3">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <span className="eyebrow">Operator console</span>
 
@@ -397,7 +397,7 @@ function ChatTurn({
   const dot = classColor(from, isOperatorQuery)
 
   return (
-    <article className="flex flex-col gap-1.5 border-b border-rule-soft py-3">
+    <article className="flex flex-col gap-1.5 border-b border-rule-soft px-3 py-2.5">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="phalanx-signal" style={{ color: dot }} />
         <span className="eyebrow" style={isOperatorQuery ? { color: "var(--warning)" } : undefined}>
@@ -421,7 +421,7 @@ function ChatTurn({
         {renderBody(
           entry.text,
           isCommanderReply || isOperatorQuery,
-          `prose-serif max-w-[74ch] whitespace-pre-wrap ${isTask ? "" : "text-ink-soft!"}`,
+          `prose max-w-[74ch] text-[0.75rem]! whitespace-pre-wrap ${isTask ? "" : "text-ink-soft!"}`,
         )}
       </div>
     </article>

@@ -286,21 +286,21 @@ export function KillChain({ state: propState, className }: KillChainProps) {
       ) : null}
 
       {/* The six MITRE ATT&CK stages, as one hairline grid */}
-      <div className="grid grid-cols-1 gap-px border-y border-rule-soft bg-rule-soft sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="panel grid grid-cols-1 gap-px overflow-hidden bg-rule-soft sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
         {stages.map((stage) => {
           const isDetected = stage.status === "Detected"
           const isRemediated = stage.status === "Remediated/Blocked"
           const Icon = stage.Icon
 
           return (
-            <div key={stage.id} className="flex flex-col gap-2 bg-page px-3.5 py-3" title={stage.description}>
+            <div key={stage.id} className="flex flex-col gap-1.5 bg-card px-3 py-2.5" title={stage.description}>
               <span className="eyebrow">
                 {stage.step} · {stage.mitreId}
               </span>
 
               <span className="flex items-center gap-2">
                 <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-                <span className="title-serif text-[0.9375rem]">{stage.name}</span>
+                <span className="title text-[0.875rem]">{stage.name}</span>
               </span>
 
               <span className="meta-mono flex items-center gap-1.5">

@@ -19,7 +19,7 @@ import {
   useSidebar,
 } from "@foundry/ui/components/sidebar"
 import { cn } from "@foundry/ui/lib/utils"
-import { PhalanxProductMark, PhalanxWordmark } from "@/components/phalanx-mark"
+import { PhalanxProductMark } from "@/components/phalanx-mark"
 import { NAV_SECTIONS, type NavItem } from "@/lib/nav"
 import { phalanxApi, usePhalanx } from "@/lib/store"
 
@@ -54,9 +54,11 @@ function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
+      {/* The only collapse control lives in the page chrome; the brand is a
+          brand, and only expands the rail when it is the sole thing visible. */}
       <SidebarHeader
         className={cn(
-          "flex h-14 flex-row items-center justify-between px-4",
+          "flex h-14 flex-row items-center px-4",
           isCollapsed && "justify-center px-0",
         )}
       >
@@ -66,18 +68,24 @@ function AppSidebar() {
             if (isCollapsed) toggleSidebar()
           }}
           className={cn(
-            "flex items-center gap-2.5 text-left select-none transition-opacity",
+            "flex min-w-0 items-center gap-2.5 text-left select-none transition-opacity",
             isCollapsed ? "cursor-pointer hover:opacity-85" : "cursor-default",
           )}
           title={isCollapsed ? "Expand sidebar" : undefined}
           aria-label={isCollapsed ? "Expand sidebar" : "Phalanx"}
         >
-          {isCollapsed ? <PhalanxProductMark className="size-7" /> : <PhalanxWordmark />}
+          <PhalanxProductMark className="size-7" />
+          {!isCollapsed ? (
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-[0.8125rem] font-semibold leading-tight tracking-[-0.01em] text-ink">
+                Phalanx
+              </span>
+              <span className="truncate font-mono text-[0.625rem] leading-tight text-muted-foreground">
+                Blue-team swarm
+              </span>
+            </span>
+          ) : null}
         </button>
-        <SidebarTrigger
-          className="size-7 text-muted-foreground group-data-[collapsible=icon]:hidden"
-          title="Collapse sidebar"
-        />
       </SidebarHeader>
 
       <SidebarContent className="px-1.5 py-2">

@@ -34,15 +34,14 @@ export function PhalanxProductGlyph({ className }: { className?: string }) {
   )
 }
 
-/** Phalanx glyph tile for the places a wordmark will not fit: mobile chrome and
- *  the favicon. Flat page surface, one hairline, an accent glyph — no fill,
- *  no shadow, no glow. */
+/** Phalanx product mark: the shield glyph on a filled accent tile. Flat fill,
+ *  dark ink, no shadow and no glow. */
 export function PhalanxProductMark({ className }: { className?: string }) {
   return (
     <span
       aria-hidden
       className={cn(
-        "grid size-7 shrink-0 place-items-center rounded-control border border-rule-soft text-accent-indigo select-none",
+        "grid size-7 shrink-0 place-items-center rounded-control bg-primary text-primary-foreground select-none",
         className
       )}
     >
@@ -51,21 +50,7 @@ export function PhalanxProductMark({ className }: { className?: string }) {
   )
 }
 
-/** Phalanx wordmark: the product name set in the title serif with the accent
- *  dot that closes the author's own mark. */
-export function PhalanxWordmark({ className }: { className?: string }) {
-  return (
-    <span className={cn("inline-flex items-baseline gap-1.5", className)}>
-      <span className="title-serif text-[1.375rem] leading-none">Phalanx</span>
-      <span
-        aria-hidden
-        className="size-[7px] shrink-0 rounded-full bg-accent-indigo"
-      />
-    </span>
-  )
-}
-
-/** Phalanx product lockup: glyph tile + wordmark. */
+/** Phalanx product lockup: the tile, then the product name over what it is. */
 export function PhalanxProductBrand({
   compact = false,
   className,
@@ -76,7 +61,16 @@ export function PhalanxProductBrand({
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <PhalanxProductMark />
-      {!compact && <PhalanxWordmark className="group-data-[collapsible=icon]:hidden" />}
+      {!compact && (
+        <span className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
+          <span className="truncate text-[0.8125rem] font-semibold leading-tight tracking-[-0.01em] text-ink">
+            Phalanx
+          </span>
+          <span className="truncate font-mono text-[0.625rem] leading-tight text-muted-foreground">
+            Blue-team swarm
+          </span>
+        </span>
+      )}
     </span>
   )
 }

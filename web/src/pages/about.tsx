@@ -8,12 +8,12 @@ import { usePhalanx } from "@/lib/store"
 import { ClaudeLogo, GeminiLogo, OpenAILogo } from "@/components/provider-logos"
 
 /* How this works.
-   An essay, laid out like the writing on the site it borrows its language
-   from: a numbered eyebrow, a serif heading, a column of prose at 62ch, and
-   hairline rows wherever the argument turns into a list. */
+   The one document in the product: a numbered eyebrow, a heading, a column of
+   prose at 62ch, and hairline rows wherever the argument turns into a list.
+   Same Inter scale as the dashboard, just given more room. */
 
-const HEADING: CSSProperties = { fontWeight: 300, fontSize: "clamp(1.75rem, 3vw, 2.5rem)" }
-const BODY: CSSProperties = { fontSize: "1rem" }
+const HEADING: CSSProperties = { fontWeight: 600, fontSize: "1.5rem" }
+const BODY: CSSProperties = { fontSize: "0.8125rem" }
 
 /* --------------------------------------------------------------------------
    CODE VIEWER
@@ -429,7 +429,7 @@ export function AboutPage() {
           meta="Core thesis"
           title="Autonomous blue-team swarms against real-time intrusions"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             Modern cyber attacks execute at machine speed. Threat actors use automated recon, in-memory
             process injection, zero-day chains, and stolen OAuth tokens to compromise infrastructure in
             minutes. Meanwhile, human security operations centres remain throttled by alert fatigue,
@@ -464,7 +464,7 @@ export function AboutPage() {
           meta="Four decoupled tiers"
           title="A four-tier pipeline from telemetry to interface"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             Phalanx separates raw security telemetry, cognitive reasoning, decentralized agent
             communication, and safe UI generation into four self-contained tiers.
           </p>
@@ -529,7 +529,7 @@ export function AboutPage() {
           meta="The end of rigid DAGs"
           title="Unscripted orchestration: why state machines fail in cyber defense"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             Traditional security orchestration, automation, and response (SOAR) platforms rely on
             pre-programmed decision trees and directed acyclic graphs. During real intrusions, that
             architecture breaks.
@@ -610,7 +610,7 @@ export function AboutPage() {
           meta="Google Agent2Agent v0.3"
           title="Peer-to-peer A2A, on the wire"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             Phalanx implements the Google Agent2Agent (A2A) specification over JSON-RPC 2.0. Rather
             than calling internal function pointers, all inter-agent delegation moves as fully-formed
             wire envelopes.
@@ -688,7 +688,7 @@ export function AboutPage() {
           meta="A2UI v0.9 specification"
           title="A2UI v0.9 runtime surface generation"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             How can autonomous agents author operator dashboards without introducing cross-site
             scripting or arbitrary code execution? Phalanx uses the A2UI v0.9 declarative
             specification.
@@ -721,7 +721,7 @@ export function AboutPage() {
                     <span className="eyebrow" style={{ color: "var(--negative)" }}>
                       Critical action
                     </span>
-                    <h4 className="title-serif text-[1.25rem]">Immediate containment required</h4>
+                    <h4 className="title text-[1.0625rem]">Immediate containment required</h4>
                   </div>
                   <span className="sev-tag" data-tone="negative">
                     sev-1
@@ -734,7 +734,7 @@ export function AboutPage() {
                   <MockMetric label="Blast radius" value="Single service pod" tone="var(--accent)" />
                 </dl>
 
-                <p className="prose-serif mt-3">
+                <p className="prose mt-3">
                   Adversary implant actively communicating with external C2 185.121.44.19. Containment
                   operator recommends network isolation.
                 </p>
@@ -778,7 +778,7 @@ export function AboutPage() {
           meta="37 simulated SOC instruments"
           title="The simulated tool estate and zero-ground-truth isolation"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             Phalanx agents carry 37 simulated security instruments covering the full spectrum of SOC
             operations. Agents are quarantined from the hidden scenario ground truth, which forces
             genuine forensic deduction.
@@ -808,7 +808,7 @@ export function AboutPage() {
                 className="rule-row md:grid-cols-[11rem_minmax(0,1fr)_minmax(0,0.5fr)]"
               >
                 <code className="meta-mono text-accent-indigo!">{tool.name}</code>
-                <p className="prose-serif max-w-[62ch]">{tool.description}</p>
+                <p className="prose max-w-[62ch]">{tool.description}</p>
                 <div className="flex flex-col items-start gap-1.5">
                   <span className="sev-tag" data-tone={CLEARANCE_TONE[tool.clearance]}>
                     {tool.clearance}
@@ -832,7 +832,7 @@ export function AboutPage() {
           meta="Frontier models and the replay engine"
           title="Multi-model flexibility and deterministic replay"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             Security work demands vendor independence. Phalanx has a plug-and-play provider
             architecture alongside an offline deterministic replay engine.
           </p>
@@ -852,8 +852,8 @@ export function AboutPage() {
 
             {activeModelTab === "gemini" && (
               <div className="flex flex-col gap-3">
-                <h3 className="title-serif text-[1.375rem]">Google Gemini 3</h3>
-                <p className="prose-serif max-w-[62ch]">
+                <h3 className="title text-[1.125rem]">Google Gemini 3</h3>
+                <p className="prose max-w-[62ch]">
                   A 2M token context window and native multi-turn tool calling.
                 </p>
                 <dl className="flex flex-col">
@@ -871,8 +871,8 @@ export function AboutPage() {
 
             {activeModelTab === "claude" && (
               <div className="flex flex-col gap-3">
-                <h3 className="title-serif text-[1.375rem]">Anthropic Claude 5</h3>
-                <p className="prose-serif max-w-[62ch]">
+                <h3 className="title text-[1.125rem]">Anthropic Claude 5</h3>
+                <p className="prose max-w-[62ch]">
                   Hybrid thinking and long chain-of-thought forensic reasoning.
                 </p>
                 <dl className="flex flex-col">
@@ -891,8 +891,8 @@ export function AboutPage() {
 
             {activeModelTab === "openai" && (
               <div className="flex flex-col gap-3">
-                <h3 className="title-serif text-[1.375rem]">OpenAI GPT-5</h3>
-                <p className="prose-serif max-w-[62ch]">
+                <h3 className="title text-[1.125rem]">OpenAI GPT-5</h3>
+                <p className="prose max-w-[62ch]">
                   Strict JSON schema adherence and tool orchestration.
                 </p>
                 <dl className="flex flex-col">
@@ -910,8 +910,8 @@ export function AboutPage() {
 
             {activeModelTab === "replay" && (
               <div className="flex flex-col gap-3">
-                <h3 className="title-serif text-[1.375rem]">Deterministic replay engine</h3>
-                <p className="prose-serif max-w-[62ch]">
+                <h3 className="title text-[1.125rem]">Deterministic replay engine</h3>
+                <p className="prose max-w-[62ch]">
                   Phalanx ships a pre-recorded, millisecond-accurate replay director. It streams the
                   authentic tool responses, A2A coordination messages, and A2UI dashboards with zero
                   model API calls.
@@ -940,7 +940,7 @@ export function AboutPage() {
           meta="Architectural benchmarks"
           title="Rigid SOAR playbooks versus autonomous multi-agent swarms"
         >
-          <p className="prose-serif max-w-[62ch]" style={BODY}>
+          <p className="prose max-w-[62ch]" style={BODY}>
             An architectural comparison of the move from rigid automation to autonomous agentic
             defense.
           </p>
@@ -1009,8 +1009,8 @@ export function AboutPage() {
 
         {/* ------------------------------------------------------------- next */}
         <section className="flex flex-col gap-4 border-t border-rule pt-8">
-          <h3 className="title-serif text-[1.5rem]">See the swarm run</h3>
-          <p className="prose-serif max-w-[62ch]">
+          <h3 className="title text-[1.25rem]">See the swarm run</h3>
+          <p className="prose max-w-[62ch]">
             Run a scenario, inspect the agent skills, or point the swarm at a live model.
           </p>
 
@@ -1094,7 +1094,7 @@ function Section({
           </span>
           <span className="meta-mono">{meta}</span>
         </div>
-        <h2 className="title-serif max-w-[24ch]" style={HEADING}>
+        <h2 className="title max-w-[24ch]" style={HEADING}>
           {title}
         </h2>
       </div>
@@ -1106,8 +1106,8 @@ function Section({
 function DefRow({ term, children }: { term: string; children: ReactNode }) {
   return (
     <div className="rule-row md:grid-cols-[14rem_minmax(0,1fr)]">
-      <dt className="title-serif text-[1.125rem]">{term}</dt>
-      <dd className="prose-serif max-w-[62ch]">{children}</dd>
+      <dt className="title text-[0.9375rem]">{term}</dt>
+      <dd className="prose max-w-[62ch]">{children}</dd>
     </div>
   )
 }
@@ -1118,7 +1118,7 @@ function ClaimRow({ tone, term, children }: { tone: "negative" | "positive"; ter
       <dt className="meta-mono" style={{ color: `var(--${tone})` }}>
         {term}
       </dt>
-      <dd className="prose-serif max-w-[62ch]">{children}</dd>
+      <dd className="prose max-w-[62ch]">{children}</dd>
     </div>
   )
 }
@@ -1140,9 +1140,9 @@ function TierRow({
     <div className="rule-row md:grid-cols-[3rem_minmax(0,1.25fr)_minmax(0,0.55fr)]">
       <span className="meta-mono">{number}</span>
       <div className="flex flex-col gap-1.5">
-        <h3 className="title-serif text-[1.125rem]">{title}</h3>
+        <h3 className="title text-[0.9375rem]">{title}</h3>
         <span className="meta-mono">{lede}</span>
-        <p className="prose-serif max-w-[62ch]">{children}</p>
+        <p className="prose max-w-[62ch]">{children}</p>
       </div>
       <span className="concepts">
         {tags.map((tag) => (
@@ -1180,12 +1180,12 @@ function CompareRow({
   return (
     <tr className="border-b border-rule-soft transition-colors hover:bg-[var(--wash)]">
       <td className="py-3 pr-4 align-top">
-        <span className="title-serif text-[1rem]">{dimension}</span>
+        <span className="title text-[0.875rem]">{dimension}</span>
       </td>
-      <td className="prose-serif py-3 pr-4 align-top" style={soarTone ? { color: soarTone } : undefined}>
+      <td className="prose py-3 pr-4 align-top" style={soarTone ? { color: soarTone } : undefined}>
         {soar}
       </td>
-      <td className="prose-serif py-3 align-top" style={swarmTone ? { color: swarmTone } : { color: "var(--ink-soft)" }}>
+      <td className="prose py-3 align-top" style={swarmTone ? { color: swarmTone } : { color: "var(--ink-soft)" }}>
         {swarm}
       </td>
     </tr>
@@ -1195,8 +1195,8 @@ function CompareRow({
 function NextRow({ term, description, action }: { term: string; description: string; action: ReactNode }) {
   return (
     <div className="rule-row items-center md:grid-cols-[12rem_minmax(0,1fr)_auto]">
-      <span className="title-serif text-[1.125rem]">{term}</span>
-      <span className="prose-serif max-w-[62ch]">{description}</span>
+      <span className="title text-[0.9375rem]">{term}</span>
+      <span className="prose max-w-[62ch]">{description}</span>
       {action}
     </div>
   )

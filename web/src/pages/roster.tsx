@@ -7,9 +7,9 @@ import { CLASS_LABEL, type AgentClass } from "@/lib/model"
 import { usePhalanx, useIncidentList } from "@/lib/store"
 
 /* The Roster.
-   One hairline row per agent, grouped by class: callsign and id on the left,
-   the dossier in the middle, published skills and current load on the right.
-   Selecting a row opens the agent detail beside the list. */
+   One compact panel per agent, grouped by class: who it is, what it does, the
+   skills it publishes and the load it is carrying. Selecting a card opens the
+   agent detail beside the grid. */
 
 const ORDER: AgentClass[] = ["command", "analysis", "action", "comms"]
 
@@ -31,70 +31,68 @@ export function RosterPage() {
         }`}
       />
 
-      <p className="prose-serif max-w-[62ch]">
+      <p className="prose max-w-[72ch] text-[0.75rem]!">
         Every agent publishes a live A2A discovery card describing its skills, instruments, and
         delegation heuristics. Incident commanders formulate task squads at run time rather than
         following a fixed playbook.
       </p>
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <div className="flex min-w-0 flex-1 flex-col gap-8">
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col gap-5">
           {ORDER.map((agentClass) => {
             const members = state.agents.filter((each) => each.class === agentClass)
             if (members.length === 0) return null
             return (
-              <section key={agentClass} className="flex flex-col">
+              <section key={agentClass} className="flex flex-col gap-2">
                 <SectionHeader title={CLASS_LABEL[agentClass]}>
                   <span>{members.length} agents</span>
                 </SectionHeader>
 
-                {members.map((member) => {
-                  const runtime = state.runtime.get(member.id)
-                  const activeCount = runtime?.incidentIds.length ?? 0
-                  const working = runtime?.state === "working" || runtime?.state === "consulting"
+                <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {members.map((member) => {
+                    const runtime = state.runtime.get(member.id)
+                    const activeCount = runtime?.incidentIds.length ?? 0
+                    const working = runtime?.state === "working" || runtime?.state === "consulting"
 
-                  return (
-                    <button
-                      key={member.id}
-                      type="button"
-                      className={`rule-row w-full border-l-2 text-left md:grid-cols-[8.5rem_minmax(0,1.15fr)_minmax(0,0.7fr)] ${
-                        selected === member.id ? "border-l-[var(--accent)]" : "border-l-transparent"
-                      }`}
-                      style={{ paddingLeft: "0.75rem" }}
-                      onClick={() => setSelected(selected === member.id ? null : member.id)}
-                    >
-                      <span className="flex flex-col gap-1">
-                        <span className="meta-mono flex items-center gap-2 text-ink!">
-                          <span
-                            className={`phalanx-signal ${working ? "phalanx-status-pulse" : ""}`}
-                            style={{ color: `var(--phalanx-class-${member.class})` }}
-                          />
-                          {member.callsign}
-                        </span>
-                        <span className="meta-mono">{member.id}</span>
-                      </span>
+                    return (
+                      <li key={member.id} className="flex">
+                        <button
+                          type="button"
+                          className={`panel flex w-full flex-col gap-1.5 border-l-2 p-3 text-left transition-colors hover:bg-wash ${
+                            selected === member.id ? "border-l-[var(--accent)]" : "border-l-rule-soft"
+                          }`}
+                          onClick={() => setSelected(selected === member.id ? null : member.id)}
+                        >
+                          <span className="flex items-center gap-2">
+                            <span
+                              className={`phalanx-signal ${working ? "phalanx-status-pulse" : ""}`}
+                              style={{ color: `var(--phalanx-class-${member.class})` }}
+                            />
+                            <span className="truncate text-[0.8125rem] font-semibold tracking-[-0.01em] text-ink">
+                              {member.name}
+                            </span>
+                          </span>
 
-                      <span className="flex min-w-0 flex-col gap-1">
-                        <span className="title-serif text-[1.125rem]">{member.name}</span>
-                        <span className="meta-mono">
-                          {member.discipline} · {CLASS_LABEL[member.class]}
-                        </span>
-                        <span className="prose-serif max-w-[58ch]">{member.summary}</span>
-                      </span>
+                          <span className="meta-mono truncate">
+                            {member.callsign} · {member.discipline} · {CLASS_LABEL[member.class]}
+                          </span>
 
-                      <span className="flex flex-col gap-1.5">
-                        <span className="concepts">
-                          {member.skills.map((skill) => (
-                            <span key={skill.id}>{skill.id}</span>
-                          ))}
-                        </span>
-                        <span className="meta-mono">
-                          Load {activeCount} / {member.capacity} · {runtime?.tasksHandled ?? 0} tasks
-                        </span>
-                      </span>
-                    </button>
-                  )
-                })}
+                          <span className="prose line-clamp-2 text-[0.75rem]!">{member.summary}</span>
+
+                          <span className="concepts mt-auto pt-1">
+                            {member.skills.map((skill) => (
+                              <span key={skill.id}>{skill.id}</span>
+                            ))}
+                          </span>
+
+                          <span className="meta-mono">
+                            Load {activeCount} / {member.capacity} · {runtime?.tasksHandled ?? 0} tasks
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
               </section>
             )
           })}

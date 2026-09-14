@@ -105,7 +105,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
                 <span>{str(spec.kicker, data)}</span>
               </div>
             ) : null}
-            <CardTitle className="title-serif text-[1.0625rem]">{str(spec.title, data)}</CardTitle>
+            <CardTitle className="title text-[0.875rem]!">{str(spec.title, data)}</CardTitle>
           </CardHeader>
           <CardContent className="pt-3">
             {typeof spec.child === "string" ? <Component id={spec.child} context={context} depth={depth + 1} /> : null}
@@ -115,7 +115,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
     }
 
     case "Heading":
-      return <h3 className="title-serif text-[0.9375rem]">{str(spec.text, data)}</h3>
+      return <h3 className="title text-[0.875rem]">{str(spec.text, data)}</h3>
 
     case "Text": {
       const tone = toneOf(spec.tone)
@@ -123,7 +123,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
       return (
         <p
           className={[
-            variant === "mono" ? "meta-mono" : "prose-serif",
+            variant === "mono" ? "meta-mono" : "prose text-[0.75rem]!",
             tone === "neutral" ? (variant === "lead" ? "text-ink!" : "") : toned(spec.tone),
           ].join(" ")}
         >
@@ -167,7 +167,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
           {rows.map((row) => (
             <div key={row.label} className="grid grid-cols-[8.5rem_1fr] items-baseline gap-3">
               <dt className="meta-mono">{row.label}</dt>
-              <dd className={`prose-serif ${toned(row.tone)}`}>{row.value}</dd>
+              <dd className={`prose text-[0.75rem]! ${toned(row.tone)}`}>{row.value}</dd>
             </div>
           ))}
         </dl>

@@ -61,7 +61,7 @@ export function AgentDetail({
   }
 
   return (
-    <aside className="fleet-drawer-in flex w-full shrink-0 flex-col gap-4 border-l border-rule bg-page pl-4 lg:w-96">
+    <aside className="fleet-drawer-in flex w-full shrink-0 flex-col gap-3 border-l border-rule bg-card p-3.5 lg:w-96">
       <header className="flex items-start justify-between gap-3 border-b border-rule-soft pb-3">
         <div className="flex min-w-0 flex-col gap-1">
           <span className="meta-mono flex items-center gap-2 text-ink!">
@@ -72,7 +72,7 @@ export function AgentDetail({
             {agent.callsign}
             <span className="text-muted-foreground">{agent.id}</span>
           </span>
-          <h2 className="title-serif truncate text-[1.25rem]">{agent.name}</h2>
+          <h2 className="title truncate text-[0.9375rem]">{agent.name}</h2>
           <span className="meta-mono">
             {agent.discipline} · {CLASS_LABEL[agent.class]} · {agent.clearance} clearance
           </span>
@@ -96,15 +96,15 @@ export function AgentDetail({
               tone={STATE_TONE[runtime?.state ?? "standby"] ?? "neutral"}
               pulse={runtime?.state === "working" || runtime?.state === "consulting"}
             />
-            <span className="prose-serif text-ink!">{runtime?.activity ?? "Standing by"}</span>
+            <span className="prose text-[0.75rem]! text-ink!">{runtime?.activity ?? "Standing by"}</span>
             <span className="meta-mono ml-auto">{runtime?.state ?? "standby"}</span>
           </div>
 
-          <p className="prose-serif">{agent.summary}</p>
+          <p className="prose text-[0.75rem]!">{agent.summary}</p>
 
           <div className="flex flex-col gap-1.5">
             <h3 className="eyebrow">Delegate when</h3>
-            <p className="prose-serif text-ink-soft!">{agent.delegateWhen}</p>
+            <p className="prose text-[0.75rem]! text-ink-soft!">{agent.delegateWhen}</p>
           </div>
 
           <dl className="grid grid-cols-3 gap-3 border-t border-rule-soft pt-3">
@@ -126,7 +126,7 @@ export function AgentDetail({
               {agent.skills.map((skill) => (
                 <li key={skill.id} className="rule-row gap-1!">
                   <span className="meta-mono text-accent-indigo!">{skill.id}</span>
-                  <span className="prose-serif">{skill.description}</span>
+                  <span className="prose text-[0.75rem]!">{skill.description}</span>
                 </li>
               ))}
             </ul>
@@ -156,7 +156,7 @@ export function AgentDetail({
                         {incident.code}
                         <span className="ml-auto text-muted-foreground">{incident.phase}</span>
                       </span>
-                      <span className="prose-serif truncate">{incident.title}</span>
+                      <span className="prose truncate text-[0.75rem]!">{incident.title}</span>
                     </button>
                   </li>
                 ))}

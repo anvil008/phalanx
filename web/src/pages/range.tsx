@@ -5,7 +5,7 @@ import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { StatusDot } from "@foundry/ui/components/status-dot"
 import { ArrowRight, Play, Square } from "lucide-react"
 import { RangePanel } from "@/components/range-panel"
-import { SectionHeader } from "@/components/section-header"
+import { PanelSection } from "@/components/section-header"
 import { shortTime } from "@/lib/format"
 import { phalanxApi, useAgentIndex, usePhalanx, useIncidentList } from "@/lib/store"
 
@@ -83,7 +83,7 @@ export function RangePage() {
         }
       />
 
-      <p className="prose-serif max-w-[72ch]">
+      <p className="prose max-w-[72ch] text-[0.75rem]!">
         This runs a real, scripted attack against an isolated estate of instrumented services on this host — six loopback
         HTTP services, a fake C2, and an attacker process, all confined to 127.0.0.1. The attack writes real logs; a real
         detector turns those logs into the incident; and the agents read the same bytes. Containment acts on the range for
@@ -91,9 +91,9 @@ export function RangePage() {
       </p>
 
       {!running && events.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 border-y border-rule-soft py-12 text-center">
-          <p className="title-serif text-[1.125rem]">The range is idle</p>
-          <p className="prose-serif max-w-[52ch]">
+        <div className="panel flex flex-col items-center gap-3 px-3 py-10 text-center">
+          <p className="title text-[0.875rem]">The range is idle</p>
+          <p className="prose max-w-[52ch] text-[0.75rem]!">
             Run the attack to spin up the estate, launch the intrusion, and watch the incident open from the real
             telemetry. Nothing leaves this host.
           </p>
@@ -103,20 +103,25 @@ export function RangePage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <div className="flex flex-col gap-4">
+      {/* The left column only exists once the range has something to report. */}
+      <div
+        className={`grid gap-3 ${
+          state.rangeStatus || rangeIncidents.length > 0 ? "xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]" : ""
+        }`}
+      >
+        <div className="flex flex-col gap-3 empty:hidden">
           {state.rangeStatus ? <RangePanel status={state.rangeStatus} /> : null}
 
           {rangeIncidents.length > 0 ? (
-            <div className="flex flex-col">
-              <SectionHeader
-                title={rangeIncidents.length > 1 ? "Incidents from the range" : "Incident from the range"}
-              />
+            <PanelSection
+              title={rangeIncidents.length > 1 ? "Incidents from the range" : "Incident from the range"}
+              meta={<span>{rangeIncidents.length} open</span>}
+            >
               {rangeIncidents.map((rangeIncident) => (
                 <button
                   key={rangeIncident.id}
                   type="button"
-                  className="rule-row w-full text-left"
+                  className="panel-row w-full items-start text-left"
                   onClick={() => navigate(`/incidents/${rangeIncident.id}`)}
                 >
                   <span className="meta-mono flex items-center gap-2">
@@ -125,20 +130,20 @@ export function RangePage() {
                     <span>{agents.get(rangeIncident.commanderId)?.callsign ?? rangeIncident.commanderId}</span>
                     <span className="ml-auto">{rangeIncident.phase} · {rangeIncident.status}</span>
                   </span>
-                  <span className="title-serif mt-1 flex items-center gap-1.5 text-[0.9375rem]">
+                  <span className="title mt-1 flex items-center gap-1.5 text-[0.875rem]">
                     {rangeIncident.title} <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
                   </span>
                 </button>
               ))}
-            </div>
+            </PanelSection>
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-3">
-          <SectionHeader title="Raw telemetry">
-            <span className="font-mono text-[11px] text-muted-foreground">{events.length} events · events.jsonl</span>
-          </SectionHeader>
-          <div className="max-h-[38rem] overflow-y-auto border border-rule-soft p-3">
+        <PanelSection
+          title="Raw telemetry"
+          meta={<span>{events.length} events · events.jsonl</span>}
+        >
+          <div className="max-h-[38rem] overflow-y-auto px-3 py-2.5">
             {events.length === 0 ? (
               <p className="meta-mono">No events yet.</p>
             ) : (
@@ -154,7 +159,7 @@ export function RangePage() {
               </ol>
             )}
           </div>
-        </div>
+        </PanelSection>
       </div>
     </PageContent>
   )
