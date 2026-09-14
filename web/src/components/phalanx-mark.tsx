@@ -34,13 +34,15 @@ export function PhalanxProductGlyph({ className }: { className?: string }) {
   )
 }
 
-/** Phalanx product-owned Core Tile mark (Ledger-style rounded squircle tile). */
+/** Phalanx glyph tile for the places a wordmark will not fit: mobile chrome and
+ *  the favicon. Flat page surface, one hairline, an accent glyph — no fill,
+ *  no shadow, no glow. */
 export function PhalanxProductMark({ className }: { className?: string }) {
   return (
     <span
       aria-hidden
       className={cn(
-        "grid size-7 shrink-0 place-items-center rounded-control bg-primary text-primary-foreground select-none shadow-sm",
+        "grid size-7 shrink-0 place-items-center rounded-control border border-rule-soft text-accent-indigo select-none",
         className
       )}
     >
@@ -49,7 +51,21 @@ export function PhalanxProductMark({ className }: { className?: string }) {
   )
 }
 
-/** Phalanx product lockup: Core Tile mark + Title Case name (Ledger style). */
+/** Phalanx wordmark: the product name set in the title serif with the accent
+ *  dot that closes the author's own mark. */
+export function PhalanxWordmark({ className }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex items-baseline gap-1.5", className)}>
+      <span className="title-serif text-[1.375rem] leading-none">Phalanx</span>
+      <span
+        aria-hidden
+        className="size-[7px] shrink-0 rounded-full bg-accent-indigo"
+      />
+    </span>
+  )
+}
+
+/** Phalanx product lockup: glyph tile + wordmark. */
 export function PhalanxProductBrand({
   compact = false,
   className,
@@ -60,11 +76,7 @@ export function PhalanxProductBrand({
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <PhalanxProductMark />
-      {!compact && (
-        <span className="truncate font-sans text-[14px] font-semibold leading-none tracking-[-0.015em] text-foreground group-data-[collapsible=icon]:hidden">
-          Phalanx
-        </span>
-      )}
+      {!compact && <PhalanxWordmark className="group-data-[collapsible=icon]:hidden" />}
     </span>
   )
 }

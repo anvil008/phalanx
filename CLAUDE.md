@@ -7,7 +7,7 @@ demo with zero external repository dependencies, and nothing outside this direct
 should be edited to change its behaviour.
 
 - **Ports:** server `:8095`, web dev server `:5195`.
-- **Design language:** Modern dark instrument canvas design system (`@foundry/ui`, `@foundry/tokens`, `@foundry/charts`). Surface ladder, radii, glass recipes, hairlines and typography are unified. Phalanx's brand hue is cyan `#4cc9d9` rather than amber, because in an incident-response surface amber and red are already spoken for by severity.
+- **Design language:** Flat hairline editorial surfaces on `@foundry/ui`, restyled through tokens in `web/src/styles/phalanx.css` rather than per-page overrides. The accent is indigo `#79a7ff`; amber and red stay reserved for severity, and severity shows as text colour or a small dot, never a fill or a glow. Titles and prose are Newsreader, labels/meta/data/buttons/nav are Space Mono, and uppercase is permitted only for eyebrows. No glass, blur, grain, gradient, shadow or glow anywhere: panels are the page plus a 1px rule at `0.25rem` radius or less.
 - **The live range is real data, and its isolation is load-bearing.** The
   `range/` lab is Node processes on `127.0.0.1` writing real logs to
   `~/.phalanx-range`; the agents read those logs through the `TelemetrySource`

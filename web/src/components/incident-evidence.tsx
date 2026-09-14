@@ -1,15 +1,5 @@
 import { useState } from "react"
-import { Badge } from "@foundry/ui/components/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@foundry/ui/components/card"
-import {
-  ShieldAlert,
-  Terminal,
-  FileCode,
-  Network,
-  Copy,
-  Check,
-  ShieldCheck,
-} from "lucide-react"
+import { ShieldAlert, Terminal, FileCode, Network, Copy, Check } from "lucide-react"
 import type { Incident } from "@/lib/model"
 
 interface IncidentEvidenceProps {
@@ -29,37 +19,37 @@ function getIOCsForIncident(incident: Incident): IOCItem[] {
     return [
       {
         value: "185.121.44.19",
-        type: "IPv4 C2 Infrastructure",
+        type: "IPv4 C2 infrastructure",
         verdict: "critical",
-        containment: "Perimeter BGP Null-Route & Egress Firewall Block",
+        containment: "Perimeter BGP null-route and egress firewall block",
         mitreTactic: "T1071.001 (Web Protocols)",
       },
       {
         value: "cdn-status-check.net",
-        type: "Adversary Domain / DNS",
+        type: "Adversary domain",
         verdict: "critical",
-        containment: "CoreDNS Sinkholed & SNI Filtering Active",
+        containment: "CoreDNS sinkholed, SNI filtering active",
         mitreTactic: "T1071.004 (DNS)",
       },
       {
         value: "libedgetls.so.2",
-        type: "LD_PRELOAD Rootkit Hook",
+        type: "LD_PRELOAD rootkit hook",
         verdict: "critical",
-        containment: "Host Isolated (edge-gw-01) & Hash Blacklisted",
+        containment: "Host isolated, hash blocked",
         mitreTactic: "T1574.006 (LD_PRELOAD)",
       },
       {
         value: "svc-deploy",
-        type: "Compromised Service Principal",
+        type: "Compromised service principal",
         verdict: "high",
-        containment: "IAM STS Session Revoked & Credentials Rotated",
+        containment: "IAM STS session revoked, credentials rotated",
         mitreTactic: "T1078.004 (Cloud Accounts)",
       },
       {
         value: "edge-gw-01",
-        type: "Compromised Ingress Host",
+        type: "Compromised ingress host",
         verdict: "critical",
-        containment: "VLAN Quarantined & Live Memory Dump Captured",
+        containment: "VLAN quarantined, live memory dump captured",
         mitreTactic: "T1190 (Exploit Public-Facing App)",
       },
     ]
@@ -69,30 +59,30 @@ function getIOCsForIncident(incident: Incident): IOCItem[] {
     return [
       {
         value: "app-id 9f31c0",
-        type: "Illicit OAuth Enterprise App",
+        type: "Illicit OAuth enterprise app",
         verdict: "critical",
-        containment: "Tenant Consent Revoked & Service Principal Evicted",
+        containment: "Tenant consent revoked, service principal evicted",
         mitreTactic: "T1528 (Application Access Token)",
       },
       {
         value: "cdn-status-check.net",
-        type: "OAuth Redirect C2 Domain",
+        type: "OAuth redirect C2 domain",
         verdict: "critical",
-        containment: "DNS Sinkholed & Outbound Web Proxy Blocked",
+        containment: "DNS sinkholed, outbound web proxy blocked",
         mitreTactic: "T1071.001 (Web Protocols)",
       },
       {
         value: "r.almeida",
-        type: "Phished Corporate Account",
+        type: "Phished corporate account",
         verdict: "high",
-        containment: "Active Sessions Revoked & Forced MFA Reset",
+        containment: "Active sessions revoked, MFA reset forced",
         mitreTactic: "T1566.002 (Spearphishing Link)",
       },
       {
         value: "corp-idp-01",
-        type: "Target Identity Provider",
+        type: "Target identity provider",
         verdict: "high",
-        containment: "Audit Logs Exported & Graph API App Locked Down",
+        containment: "Audit logs exported, Graph API app locked down",
         mitreTactic: "T1098.005 (Device Registration)",
       },
     ]
@@ -101,9 +91,9 @@ function getIOCsForIncident(incident: Incident): IOCItem[] {
   // Fallback for live range or custom
   return incident.indicators.map((ind) => ({
     value: ind,
-    type: ind.includes(".") ? (ind.match(/\d+\.\d+\.\d+\.\d+/) ? "IP Address" : "Domain Name") : "Indicator",
+    type: ind.includes(".") ? (ind.match(/\d+\.\d+\.\d+\.\d+/) ? "IP address" : "Domain name") : "Indicator",
     verdict: "high",
-    containment: "Active Defense Automated Containment Enforced",
+    containment: "Automated containment enforced",
     mitreTactic: "TA0040 (Impact / Defense Evasion)",
   }))
 }
@@ -124,122 +114,77 @@ export function IncidentEvidence({ incident }: IncidentEvidenceProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Evidence & IOC Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto border-b border-border/60 pb-2">
-        <button
-          type="button"
-          onClick={() => setActiveTab("iocs")}
-          className={`flex items-center gap-1.5 rounded-item px-2.5 py-1 text-xs font-medium transition-colors ${
-            activeTab === "iocs"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
-        >
-          <ShieldAlert className="size-3.5" />
-          <span>Indicators of Compromise ({iocs.length})</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("waf")}
-          className={`flex items-center gap-1.5 rounded-item px-2.5 py-1 text-xs font-medium transition-colors ${
-            activeTab === "waf"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
-        >
-          <FileCode className="size-3.5" />
-          <span>{isZeroDay ? "WAF / Ingress Telemetry" : "OAuth Consent Log"}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("edr")}
-          className={`flex items-center gap-1.5 rounded-item px-2.5 py-1 text-xs font-medium transition-colors ${
-            activeTab === "edr"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
-        >
-          <Terminal className="size-3.5" />
-          <span>{isZeroDay ? "EDR Process Tree" : "Graph API Audit Trail"}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("netflow")}
-          className={`flex items-center gap-1.5 rounded-item px-2.5 py-1 text-xs font-medium transition-colors ${
-            activeTab === "netflow"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground"
-          }`}
-        >
-          <Network className="size-3.5" />
-          <span>{isZeroDay ? "NetFlow C2 Beaconing" : "Mailbox Enumeration Flow"}</span>
-        </button>
+      {/* Evidence tabs */}
+      <div className="flex items-center gap-5 overflow-x-auto border-b border-rule-soft">
+        {[
+          { id: "iocs", Icon: ShieldAlert, label: `Indicators (${iocs.length})` },
+          { id: "waf", Icon: FileCode, label: isZeroDay ? "WAF telemetry" : "Consent log" },
+          { id: "edr", Icon: Terminal, label: isZeroDay ? "EDR process tree" : "Graph API audit" },
+          { id: "netflow", Icon: Network, label: isZeroDay ? "NetFlow beaconing" : "Mailbox enumeration" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`meta-mono -mb-px flex shrink-0 items-center gap-1.5 border-b pb-1.5 transition-colors ${
+              activeTab === tab.id
+                ? "border-[color:var(--accent)] text-ink"
+                : "border-transparent hover:text-ink"
+            }`}
+          >
+            <tab.Icon className="size-3" />
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab: Indicators of Compromise */}
       {activeTab === "iocs" && (
-        <Card className="border-border/70 bg-card/60">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Threat Intelligence & Extracted IOCs
-              </CardTitle>
-              <Badge variant="outline" className="font-mono text-[10px] text-primary">
-                Swarm Verified
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-1">
-            <div className="flex flex-col divide-y divide-border/40">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
+            <span className="title-serif text-[0.9375rem]">Threat intelligence and extracted IOCs</span>
+            <span className="meta-mono text-accent-indigo!">Swarm verified</span>
+          </div>
+          <div>
+            <ul className="flex flex-col">
               {iocs.map((ioc) => (
-                <div key={ioc.value} className="flex flex-col gap-1.5 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-start gap-2.5 min-w-0">
-                    <button
-                      type="button"
-                      onClick={() => copyToClipboard(ioc.value)}
-                      title="Click to copy IOC"
-                      className="group mt-0.5 flex items-center gap-1.5 rounded bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-foreground hover:bg-muted"
-                    >
-                      <span className="truncate">{ioc.value}</span>
-                      {copiedValue === ioc.value ? (
-                        <Check className="size-3 text-positive" />
-                      ) : (
-                        <Copy className="size-3 opacity-40 group-hover:opacity-100" />
-                      )}
-                    </button>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-muted-foreground">{ioc.type}</span>
-                      <span className="font-mono text-[10px] text-muted-foreground/80">• {ioc.mitreTactic}</span>
+                <li key={ioc.value} className="rule-row">
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(ioc.value)}
+                        title="Click to copy IOC"
+                        className="meta-mono group flex max-w-full items-center gap-1.5 border border-rule-soft px-1.5 py-0.5 text-ink! hover:bg-wash"
+                      >
+                        <span className="truncate">{ioc.value}</span>
+                        {copiedValue === ioc.value ? (
+                          <Check className="size-3 text-positive" />
+                        ) : (
+                          <Copy className="size-3 opacity-40 group-hover:opacity-100" />
+                        )}
+                      </button>
+                      <span className="meta-mono">{ioc.mitreTactic}</span>
                     </div>
+                    <span className="prose-serif">{ioc.type}</span>
+                    <span className="meta-mono text-[color:var(--positive)]!">{ioc.containment}</span>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="flex items-center gap-1 text-[11px] text-emerald-400">
-                      <ShieldCheck className="size-3.5" />
-                      <span>{ioc.containment}</span>
-                    </span>
-                  </div>
-                </div>
+                </li>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+            </ul>
+          </div>
+        </div>
       )}
 
       {/* Tab: WAF / Ingress Telemetry */}
       {activeTab === "waf" && (
-        <Card className="border-border/70 bg-card/60">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {isZeroDay ? "Perimeter Ingress HTTP Desync Artifact" : "Azure AD / IdP Consent Grant Event"}
-              </CardTitle>
-              <Badge variant="outline" className="font-mono text-[10px] text-rose-400">
-                Rule: {isZeroDay ? "HTTP-DESYNC-HEURISTIC" : "UNKNOWN-APP-CONSENT"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-1">
-            <div className="overflow-x-auto rounded-item bg-muted/30 p-3 font-mono text-[11px] leading-relaxed text-foreground/90">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
+            <span className="title-serif text-[0.9375rem]">{isZeroDay ? "Perimeter ingress HTTP desync artifact" : "Azure AD consent grant event"}</span>
+            <span className="meta-mono text-[color:var(--negative)]!">Rule {isZeroDay ? "HTTP-DESYNC-HEURISTIC" : "UNKNOWN-APP-CONSENT"}</span>
+          </div>
+          <div>
+            <div className="overflow-x-auto border border-rule-soft bg-wash p-3 font-mono text-[11px] leading-relaxed text-ink-soft">
               {isZeroDay ? (
                 <pre>
 {`POST /admin/_health HTTP/1.1
@@ -290,25 +235,19 @@ Content-Type: application/json
                 </pre>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Tab: EDR Process Tree */}
       {activeTab === "edr" && (
-        <Card className="border-border/70 bg-card/60">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {isZeroDay ? "Host EDR Process Lineage & Memory Dump" : "Graph API High-Velocity Audit Trail"}
-              </CardTitle>
-              <Badge variant="outline" className="font-mono text-[10px] text-amber-400">
-                {isZeroDay ? "Host: edge-gw-01" : "Host: corp-fs-03"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-1">
-            <div className="overflow-x-auto rounded-item bg-muted/30 p-3 font-mono text-[11px] leading-relaxed text-foreground/90">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
+            <span className="title-serif text-[0.9375rem]">{isZeroDay ? "Host EDR process lineage and memory dump" : "Graph API audit trail"}</span>
+            <span className="meta-mono text-[color:var(--warning)]!">{isZeroDay ? "Host edge-gw-01" : "Host corp-fs-03"}</span>
+          </div>
+          <div>
+            <div className="overflow-x-auto border border-rule-soft bg-wash p-3 font-mono text-[11px] leading-relaxed text-ink-soft">
               {isZeroDay ? (
                 <pre>
 {`[02:14:11] systemd (PID 1)
@@ -340,25 +279,19 @@ Content-Type: application/json
                 </pre>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Tab: NetFlow / Beaconing Analysis */}
       {activeTab === "netflow" && (
-        <Card className="border-border/70 bg-card/60">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {isZeroDay ? "NetFlow Deep Packet & Cadence Analysis" : "Exfiltration Bandwidth & Data Flow"}
-              </CardTitle>
-              <Badge variant="outline" className="font-mono text-[10px] text-cyan-400">
-                Rule: {isZeroDay ? "PERIODIC-EGRESS" : "BULK-OBJECT-READ"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-1">
-            <div className="overflow-x-auto rounded-item bg-muted/30 p-3 font-mono text-[11px] leading-relaxed text-foreground/90">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-soft pb-1.5">
+            <span className="title-serif text-[0.9375rem]">{isZeroDay ? "NetFlow packet and cadence analysis" : "Exfiltration bandwidth and data flow"}</span>
+            <span className="meta-mono">Rule {isZeroDay ? "PERIODIC-EGRESS" : "BULK-OBJECT-READ"}</span>
+          </div>
+          <div>
+            <div className="overflow-x-auto border border-rule-soft bg-wash p-3 font-mono text-[11px] leading-relaxed text-ink-soft">
               {isZeroDay ? (
                 <pre>
 {`Flow Record ID: FLW-2026-9481
@@ -392,8 +325,8 @@ Exfiltration Pattern:
                 </pre>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   )

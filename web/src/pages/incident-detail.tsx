@@ -1,11 +1,9 @@
 import { useMemo, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
-import { Badge } from "@foundry/ui/components/badge"
 import { Button } from "@foundry/ui/components/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@foundry/ui/components/card"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { StatusDot } from "@foundry/ui/components/status-dot"
-import { ArrowLeft, Shield, Terminal, Clock, Activity, ArrowRight } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { A2UISurface } from "@/components/a2ui-surface"
 import { RangePanel } from "@/components/range-panel"
 import { AgentDetail } from "@/components/agent-detail"
@@ -18,23 +16,27 @@ import { PHASE_ORDER, type IncidentSeverity, type IncidentTimelineEntry } from "
 import { IncidentEvidence } from "@/components/incident-evidence"
 import { phalanxApi, useAgentIndex, usePhalanx, useIncidentList } from "@/lib/store"
 
-/* One Incident, and the Swarm working it.
-   Executive tactical breakdown: real-time topology, MITRE indicators,
-   and dynamic A2UI commander cards. */
+/* One incident, and the swarm working it.
+   Topology, tasking, timeline and the commander's own A2UI card, in the same
+   hairline language as the rest of the product. */
 
-const SEV_CLASS: Record<IncidentSeverity, { badge: string; text: string }> = {
-  sev1: { badge: "border-destructive/50 bg-destructive/15 text-destructive", text: "text-destructive" },
-  sev2: { badge: "border-warning/50 bg-warning/15 text-warning", text: "text-warning" },
-  sev3: { badge: "border-primary/50 bg-primary/15 text-primary", text: "text-primary" },
-  sev4: { badge: "border-border bg-black/40 text-muted-foreground", text: "text-muted-foreground" },
+const SEV_TONE: Record<IncidentSeverity, string> = {
+  sev1: "negative",
+  sev2: "warning",
+  sev3: "info",
+  sev4: "muted",
 }
 
 const TONE_TEXT: Record<IncidentTimelineEntry["tone"], string> = {
   neutral: "text-muted-foreground",
-  info: "text-info font-medium",
-  positive: "text-positive font-medium",
-  warning: "text-warning font-medium",
-  negative: "text-destructive font-medium",
+  info: "text-info",
+  positive: "text-positive",
+  warning: "text-warning",
+  negative: "text-destructive",
+}
+
+function severityLabel(severity: IncidentSeverity): string {
+  return `Sev ${severity.slice(3)}`
 }
 
 export function IncidentDetailPage() {
@@ -54,15 +56,13 @@ export function IncidentDetailPage() {
   if (!incident) {
     return (
       <PageContent>
-        <PageHeader title="Incident Dossier" />
-        <Card className="border-border bg-card/85">
-          <CardContent className="py-10 text-center font-mono">
-            <p className="text-sm font-bold text-foreground">Incident not found in active memory space.</p>
-            <Button size="sm" variant="outline" className="mt-4 font-mono text-xs" onClick={() => navigate("/incidents")}>
-              Return to Incident Response Team
-            </Button>
-          </CardContent>
-        </Card>
+        <PageHeader title="Incident dossier" />
+        <div className="flex flex-col items-center gap-4 py-12 text-center">
+          <p className="title-serif text-[1.125rem]">Incident not found in active memory</p>
+          <Button size="sm" variant="outline" onClick={() => navigate("/incidents")}>
+            Return to the incident response team
+          </Button>
+        </div>
       </PageContent>
     )
   }
@@ -72,99 +72,89 @@ export function IncidentDetailPage() {
   const incidentBus = state.bus.filter((message) => message.incidentId === incident.id)
   const agent = selectedAgent ? agents.get(selectedAgent) : undefined
   const phaseIndex = PHASE_ORDER.indexOf(incident.phase)
-  const sevInfo = SEV_CLASS[incident.severity] ?? SEV_CLASS.sev4
 
   return (
     <PageContent className="phalanx-page-scroll-fade">
       <PageHeader
         title={`${incident.code} · ${incident.title}`}
-        subtitle={`COMMANDER ${commander?.callsign?.toUpperCase() ?? incident.commanderId.toUpperCase()} · ACTIVE PHASE: ${incident.phase.toUpperCase()}`}
+        subtitle={`Commander ${commander?.callsign ?? incident.commanderId} · phase ${incident.phase}`}
         actions={
-          <Button size="sm" variant="outline" className="font-mono text-xs gap-1.5 h-7.5" render={<Link to="/incidents" />}>
-            <ArrowLeft className="size-3.5" />
-            <span>ALL INCIDENTS</span>
+          <Button size="sm" variant="outline" render={<Link to="/incidents" />}>
+            <ArrowLeft className="size-3.5 mr-1.5" />
+            <span>All incidents</span>
           </Button>
         }
       />
 
-      {/* Incident Status Strip */}
-      <div className="rounded-shell border border-border bg-card/80 p-3.5 backdrop-blur-md flex flex-wrap items-center gap-4 justify-between shadow-lg">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="outline" className={`font-mono text-[10px] font-bold ${sevInfo.badge}`}>
-            {incident.severity.toUpperCase()}
-          </Badge>
+      {/* Status strip */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-y border-rule-soft py-3">
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="sev-tag" data-tone={SEV_TONE[incident.severity]}>
+            {severityLabel(incident.severity)}
+          </span>
 
-          <span className="flex items-center gap-1.5 font-mono text-xs text-foreground">
+          <span className="meta-mono flex items-center gap-1.5">
             <StatusDot
               tone={incident.status === "resolved" ? "positive" : incident.status === "contained" ? "warning" : "negative"}
               pulse={incident.status === "open"}
             />
-            <span className="font-bold uppercase">{incident.status}</span>
+            <span className="text-ink">{incident.status}</span>
           </span>
 
-          <span className="font-mono text-xs text-muted-foreground flex items-center gap-1">
-            <Clock className="size-3 text-muted-foreground" />
-            <span>ELAPSED: <strong className="text-foreground">{duration(incident.openedAt, incident.closedAt)}</strong></span>
+          <span className="meta-mono">
+            Elapsed <span className="text-ink">{duration(incident.openedAt, incident.closedAt)}</span>
           </span>
 
-          <span className="font-mono text-xs text-muted-foreground">
-            CONFIDENCE: <strong className="text-foreground">{incident.confidence}%</strong>
+          <span className="meta-mono">
+            Confidence <span className="text-ink">{incident.confidence}%</span>
           </span>
         </div>
 
-        {/* Phase Stepper */}
-        <div className="flex items-center gap-1 font-mono text-[10px] overflow-x-auto">
+        {/* Phase stepper */}
+        <div className="meta-mono flex items-center gap-3 overflow-x-auto">
           {PHASE_ORDER.map((phase, index) => {
             const isCompleted = index < phaseIndex
             const isCurrent = index === phaseIndex
             return (
-              <div key={phase} className="flex items-center gap-1">
+              <span key={phase} className="flex items-center gap-1.5">
                 <span
-                  className={`rounded px-2 py-0.5 font-bold uppercase transition-colors ${
-                    isCurrent
-                      ? "bg-primary text-primary-foreground shadow-[0_0_8px_rgba(76,201,217,0.4)]"
+                  className="inline-block size-1.5 rounded-full"
+                  style={{
+                    background: isCurrent
+                      ? "var(--accent)"
                       : isCompleted
-                        ? "bg-positive/20 text-positive border border-positive/30"
-                        : "text-muted-foreground/40 border border-transparent"
-                  }`}
-                >
-                  {phase}
-                </span>
-                {index < PHASE_ORDER.length - 1 ? (
-                  <ArrowRight className="size-2.5 text-muted-foreground/30" />
-                ) : null}
-              </div>
+                        ? "var(--muted)"
+                        : "var(--rule)",
+                  }}
+                />
+                <span className={isCurrent ? "text-ink" : isCompleted ? "" : "text-muted-soft"}>{phase}</span>
+              </span>
             )
           })}
         </div>
       </div>
 
-      <div className="rounded-item border border-border/70 bg-card/60 p-3 text-xs text-muted-foreground leading-relaxed">
-        {incident.summary}
-      </div>
+      <p className="prose-serif max-w-[72ch]">{incident.summary}</p>
 
       {incident.links.length > 0 ? (
-        <div className="rounded-item border border-warning/40 bg-warning/10 p-2.5 font-mono text-xs text-warning flex items-center gap-2">
-          <Activity className="size-3.5 shrink-0" />
-          <span>
-            Part of multi-front campaign. Correlated with{" "}
-            {incident.links.map((link) => {
-              const other = state.incidents.get(link.incidentId)
-              return other ? (
-                <Link key={link.incidentId} to={`/incidents/${link.incidentId}`} className="underline font-bold text-foreground">
-                  {other.code}
-                </Link>
-              ) : null
-            })}{" "}
-            — {incident.links[0]!.reason}
-          </span>
-        </div>
+        <p className="meta-mono text-[color:var(--warning)]!">
+          Part of a multi-front campaign. Correlated with{" "}
+          {incident.links.map((link) => {
+            const other = state.incidents.get(link.incidentId)
+            return other ? (
+              <Link key={link.incidentId} to={`/incidents/${link.incidentId}`} className="text-ink underline">
+                {other.code}
+              </Link>
+            ) : null
+          })}{" "}
+          — {incident.links[0]!.reason}
+        </p>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        {/* Left Column: Swarm Graph, Tasking, Incident Bus */}
-        <div className="flex flex-col gap-3">
-          <SectionHeader title="INCIDENT SWARM TOPOLOGY">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        {/* Left column: swarm graph, tasking, incident bus */}
+        <div className="flex flex-col gap-4">
+          <SectionHeader title="Swarm topology">
             <ClassLegend />
           </SectionHeader>
 
@@ -190,154 +180,110 @@ export function IncidentDetailPage() {
 
           <BusLegend />
 
-          {/* Commander Tasking Table */}
-          <Card className="border-border bg-card/85">
-            <CardHeader className="pb-0 pt-3.5 px-4 border-b border-border/40">
-              <CardTitle className="font-mono text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <Terminal className="size-3.5 text-primary" />
-                <span>COMMANDER TASKING & SQUAD ASSIGNMENTS</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-3 px-4">
-              {incident.assignments.length === 0 ? (
-                <p className="font-mono text-xs text-muted-foreground py-2">The commander has not tasked specialists yet.</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {incident.assignments.map((assignment) => {
-                    const assignee = agents.get(assignment.agentId)
-                    return (
-                      <li key={assignment.agentId} className="flex items-start gap-3 rounded border border-border/50 bg-black/30 p-2.5">
-                        <button
-                          type="button"
-                          className="flex items-center gap-1.5 text-left shrink-0 font-mono text-[11px] font-bold text-foreground hover:text-primary transition-colors"
-                          onClick={() => setSelectedAgent(assignment.agentId)}
-                        >
-                          <span
-                            className="size-1.5 rounded-full shadow-[0_0_4px_currentColor]"
-                            style={{
-                              background: `var(--phalanx-class-${assignee?.class ?? "analysis"})`,
-                              color: `var(--phalanx-class-${assignee?.class ?? "analysis"})`,
-                            }}
-                          />
-                          <span>{assignee?.callsign ?? assignment.agentId}</span>
-                        </button>
-                        <p className="text-xs text-muted-foreground leading-relaxed">{assignment.objective}</p>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+          {/* Commander tasking */}
+          <div className="flex flex-col">
+            <SectionHeader title="Tasking" />
+            {incident.assignments.length === 0 ? (
+              <p className="meta-mono pt-3">The commander has not tasked specialists yet</p>
+            ) : (
+              <ul className="flex flex-col">
+                {incident.assignments.map((assignment) => {
+                  const assignee = agents.get(assignment.agentId)
+                  return (
+                    <li key={assignment.agentId} className="rule-row grid-cols-[7rem_minmax(0,1fr)] items-baseline">
+                      <button
+                        type="button"
+                        className="meta-mono flex items-center gap-1.5 text-left text-ink! hover:text-accent-indigo!"
+                        onClick={() => setSelectedAgent(assignment.agentId)}
+                      >
+                        <span
+                          className="size-1.5 rounded-full"
+                          style={{ background: `var(--phalanx-class-${assignee?.class ?? "analysis"})` }}
+                        />
+                        <span>{assignee?.callsign ?? assignment.agentId}</span>
+                      </button>
+                      <p className="prose-serif">{assignment.objective}</p>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
 
-          {/* Incident A2A Bus Traffic */}
-          <Card className="border-border bg-card/85">
-            <CardHeader className="pb-0 pt-3.5 px-4 border-b border-border/40">
-              <CardTitle className="font-mono text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <Activity className="size-3.5 text-primary" />
-                <span>A2A PROTOCOL TRAFFIC FOR {incident.code}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-3 px-4">
-              <BusTrace
-                messages={incidentBus}
-                agents={agents}
-                onSelectAgent={setSelectedAgent}
-                emptyText="No A2A messages on this incident bus yet."
-                limit={40}
-              />
-            </CardContent>
-          </Card>
+          {/* Incident A2A traffic */}
+          <div className="flex flex-col gap-3">
+            <SectionHeader title={`Bus traffic · ${incident.code}`} />
+            <BusTrace
+              messages={incidentBus}
+              agents={agents}
+              onSelectAgent={setSelectedAgent}
+              emptyText="No A2A messages on this incident bus yet."
+              limit={40}
+            />
+          </div>
         </div>
 
-        {/* Right Column: Commander A2UI Surface, Timeline, Scope & Evidence */}
-        <div className="flex flex-col gap-3">
-          <SectionHeader title={`COMMANDER ${commander?.callsign?.toUpperCase() ?? "IC"}'S VIEW`}>
-            <span className="font-mono text-[10px] text-primary font-bold">[A2UI PROTOCOL]</span>
+        {/* Right column: commander surface, timeline, scope & evidence */}
+        <div className="flex flex-col gap-4">
+          <SectionHeader title={`Commander ${commander?.callsign ?? "IC"}`}>
+            <span>A2UI</span>
           </SectionHeader>
 
           {incident.scenarioId === "range" && state.rangeStatus ? <RangePanel status={state.rangeStatus} /> : null}
 
-          {/* A2UI Surface Container */}
-          <div className="relative overflow-hidden rounded-shell border border-border bg-card/85 backdrop-blur-md shadow-xl">
-            <div className="h-[2px] w-full bg-gradient-to-r from-primary via-accent-indigo to-primary" />
-            <div className="p-3.5">
-              <A2UISurface
-                surface={surface}
-                onAction={(actionId, payload) => void phalanxApi.action(incident.surfaceId, actionId, payload)}
-                empty={<p className="font-mono text-xs text-muted-foreground py-4 text-center">Commander has not published an A2UI card yet.</p>}
-              />
-            </div>
+          <A2UISurface
+            surface={surface}
+            onAction={(actionId, payload) => void phalanxApi.action(incident.surfaceId, actionId, payload)}
+            empty={<p className="meta-mono">The commander has not published an A2UI card yet</p>}
+          />
+
+          {/* Timeline */}
+          <div className="flex flex-col">
+            <SectionHeader title="Timeline" />
+            {incident.timeline.length === 0 ? (
+              <p className="meta-mono pt-3">No timeline events recorded</p>
+            ) : (
+              <ol className="flex flex-col">
+                {[...incident.timeline].reverse().map((entry) => (
+                  <li key={entry.id} className="rule-row grid-cols-[4.5rem_minmax(0,1fr)] items-baseline">
+                    <span className="meta-mono">{shortTime(entry.at)}</span>
+                    <p className="prose-serif">
+                      <span className="meta-mono mr-1.5 text-ink!">{entry.actorName}</span>
+                      <span className={TONE_TEXT[entry.tone]}>{entry.text}</span>
+                    </p>
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
 
-          {/* Incident Timeline */}
-          <Card className="border-border bg-card/85">
-            <CardHeader className="pb-0 pt-3.5 px-4 border-b border-border/40">
-              <CardTitle className="font-mono text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                <Clock className="size-3.5 text-primary" />
-                <span>RESPONSE TIMELINE & ACTIONS</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-3 px-4">
-              {incident.timeline.length === 0 ? (
-                <p className="font-mono text-xs text-muted-foreground py-2">No timeline events recorded.</p>
-              ) : (
-                <ol className="flex flex-col gap-2">
-                  {[...incident.timeline].reverse().map((entry) => (
-                    <li key={entry.id} className="grid grid-cols-[4.5rem_1fr] gap-2.5 rounded border border-border/40 bg-black/25 p-2">
-                      <span className="font-mono text-[10px] text-muted-foreground/80">{shortTime(entry.at)}</span>
-                      <p className="text-xs leading-relaxed">
-                        <span className="font-mono text-[10.5px] font-bold text-foreground mr-1.5">{entry.actorName}</span>
-                        <span className={TONE_TEXT[entry.tone]}>{entry.text}</span>
-                      </p>
-                    </li>
-                  ))}
-                </ol>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Scope & Assets */}
+          {/* Scope & assets */}
           {incident.indicators.length > 0 || incident.assets.length > 0 ? (
-            <Card className="border-border bg-card/85">
-              <CardHeader className="pb-0 pt-3.5 px-4 border-b border-border/40">
-                <CardTitle className="font-mono text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-2">
-                  <Shield className="size-3.5 text-primary" />
-                  <span>TARGET ASSETS & OBSERVED INDICATORS</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3 pt-3 px-4">
-                {incident.assets.length > 0 ? (
-                  <div>
-                    <div className="font-mono text-[10px] uppercase text-muted-foreground tracking-wide">
-                      AFFECTED INFRASTRUCTURE ASSETS
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {incident.assets.map((asset) => (
-                        <Badge key={asset} variant="outline" className="font-mono text-[10px] border-border bg-black/40 text-foreground">
-                          {asset}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
+            <div className="flex flex-col gap-3">
+              <SectionHeader title="Assets and indicators" />
 
-                {incident.indicators.length > 0 ? (
-                  <div>
-                    <div className="font-mono text-[10px] uppercase text-muted-foreground tracking-wide">
-                      EXTRACTED THREAT INDICATORS (IOCs)
-                    </div>
-                    <div className="mt-1.5 flex flex-wrap gap-1.5">
-                      {incident.indicators.map((indicator) => (
-                        <Badge key={indicator} variant="outline" className="font-mono text-[10px] border-destructive/40 bg-destructive/15 text-destructive font-bold">
-                          {indicator}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </CardContent>
-            </Card>
+              {incident.assets.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  <span className="eyebrow">Affected assets</span>
+                  <p className="meta-mono flex flex-wrap gap-x-4 text-ink-soft!">
+                    {incident.assets.map((asset) => (
+                      <span key={asset}>{asset}</span>
+                    ))}
+                  </p>
+                </div>
+              ) : null}
+
+              {incident.indicators.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  <span className="eyebrow">Indicators</span>
+                  <p className="meta-mono flex flex-wrap gap-x-4 text-[color:var(--negative)]!">
+                    {incident.indicators.map((indicator) => (
+                      <span key={indicator}>{indicator}</span>
+                    ))}
+                  </p>
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           <IncidentEvidence incident={incident} />

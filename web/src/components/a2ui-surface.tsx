@@ -32,12 +32,19 @@ const TONE_DOT: Record<Tone, "neutral" | "info" | "positive" | "warning" | "nega
   critical: "negative",
 }
 
-const TONE_BORDER: Record<Tone, string> = {
-  neutral: "border-border",
-  info: "border-info/30",
-  positive: "border-positive/30",
-  warning: "border-warning/35",
-  critical: "border-destructive/40",
+/* The typography classes carry their own colour, so a tone has to win on
+   importance rather than on order. Tailwind only emits candidates it can see,
+   so these stay literal rather than being built from TONE_TEXT. */
+const TONE_TEXT_IMPORTANT: Record<Tone, string> = {
+  neutral: "",
+  info: "text-info!",
+  positive: "text-positive!",
+  warning: "text-warning!",
+  critical: "text-destructive!",
+}
+
+function toned(value: unknown): string {
+  return TONE_TEXT_IMPORTANT[toneOf(value)]
 }
 
 function toneOf(value: unknown): Tone {
@@ -90,15 +97,15 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
     case "Card": {
       const tone = toneOf(spec.tone)
       return (
-        <Card className={`phalanx-card-in ${TONE_BORDER[tone]}`}>
+        <Card className="phalanx-card-in">
           <CardHeader className="gap-1 pb-0">
             {spec.kicker ? (
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="meta-mono flex items-center gap-1.5">
                 <StatusDot tone={TONE_DOT[tone]} pulse={tone === "critical"} />
-                <span className="font-mono">{str(spec.kicker, data)}</span>
+                <span>{str(spec.kicker, data)}</span>
               </div>
             ) : null}
-            <CardTitle className="text-sm font-medium normal-case leading-snug tracking-normal">{str(spec.title, data)}</CardTitle>
+            <CardTitle className="title-serif text-[1.0625rem]">{str(spec.title, data)}</CardTitle>
           </CardHeader>
           <CardContent className="pt-3">
             {typeof spec.child === "string" ? <Component id={spec.child} context={context} depth={depth + 1} /> : null}
@@ -108,7 +115,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
     }
 
     case "Heading":
-      return <h3 className="text-sm font-medium text-foreground">{str(spec.text, data)}</h3>
+      return <h3 className="title-serif text-[0.9375rem]">{str(spec.text, data)}</h3>
 
     case "Text": {
       const tone = toneOf(spec.tone)
@@ -116,9 +123,8 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
       return (
         <p
           className={[
-            variant === "lead" ? "text-sm leading-relaxed" : "text-xs leading-relaxed",
-            variant === "mono" ? "font-mono" : "",
-            tone === "neutral" ? (variant === "lead" ? "text-foreground" : "text-muted-foreground") : TONE_TEXT[tone],
+            variant === "mono" ? "meta-mono" : "prose-serif",
+            tone === "neutral" ? (variant === "lead" ? "text-ink!" : "") : toned(spec.tone),
           ].join(" ")}
         >
           {str(spec.text, data)}
@@ -129,7 +135,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
     case "Badge": {
       const tone = toneOf(spec.tone)
       return (
-        <Badge variant="outline" className={`${TONE_TEXT[tone]} ${TONE_BORDER[tone]} font-mono text-[11px]`}>
+        <Badge variant="outline" data-tone={tone === "critical" ? "negative" : tone}>
           {str(spec.text, data)}
         </Badge>
       )
@@ -144,9 +150,9 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
         <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
           {metrics.map((metric) => (
             <div key={metric.label}>
-              <div className="text-xs text-muted-foreground">{metric.label}</div>
-              <div className={`mt-0.5 font-mono text-sm ${TONE_TEXT[toneOf(metric.tone)]}`}>{metric.value}</div>
-              {metric.delta ? <div className="text-[11px] text-muted-foreground">{metric.delta}</div> : null}
+              <div className="eyebrow">{metric.label}</div>
+              <div className={`mt-0.5 font-mono text-sm font-normal ${TONE_TEXT[toneOf(metric.tone)]}`}>{metric.value}</div>
+              {metric.delta ? <div className="meta-mono">{metric.delta}</div> : null}
             </div>
           ))}
         </div>
@@ -160,8 +166,8 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
         <dl className="flex flex-col gap-2">
           {rows.map((row) => (
             <div key={row.label} className="grid grid-cols-[8.5rem_1fr] items-baseline gap-3">
-              <dt className="text-xs text-muted-foreground">{row.label}</dt>
-              <dd className={`text-xs leading-relaxed ${TONE_TEXT[toneOf(row.tone)]}`}>{row.value}</dd>
+              <dt className="meta-mono">{row.label}</dt>
+              <dd className={`prose-serif ${toned(row.tone)}`}>{row.value}</dd>
             </div>
           ))}
         </dl>
@@ -192,7 +198,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
             <li key={index} className="grid grid-cols-[4.5rem_1fr] gap-3">
               <span className="font-mono text-[11px] text-muted-foreground">{shortTime(entry.at)}</span>
               <span className="text-xs leading-relaxed">
-                <span className="font-mono text-[11px] text-muted-foreground">{entry.actor}</span>{" "}
+                <span className="meta-mono text-ink!">{entry.actor}</span>{" "}
                 <span className={TONE_TEXT[toneOf(entry.tone)]}>{entry.text}</span>
               </span>
             </li>
@@ -208,7 +214,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
           {agents.map((agent) => (
             <span
               key={agent.id}
-              className="flex items-center gap-1.5 rounded-item border border-border px-2 py-1 font-mono text-[11px] text-muted-foreground"
+              className="meta-mono flex items-center gap-1.5 border border-rule-soft px-2 py-1"
             >
               <StatusDot
                 tone={agent.state === "blocked" ? "negative" : agent.state === "standby" ? "faint" : "info"}
@@ -227,15 +233,15 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
       const pct = Math.max(0, Math.min(100, Math.round((value / max) * 100)))
       const tone = toneOf(spec.tone)
       const barTone =
-        tone === "positive" ? "bg-positive" : tone === "critical" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-primary"
+        tone === "positive" ? "bg-positive" : tone === "critical" ? "bg-destructive" : tone === "warning" ? "bg-warning" : "bg-[color:var(--accent)]"
       return (
         <div>
-          <div className="flex items-baseline justify-between text-xs">
-            <span className="text-muted-foreground">{str(spec.label, data)}</span>
-            <span className="font-mono text-muted-foreground">{pct}%</span>
+          <div className="meta-mono flex items-baseline justify-between">
+            <span>{str(spec.label, data)}</span>
+            <span className="text-ink">{pct}%</span>
           </div>
-          <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-well">
-            <div className={`h-full rounded-full transition-all duration-500 ${barTone}`} style={{ width: `${pct}%` }} />
+          <div className="mt-1.5 h-px w-full bg-rule-soft">
+            <div className={`h-px transition-all duration-500 ${barTone}`} style={{ width: `${pct}%` }} />
           </div>
         </div>
       )
@@ -243,7 +249,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
 
     case "CodeBlock":
       return (
-        <pre className="overflow-x-auto rounded-item border border-border bg-well p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+        <pre className="overflow-x-auto border border-rule-soft bg-wash p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
           {str(spec.text, data)}
         </pre>
       )
@@ -274,7 +280,7 @@ function Component({ id, context, depth = 0 }: { id: string; context: RenderCont
     default:
       // A catalog the client does not know is a protocol mismatch, not a crash.
       return (
-        <div className="rounded-item border border-warning/30 px-2 py-1 font-mono text-[11px] text-warning">
+        <div className="meta-mono border border-rule-soft px-2 py-1 text-[color:var(--warning)]!">
           unrenderable component: {spec.component}
         </div>
       )

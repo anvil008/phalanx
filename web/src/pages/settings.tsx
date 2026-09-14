@@ -1,23 +1,18 @@
 import { useEffect, useState } from "react"
-import {
-  CheckCircle2,
-  ExternalLink,
-  Eye,
-  EyeOff,
-  Loader2,
-  Radio,
-  RefreshCw,
-  Save,
-  ShieldCheck,
-  XCircle,
-} from "lucide-react"
+import { CheckCircle2, ExternalLink, Eye, EyeOff, Loader2, XCircle } from "lucide-react"
 import { ClaudeLogo, GeminiLogo, OpenAILogo } from "@/components/provider-logos"
-import { Badge } from "@foundry/ui/components/badge"
 import { Button } from "@foundry/ui/components/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@foundry/ui/components/card"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { phalanxApi, usePhalanx } from "@/lib/store"
 import type { PublicSettings } from "@/lib/model"
+
+/* Model & API settings.
+   Hairline sections rather than cards: an eyebrow, a serif heading, the prose
+   that explains the choice, then the fields. The current selection is a 1px
+   accent rule on the left, never a lit border. */
+
+const FIELD =
+  "h-8 w-full rounded-[0.125rem] border border-rule bg-transparent px-2.5 font-mono text-xs text-ink placeholder:text-muted-soft focus:outline-none"
 
 export function SettingsPage() {
   const state = usePhalanx()
@@ -111,7 +106,7 @@ export function SettingsPage() {
         setGeminiKey("")
         setAnthropicKey("")
         setOpenAIKey("")
-        setSavedMessage("Settings saved successfully! Swarm updated.")
+        setSavedMessage("Settings saved. The swarm picked them up.")
         setTimeout(() => setSavedMessage(null), 5000)
       } else {
         setErrorMessage(res.reason || "Failed to save settings.")
@@ -146,7 +141,7 @@ export function SettingsPage() {
     const res = await phalanxApi.testKey(provider, key, model)
     const result = {
       ok: res.ok,
-      message: res.ok ? "Connection verified! Model responded cleanly." : res.error || "Connection failed.",
+      message: res.ok ? "Connection verified. The model answered." : res.error || "Connection failed.",
     }
 
     if (provider === "gemini") {
@@ -165,464 +160,432 @@ export function SettingsPage() {
     <PageContent className="phalanx-page-scroll-fade">
       <PageHeader
         title="Model & API Settings"
-        subtitle={state.mode === "live" ? `Live Swarm (${state.activeProvider})` : "Deterministic Replay"}
+        subtitle={state.mode === "live" ? `live swarm · ${state.activeProvider}` : "deterministic replay"}
         actions={
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={saving || loading}
-            className="flex items-center gap-1.5 shadow-sm"
-          >
-            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-            <span>Save & Apply</span>
+          <Button size="sm" className="button-ink gap-1.5" onClick={handleSave} disabled={saving || loading}>
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            <span>Save</span>
           </Button>
         }
       />
 
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-1 pt-2 pb-36">
-        {savedMessage && (
-          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
-            <CheckCircle2 className="h-4 w-4 shrink-0" />
-            <span>{savedMessage}</span>
+      <div className="flex w-full max-w-4xl flex-col gap-10 pb-24">
+        {savedMessage ? <Notice tone="positive" message={savedMessage} /> : null}
+        {errorMessage ? <Notice tone="negative" message={errorMessage} /> : null}
+
+        {/* ---------------------------------------------------------- mode */}
+        <section className="flex flex-col gap-4">
+          <SectionLabel eyebrow="Execution mode" meta={selectedMode === "live" ? "Live swarm" : "Replay simulation"} />
+          <p className="prose-serif max-w-[62ch]">
+            Choose between deterministic replay and real-time orchestration of live LLM agents.
+          </p>
+
+          <div className="flex flex-col">
+            <ModeRow
+              selected={selectedMode === "replay"}
+              onClick={() => setSelectedMode("replay")}
+              name="Replay"
+              description="Runs pre-recorded incident scenarios. No API keys or credits. Suits quick demos, test suites, and offline review."
+            />
+            <ModeRow
+              selected={selectedMode === "live"}
+              onClick={() => setSelectedMode("live")}
+              name="Live agent swarm"
+              description="Runs genuine multi-agent sessions against Google Gemini, Anthropic Claude, or OpenAI. Agents make real tool calls and talk over A2A."
+            />
           </div>
-        )}
 
-        {errorMessage && (
-          <div className="flex items-center gap-2 rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">
-            <XCircle className="h-4 w-4 shrink-0" />
-            <span>{errorMessage}</span>
+          {selectedMode === "live" ? (
+            <div className="flex flex-col gap-2 pt-2">
+              <span className="eyebrow">Active provider</span>
+              {(["gemini", "anthropic", "openai"] as const).map((prov) => {
+                const isConfigured = settings?.providers[prov]?.configured
+                const label = prov === "gemini" ? "Google Gemini" : prov === "anthropic" ? "Anthropic Claude" : "OpenAI"
+                return (
+                  <button
+                    key={prov}
+                    type="button"
+                    onClick={() => setSelectedProvider(prov)}
+                    className={`rule-row w-full grid-cols-[minmax(0,1fr)_auto] items-center border-l-2 text-left ${
+                      selectedProvider === prov ? "border-l-[var(--accent)]" : "border-l-transparent"
+                    }`}
+                    style={{ paddingLeft: "0.75rem" }}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      {prov === "gemini" ? <GeminiLogo className="size-4 shrink-0 text-muted-foreground" /> : null}
+                      {prov === "anthropic" ? <ClaudeLogo className="size-4 shrink-0 text-muted-foreground" /> : null}
+                      {prov === "openai" ? <OpenAILogo className="size-4 shrink-0 text-muted-foreground" /> : null}
+                      <span className={`title-serif text-base ${selectedProvider === prov ? "" : "opacity-70"}`}>
+                        {label}
+                      </span>
+                    </span>
+                    <span className="meta-mono">{isConfigured ? "Key configured" : "Key not set"}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ) : null}
+        </section>
+
+        {/* -------------------------------------------------------- gemini */}
+        <section className="flex flex-col gap-4">
+          <SectionLabel
+            eyebrow="Provider"
+            meta={
+              <>
+                {settings?.providers.gemini.configured ? <Tag tone="positive">Configured</Tag> : null}
+                {selectedProvider === "gemini" && selectedMode === "live" ? <Tag tone="info">Active</Tag> : null}
+                <a
+                  href="https://aistudio.google.com/app/apikey"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 hover:text-ink!"
+                >
+                  <span>Get API key</span>
+                  <ExternalLink className="size-3" />
+                </a>
+              </>
+            }
+          />
+
+          <h2 className="title-serif flex items-center gap-2.5 text-[1.375rem]">
+            <GeminiLogo className="size-4 text-muted-foreground" />
+            Google Gemini
+          </h2>
+          <p className="prose-serif max-w-[62ch]">
+            Supports Gemini 3.1 Pro and Gemini 3.8 Flash with native function calling and streaming.
+          </p>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label className="eyebrow" htmlFor="gemini-key">
+                API key
+              </label>
+              {settings?.providers.gemini.configured ? (
+                <span className="meta-mono">Current {settings.providers.gemini.preview}</span>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="gemini-key"
+                  type={showGeminiKey ? "text" : "password"}
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder={settings?.providers.gemini.configured ? "Enter a new key to replace the existing one" : "AIzaSy..."}
+                  className={`${FIELD} pr-8`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowGeminiKey(!showGeminiKey)}
+                  className="absolute right-2 top-2 text-muted-foreground hover:text-ink!"
+                  aria-label={showGeminiKey ? "Hide key" : "Show key"}
+                >
+                  {showGeminiKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => testKey("gemini")}
+                disabled={testingGemini || (!geminiKey && !settings?.providers.gemini.configured)}
+                className="h-8 shrink-0 gap-1.5"
+              >
+                {testingGemini ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Test connection
+              </Button>
+            </div>
+            {geminiTestResult ? <TestResult result={geminiTestResult} /> : null}
           </div>
-        )}
 
-        {/* Mode & Active Provider Selection */}
-        <Card className="border-border/60 bg-card/70 backdrop-blur">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold">Swarm Execution Mode</CardTitle>
-                <CardDescription className="mt-1 text-xs text-muted-foreground">
-                  Choose between deterministic replay or real-time live LLM agent orchestration
-                </CardDescription>
-              </div>
-              <Badge variant={selectedMode === "live" ? "default" : "secondary"}>
-                {selectedMode === "live" ? "Live Swarm" : "Replay Simulation"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div
-                onClick={() => setSelectedMode("replay")}
-                className={`flex cursor-pointer flex-col gap-2 rounded-lg border p-4 transition-all ${
-                  selectedMode === "replay"
-                    ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/40"
-                    : "border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold">Replay Mode</span>
-                  </div>
-                  {selectedMode === "replay" && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Runs pre-recorded realistic incident scenarios. Zero API keys or credits required. Ideal for quick demos, test suites, and offline review.
-                </p>
-              </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ModelField
+              label="Commander model"
+              value={geminiCommander}
+              onChange={setGeminiCommander}
+              hint="Default gemini-3.1-pro"
+            />
+            <ModelField
+              label="Specialist model"
+              value={geminiSpecialist}
+              onChange={setGeminiSpecialist}
+              hint="Default gemini-3.8-flash"
+            />
+          </div>
+        </section>
 
-              <div
-                onClick={() => setSelectedMode("live")}
-                className={`flex cursor-pointer flex-col gap-2 rounded-lg border p-4 transition-all ${
-                  selectedMode === "live"
-                    ? "border-primary bg-primary/10 shadow-sm ring-1 ring-primary/40"
-                    : "border-border/60 bg-muted/20 hover:border-border hover:bg-muted/40"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Radio className="h-4 w-4 text-emerald-400" />
-                    <span className="text-sm font-semibold">Live Agent Swarm</span>
-                  </div>
-                  {selectedMode === "live" && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  Executes genuine multi-agent sessions with Google Gemini, Anthropic Claude, or OpenAI. Agents make real tool calls and communicate over A2A.
-                </p>
-              </div>
-            </div>
-
-            {selectedMode === "live" && (
-              <div className="mt-4 rounded-lg border border-border/80 bg-muted/20 p-4">
-                <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Active Live LLM Provider
-                </label>
-                <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                  {(["gemini", "anthropic", "openai"] as const).map((prov) => {
-                    const isConfigured = settings?.providers[prov]?.configured
-                    const isSelected = selectedProvider === prov
-                    const label = prov === "gemini" ? "Google Gemini" : prov === "anthropic" ? "Anthropic Claude" : "OpenAI"
-                    return (
-                      <button
-                        key={prov}
-                        type="button"
-                        onClick={() => setSelectedProvider(prov)}
-                        className={`flex items-center justify-between rounded-md border px-3.5 py-2.5 text-left text-sm transition-all ${
-                          isSelected
-                            ? "border-primary bg-primary/15 font-semibold text-foreground shadow-sm ring-1 ring-primary/30"
-                            : "border-border/60 bg-background/50 hover:bg-accent/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          {prov === "gemini" && <GeminiLogo className="h-4 w-4 text-indigo-400 shrink-0" />}
-                          {prov === "anthropic" && <ClaudeLogo className="h-4 w-4 text-amber-500 shrink-0" />}
-                          {prov === "openai" && <OpenAILogo className="h-4 w-4 text-emerald-400 shrink-0" />}
-                          <div className="flex flex-col">
-                            <span>{label}</span>
-                            <span className="mt-0.5 text-[11px] text-muted-foreground">
-                              {isConfigured ? "Key Configured" : "Key Not Set"}
-                            </span>
-                          </div>
-                        </div>
-                        {isSelected ? (
-                          <CheckCircle2 className="h-4 w-4 text-primary" />
-                        ) : (
-                          <div className={`h-2 w-2 rounded-full ${isConfigured ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Gemini Provider Card */}
-        <Card className={`border-border/60 bg-card/70 transition-all ${selectedProvider === "gemini" && selectedMode === "live" ? "ring-1 ring-primary/40" : ""}`}>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <GeminiLogo className="h-5 w-5 text-indigo-400" />
-                <CardTitle className="text-base font-semibold">Google Gemini API</CardTitle>
-                {settings?.providers.gemini.configured && (
-                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
-                    Configured
-                  </Badge>
-                )}
-                {selectedProvider === "gemini" && selectedMode === "live" && (
-                  <Badge variant="default" className="text-[10px]">
-                    Active
-                  </Badge>
-                )}
-              </div>
-              <a
-                href="https://aistudio.google.com/app/apikey"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                <span>Get API Key</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-            <CardDescription className="mt-1 text-xs text-muted-foreground">
-              Supports Gemini 3.1 Pro and Gemini 3.8 Flash with native function calling and streaming.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-foreground">Gemini API Key</label>
-                {settings?.providers.gemini.configured && (
-                  <span className="font-mono text-[11px] text-muted-foreground">
-                    Current: {settings.providers.gemini.preview}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showGeminiKey ? "text" : "password"}
-                    value={geminiKey}
-                    onChange={(e) => setGeminiKey(e.target.value)}
-                    placeholder={settings?.providers.gemini.configured ? "Enter new key to replace existing" : "AIzaSy..."}
-                    className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowGeminiKey(!showGeminiKey)}
-                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => testKey("gemini")}
-                  disabled={testingGemini || (!geminiKey && !settings?.providers.gemini.configured)}
-                  className="h-9 text-xs"
+        {/* ----------------------------------------------------- anthropic */}
+        <section className="flex flex-col gap-4">
+          <SectionLabel
+            eyebrow="Provider"
+            meta={
+              <>
+                {settings?.providers.anthropic.configured ? <Tag tone="positive">Configured</Tag> : null}
+                {selectedProvider === "anthropic" && selectedMode === "live" ? <Tag tone="info">Active</Tag> : null}
+                <a
+                  href="https://console.anthropic.com/settings/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 hover:text-ink!"
                 >
-                  {testingGemini ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
-                  Test Connection
-                </Button>
-              </div>
-              {geminiTestResult && (
-                <div className={`mt-2 flex items-center gap-1.5 text-xs ${geminiTestResult.ok ? "text-emerald-400" : "text-rose-400"}`}>
-                  {geminiTestResult.ok ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
-                  <span>{geminiTestResult.message}</span>
-                </div>
-              )}
-            </div>
+                  <span>Get API key</span>
+                  <ExternalLink className="size-3" />
+                </a>
+              </>
+            }
+          />
 
-            <div className="grid grid-cols-1 gap-4 pt-1 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Incident Commander Model</label>
-                <input
-                  type="text"
-                  value={geminiCommander}
-                  onChange={(e) => setGeminiCommander(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-[11px] text-muted-foreground">Default: gemini-3.1-pro</p>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Specialist Agent Model</label>
-                <input
-                  type="text"
-                  value={geminiSpecialist}
-                  onChange={(e) => setGeminiSpecialist(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-[11px] text-muted-foreground">Default: gemini-3.8-flash</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <h2 className="title-serif flex items-center gap-2.5 text-[1.375rem]">
+            <ClaudeLogo className="size-4 text-muted-foreground" />
+            Anthropic Claude
+          </h2>
+          <p className="prose-serif max-w-[62ch]">
+            Claude Sonnet 5 and Haiku 4.5 over the tool-calling API, or a local Claude CLI agent profile.
+          </p>
 
-        {/* Anthropic Claude Provider Card */}
-        <Card className={`border-border/60 bg-card/70 transition-all ${selectedProvider === "anthropic" && selectedMode === "live" ? "ring-1 ring-primary/40" : ""}`}>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <ClaudeLogo className="h-5 w-5 text-amber-500" />
-                <CardTitle className="text-base font-semibold">Anthropic Claude API</CardTitle>
-                {settings?.providers.anthropic.configured && (
-                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
-                    Configured
-                  </Badge>
-                )}
-                {selectedProvider === "anthropic" && selectedMode === "live" && (
-                  <Badge variant="default" className="text-[10px]">
-                    Active
-                  </Badge>
-                )}
-              </div>
-              <a
-                href="https://console.anthropic.com/settings/keys"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                <span>Get API Key</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label className="eyebrow" htmlFor="anthropic-key">
+                API key
+              </label>
+              {settings?.providers.anthropic.configured ? (
+                <span className="meta-mono">Current {settings.providers.anthropic.preview}</span>
+              ) : null}
             </div>
-            <CardDescription className="mt-1 text-xs text-muted-foreground">
-              Direct Claude Sonnet 5 / Haiku 4.5 tool-calling API or local Claude CLI agent profile.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-foreground">Anthropic API Key</label>
-                {settings?.providers.anthropic.configured && (
-                  <span className="font-mono text-[11px] text-muted-foreground">
-                    Current: {settings.providers.anthropic.preview}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showAnthropicKey ? "text" : "password"}
-                    value={anthropicKey}
-                    onChange={(e) => setAnthropicKey(e.target.value)}
-                    placeholder={settings?.providers.anthropic.configured ? "Enter new key to replace existing" : "sk-ant-api03-..."}
-                    className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAnthropicKey(!showAnthropicKey)}
-                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    {showAnthropicKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => testKey("anthropic")}
-                  disabled={testingAnthropic || (!anthropicKey && !settings?.providers.anthropic.configured)}
-                  className="h-9 text-xs"
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="anthropic-key"
+                  type={showAnthropicKey ? "text" : "password"}
+                  value={anthropicKey}
+                  onChange={(e) => setAnthropicKey(e.target.value)}
+                  placeholder={settings?.providers.anthropic.configured ? "Enter a new key to replace the existing one" : "sk-ant-api03-..."}
+                  className={`${FIELD} pr-8`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAnthropicKey(!showAnthropicKey)}
+                  className="absolute right-2 top-2 text-muted-foreground hover:text-ink!"
+                  aria-label={showAnthropicKey ? "Hide key" : "Show key"}
                 >
-                  {testingAnthropic ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
-                  Test Connection
-                </Button>
+                  {showAnthropicKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
-              {anthropicTestResult && (
-                <div className={`mt-2 flex items-center gap-1.5 text-xs ${anthropicTestResult.ok ? "text-emerald-400" : "text-rose-400"}`}>
-                  {anthropicTestResult.ok ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
-                  <span>{anthropicTestResult.message}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 pt-1 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Incident Commander Model</label>
-                <input
-                  type="text"
-                  value={anthropicCommander}
-                  onChange={(e) => setAnthropicCommander(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-[11px] text-muted-foreground">Default: claude-sonnet-5</p>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Specialist Agent Model</label>
-                <input
-                  type="text"
-                  value={anthropicSpecialist}
-                  onChange={(e) => setAnthropicSpecialist(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-[11px] text-muted-foreground">Default: claude-haiku-4-5</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* OpenAI Provider Card */}
-        <Card className={`border-border/60 bg-card/70 transition-all ${selectedProvider === "openai" && selectedMode === "live" ? "ring-1 ring-primary/40" : ""}`}>
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <OpenAILogo className="h-5 w-5 text-emerald-400" />
-                <CardTitle className="text-base font-semibold">OpenAI API</CardTitle>
-                {settings?.providers.openai.configured && (
-                  <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
-                    Configured
-                  </Badge>
-                )}
-                {selectedProvider === "openai" && selectedMode === "live" && (
-                  <Badge variant="default" className="text-[10px]">
-                    Active
-                  </Badge>
-                )}
-              </div>
-              <a
-                href="https://platform.openai.com/api-keys"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => testKey("anthropic")}
+                disabled={testingAnthropic || (!anthropicKey && !settings?.providers.anthropic.configured)}
+                className="h-8 shrink-0 gap-1.5"
               >
-                <span>Get API Key</span>
-                <ExternalLink className="h-3 w-3" />
-              </a>
+                {testingAnthropic ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Test connection
+              </Button>
             </div>
-            <CardDescription className="mt-1 text-xs text-muted-foreground">
-              Supports GPT-5, GPT-5 mini, and o3 with tool execution.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-foreground">OpenAI API Key</label>
-                {settings?.providers.openai.configured && (
-                  <span className="font-mono text-[11px] text-muted-foreground">
-                    Current: {settings.providers.openai.preview}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type={showOpenAIKey ? "text" : "password"}
-                    value={openaiKey}
-                    onChange={(e) => setOpenAIKey(e.target.value)}
-                    placeholder={settings?.providers.openai.configured ? "Enter new key to replace existing" : "sk-proj-..."}
-                    className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowOpenAIKey(!showOpenAIKey)}
-                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
-                  >
-                    {showOpenAIKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => testKey("openai")}
-                  disabled={testingOpenAI || (!openaiKey && !settings?.providers.openai.configured)}
-                  className="h-9 text-xs"
+            {anthropicTestResult ? <TestResult result={anthropicTestResult} /> : null}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ModelField
+              label="Commander model"
+              value={anthropicCommander}
+              onChange={setAnthropicCommander}
+              hint="Default claude-sonnet-5"
+            />
+            <ModelField
+              label="Specialist model"
+              value={anthropicSpecialist}
+              onChange={setAnthropicSpecialist}
+              hint="Default claude-haiku-4-5"
+            />
+          </div>
+        </section>
+
+        {/* -------------------------------------------------------- openai */}
+        <section className="flex flex-col gap-4">
+          <SectionLabel
+            eyebrow="Provider"
+            meta={
+              <>
+                {settings?.providers.openai.configured ? <Tag tone="positive">Configured</Tag> : null}
+                {selectedProvider === "openai" && selectedMode === "live" ? <Tag tone="info">Active</Tag> : null}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 hover:text-ink!"
                 >
-                  {testingOpenAI ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />}
-                  Test Connection
-                </Button>
-              </div>
-              {openaiTestResult && (
-                <div className={`mt-2 flex items-center gap-1.5 text-xs ${openaiTestResult.ok ? "text-emerald-400" : "text-rose-400"}`}>
-                  {openaiTestResult.ok ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0" /> : <XCircle className="h-3.5 w-3.5 shrink-0" />}
-                  <span>{openaiTestResult.message}</span>
-                </div>
-              )}
-            </div>
+                  <span>Get API key</span>
+                  <ExternalLink className="size-3" />
+                </a>
+              </>
+            }
+          />
 
-            <div className="grid grid-cols-1 gap-4 pt-1 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Incident Commander Model</label>
-                <input
-                  type="text"
-                  value={openaiCommander}
-                  onChange={(e) => setOpenaiCommander(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-[11px] text-muted-foreground">Default: gpt-5</p>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-foreground">Specialist Agent Model</label>
-                <input
-                  type="text"
-                  value={openaiSpecialist}
-                  onChange={(e) => setOpenaiSpecialist(e.target.value)}
-                  className="h-9 w-full rounded-md border border-input/70 bg-background/60 px-3 py-2 text-xs font-mono text-foreground shadow-sm focus:outline-none focus:ring-1 focus:ring-primary"
-                />
-                <p className="text-[11px] text-muted-foreground">Default: gpt-5-mini</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          <h2 className="title-serif flex items-center gap-2.5 text-[1.375rem]">
+            <OpenAILogo className="size-4 text-muted-foreground" />
+            OpenAI
+          </h2>
+          <p className="prose-serif max-w-[62ch]">
+            Supports GPT-5, GPT-5 mini, and o3 with tool execution.
+          </p>
 
-        {/* Save & Apply Footer Bar */}
-        <div className="mt-2 flex items-center justify-between rounded-xl border border-border/80 bg-card/80 p-4 shadow-md backdrop-blur">
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-xs font-medium">
-              Target: {selectedMode === "live" ? `Live (${selectedProvider})` : "Deterministic Replay"}
-            </Badge>
-            <span className="hidden text-xs text-muted-foreground sm:inline">
-              Changes take effect immediately across all active agent listeners.
+          <div className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <label className="eyebrow" htmlFor="openai-key">
+                API key
+              </label>
+              {settings?.providers.openai.configured ? (
+                <span className="meta-mono">Current {settings.providers.openai.preview}</span>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="openai-key"
+                  type={showOpenAIKey ? "text" : "password"}
+                  value={openaiKey}
+                  onChange={(e) => setOpenAIKey(e.target.value)}
+                  placeholder={settings?.providers.openai.configured ? "Enter a new key to replace the existing one" : "sk-proj-..."}
+                  className={`${FIELD} pr-8`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowOpenAIKey(!showOpenAIKey)}
+                  className="absolute right-2 top-2 text-muted-foreground hover:text-ink!"
+                  aria-label={showOpenAIKey ? "Hide key" : "Show key"}
+                >
+                  {showOpenAIKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => testKey("openai")}
+                disabled={testingOpenAI || (!openaiKey && !settings?.providers.openai.configured)}
+                className="h-8 shrink-0 gap-1.5"
+              >
+                {testingOpenAI ? <Loader2 className="size-3.5 animate-spin" /> : null}
+                Test connection
+              </Button>
+            </div>
+            {openaiTestResult ? <TestResult result={openaiTestResult} /> : null}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ModelField
+              label="Commander model"
+              value={openaiCommander}
+              onChange={setOpenaiCommander}
+              hint="Default gpt-5"
+            />
+            <ModelField
+              label="Specialist model"
+              value={openaiSpecialist}
+              onChange={setOpenaiSpecialist}
+              hint="Default gpt-5-mini"
+            />
+          </div>
+        </section>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
+          <div className="flex flex-col gap-0.5">
+            <span className="meta-mono">
+              Target {selectedMode === "live" ? `live · ${selectedProvider}` : "deterministic replay"}
             </span>
+            <span className="prose-serif">Changes take effect immediately across all active agent listeners.</span>
           </div>
-          <Button onClick={handleSave} disabled={saving || loading} className="flex items-center gap-1.5 shadow-sm">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            <span>Save & Apply Settings</span>
+          <Button className="button-ink gap-1.5" onClick={handleSave} disabled={saving || loading}>
+            {saving ? <Loader2 className="size-3.5 animate-spin" /> : null}
+            <span>Save</span>
           </Button>
         </div>
       </div>
     </PageContent>
+  )
+}
+
+function SectionLabel({ eyebrow, meta }: { eyebrow: string; meta?: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 border-b border-rule pb-1.5">
+      <span className="eyebrow flex-1">{eyebrow}</span>
+      {meta ? <div className="meta-mono flex items-center gap-2">{meta}</div> : null}
+    </div>
+  )
+}
+
+function ModeRow({
+  selected,
+  onClick,
+  name,
+  description,
+}: {
+  selected: boolean
+  onClick: () => void
+  name: string
+  description: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rule-row w-full gap-1! border-l-2 text-left ${selected ? "border-l-[var(--accent)]" : "border-l-transparent"}`}
+      style={{ paddingLeft: "0.75rem" }}
+    >
+      <span className={`title-serif text-base ${selected ? "" : "opacity-70"}`}>{name}</span>
+      <span className="prose-serif max-w-[62ch]">{description}</span>
+    </button>
+  )
+}
+
+function ModelField({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string
+  value: string
+  onChange: (next: string) => void
+  hint: string
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="eyebrow">{label}</label>
+      <input type="text" value={value} onChange={(e) => onChange(e.target.value)} className={FIELD} />
+      <p className="meta-mono">{hint}</p>
+    </div>
+  )
+}
+
+function TestResult({ result }: { result: { ok: boolean; message: string } }) {
+  return (
+    <div
+      className="meta-mono flex items-center gap-1.5"
+      style={{ color: result.ok ? "var(--positive)" : "var(--negative)" }}
+    >
+      {result.ok ? <CheckCircle2 className="size-3.5 shrink-0" /> : <XCircle className="size-3.5 shrink-0" />}
+      <span>{result.message}</span>
+    </div>
+  )
+}
+
+function Notice({ tone, message }: { tone: "positive" | "negative"; message: string }) {
+  return (
+    <div
+      className="meta-mono flex items-center gap-2 border-l-2 py-2 pl-3"
+      style={{ borderColor: `var(--${tone})`, color: `var(--${tone})` }}
+    >
+      {tone === "positive" ? <CheckCircle2 className="size-4 shrink-0" /> : <XCircle className="size-4 shrink-0" />}
+      <span>{message}</span>
+    </div>
+  )
+}
+
+function Tag({ tone, children }: { tone: "positive" | "info"; children: React.ReactNode }) {
+  return (
+    <span className="sev-tag" data-tone={tone}>
+      {children}
+    </span>
   )
 }

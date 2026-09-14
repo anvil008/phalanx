@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Button } from "@foundry/ui/components/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@foundry/ui/components/card"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { StatusDot } from "@foundry/ui/components/status-dot"
 import { ArrowRight, Play, Square } from "lucide-react"
@@ -77,14 +76,14 @@ export function RangePage() {
               <Square className="size-3.5" /> Stop range
             </Button>
           ) : (
-            <Button size="sm" onClick={() => void phalanxApi.runRange()}>
+            <Button size="sm" variant="outline" onClick={() => void phalanxApi.runRange()}>
               <Play className="size-3.5" /> Run the attack
             </Button>
           )
         }
       />
 
-      <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+      <p className="prose-serif max-w-[72ch]">
         This runs a real, scripted attack against an isolated estate of instrumented services on this host — six loopback
         HTTP services, a fake C2, and an attacker process, all confined to 127.0.0.1. The attack writes real logs; a real
         detector turns those logs into the incident; and the agents read the same bytes. Containment acts on the range for
@@ -92,18 +91,16 @@ export function RangePage() {
       </p>
 
       {!running && events.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <p className="text-sm text-foreground">The range is idle.</p>
-            <p className="max-w-md text-xs text-muted-foreground">
-              Run the attack to spin up the estate, launch the intrusion, and watch the incident open from the real
-              telemetry. Nothing leaves this host.
-            </p>
-            <Button size="sm" onClick={() => void phalanxApi.runRange()}>
-              <Play className="size-3.5" /> Run the attack
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center gap-3 border-y border-rule-soft py-12 text-center">
+          <p className="title-serif text-[1.125rem]">The range is idle</p>
+          <p className="prose-serif max-w-[52ch]">
+            Run the attack to spin up the estate, launch the intrusion, and watch the incident open from the real
+            telemetry. Nothing leaves this host.
+          </p>
+          <Button size="sm" className="button-ink" onClick={() => void phalanxApi.runRange()}>
+            <Play className="size-3.5" /> Run the attack
+          </Button>
+        </div>
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
@@ -111,33 +108,29 @@ export function RangePage() {
           {state.rangeStatus ? <RangePanel status={state.rangeStatus} /> : null}
 
           {rangeIncidents.length > 0 ? (
-            <Card>
-              <CardHeader className="pb-0">
-                <CardTitle className="text-sm font-medium normal-case tracking-normal">
-                  {rangeIncidents.length > 1 ? "Incidents opened from the range" : "Incident opened from the range"}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2.5 pt-3">
-                {rangeIncidents.map((rangeIncident) => (
-                  <button
-                    key={rangeIncident.id}
-                    type="button"
-                    className="flex flex-col gap-1 rounded-item border border-border px-2.5 py-2 text-left transition-colors hover:bg-accent"
-                    onClick={() => navigate(`/incidents/${rangeIncident.id}`)}
-                  >
-                    <div className="flex items-center gap-2">
-                      <StatusDot tone={rangeIncident.status === "resolved" ? "positive" : rangeIncident.status === "contained" ? "warning" : "negative"} pulse={rangeIncident.status === "open"} />
-                      <span className="font-mono text-[11px] text-foreground">{rangeIncident.code}</span>
-                      <span className="text-xs text-muted-foreground">{agents.get(rangeIncident.commanderId)?.callsign ?? rangeIncident.commanderId}</span>
-                      <span className="ml-auto text-[11px] text-muted-foreground">{rangeIncident.phase} · {rangeIncident.status}</span>
-                    </div>
-                    <span className="flex items-center gap-1 text-xs leading-relaxed text-muted-foreground">
-                      {rangeIncident.title} <ArrowRight className="size-3 shrink-0" />
-                    </span>
-                  </button>
-                ))}
-              </CardContent>
-            </Card>
+            <div className="flex flex-col">
+              <SectionHeader
+                title={rangeIncidents.length > 1 ? "Incidents from the range" : "Incident from the range"}
+              />
+              {rangeIncidents.map((rangeIncident) => (
+                <button
+                  key={rangeIncident.id}
+                  type="button"
+                  className="rule-row w-full text-left"
+                  onClick={() => navigate(`/incidents/${rangeIncident.id}`)}
+                >
+                  <span className="meta-mono flex items-center gap-2">
+                    <StatusDot tone={rangeIncident.status === "resolved" ? "positive" : rangeIncident.status === "contained" ? "warning" : "negative"} pulse={rangeIncident.status === "open"} />
+                    <span className="text-ink">{rangeIncident.code}</span>
+                    <span>{agents.get(rangeIncident.commanderId)?.callsign ?? rangeIncident.commanderId}</span>
+                    <span className="ml-auto">{rangeIncident.phase} · {rangeIncident.status}</span>
+                  </span>
+                  <span className="title-serif mt-1 flex items-center gap-1.5 text-[0.9375rem]">
+                    {rangeIncident.title} <ArrowRight className="size-3 shrink-0 text-muted-foreground" />
+                  </span>
+                </button>
+              ))}
+            </div>
           ) : null}
         </div>
 
@@ -145,9 +138,9 @@ export function RangePage() {
           <SectionHeader title="Raw telemetry">
             <span className="font-mono text-[11px] text-muted-foreground">{events.length} events · events.jsonl</span>
           </SectionHeader>
-          <div className="max-h-[38rem] overflow-y-auto rounded-shell border border-border bg-card p-3">
+          <div className="max-h-[38rem] overflow-y-auto border border-rule-soft p-3">
             {events.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No events yet.</p>
+              <p className="meta-mono">No events yet.</p>
             ) : (
               <ol className="flex flex-col gap-1 font-mono text-[11px] leading-relaxed">
                 {[...events].reverse().map((event, index) => (
@@ -155,7 +148,7 @@ export function RangePage() {
                     <span className="shrink-0 text-muted-foreground">{shortTime(event.ts)}</span>
                     <span className="w-24 shrink-0 truncate text-muted-foreground">{event.host}</span>
                     <span className={`w-16 shrink-0 ${KIND_TONE[event.kind] ?? "text-muted-foreground"}`}>{event.kind}</span>
-                    <span className="min-w-0 text-foreground">{event.detail}</span>
+                    <span className="min-w-0 text-ink">{event.detail}</span>
                   </li>
                 ))}
               </ol>

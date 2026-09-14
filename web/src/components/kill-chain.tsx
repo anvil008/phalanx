@@ -1,21 +1,7 @@
 import { useMemo } from "react"
-import { Badge } from "@foundry/ui/components/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@foundry/ui/components/card"
 import { cn } from "@foundry/ui/lib/utils"
-import {
-  Globe,
-  Terminal,
-  Layers,
-  Network,
-  UploadCloud,
-  ShieldCheck,
-  Shield,
-  CheckCircle2,
-  AlertTriangle,
-  Radio,
-  Lock,
-  Flame,
-} from "lucide-react"
+import { Globe, Terminal, Layers, Network, UploadCloud, ShieldCheck } from "lucide-react"
+import { SectionHeader } from "@/components/section-header"
 import type { Detection, IncidentTimelineEntry } from "@/lib/model"
 import { usePhalanx, type PhalanxState } from "@/lib/store"
 
@@ -192,10 +178,10 @@ export function KillChain({ state: propState, className }: KillChainProps) {
       principalsRevoked ||
       c2Blocked
 
-    let containmentText = "AEGIS Automated Air-Gap Isolation Active"
-    if (edgeIsolated) containmentText = "AEGIS Air-Gap Active · edge-gw-01 Isolated from Production"
-    else if (principalsRevoked) containmentText = "KEYSTONE Credential Revocation Active · OAuth Tokens Expired"
-    else if (c2Blocked) containmentText = "SPECTRE Egress Sinkhole Active · 185.121.44.19 Blackholed"
+    let containmentText = "Aegis automated isolation active"
+    if (edgeIsolated) containmentText = "Aegis isolation active · edge-gw-01 isolated from production"
+    else if (principalsRevoked) containmentText = "Keystone credential revocation active · OAuth tokens expired"
+    else if (c2Blocked) containmentText = "Spectre egress sinkhole active · 185.121.44.19 blackholed"
 
     const stagesList: KillChainStage[] = [
       {
@@ -203,7 +189,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "01",
         mitreId: "TA0001",
         name: "Initial Access",
-        scope: "WAF & INGRESS GATEWAYS",
+        scope: "WAF and ingress gateways",
         description: "Public-facing gateway exploit (HTTP desync) or corporate identity consent abuse.",
         status: initAccessStatus,
         evidence: initAccessEvidence,
@@ -214,7 +200,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "02",
         mitreId: "TA0002",
         name: "Execution",
-        scope: "PROCESS & HOST EDR",
+        scope: "Process and host EDR",
         description: "Adversary commands, unauthorized service shells, or malicious script detonation.",
         status: execStatus,
         evidence: execEvidence,
@@ -225,7 +211,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "03",
         mitreId: "TA0003",
         name: "Persistence",
-        scope: "HOST & CI ARTIFACTS",
+        scope: "Host and CI artifacts",
         description: "Foothold via LD_PRELOAD shims, poisoned CI artifacts, or scheduled triggers.",
         status: persistStatus,
         evidence: persistEvidence,
@@ -236,7 +222,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "04",
         mitreId: "TA0008",
         name: "Lateral Movement",
-        scope: "EAST-WEST FLOW & IAM",
+        scope: "East-west flow and IAM",
         description: "Pivot across network zones using harvested service accounts or tenant tokens.",
         status: lateralStatus,
         evidence: lateralEvidence,
@@ -247,7 +233,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "05",
         mitreId: "TA0010",
         name: "Exfiltration",
-        scope: "C2 EGRESS & S3 BUCKETS",
+        scope: "C2 egress and S3 buckets",
         description: "Periodic 47s C2 beaconing and bulk customer export data extraction.",
         status: exfilStatus,
         evidence: exfilEvidence,
@@ -258,7 +244,7 @@ export function KillChain({ state: propState, className }: KillChainProps) {
         step: "06",
         mitreId: "D3-DEF",
         name: "Containment",
-        scope: "AUTONOMOUS SOAR",
+        scope: "Automated response",
         description: "Autonomous host isolation, credential revocation, and C2 blackholing by Phalanx.",
         status: containmentStatus,
         evidence: containmentEvidence,
@@ -276,169 +262,70 @@ export function KillChain({ state: propState, className }: KillChainProps) {
   const detectedCount = stages.filter((s) => s.status === "Detected").length
   const remediatedCount = stages.filter((s) => s.status === "Remediated/Blocked").length
 
+  const summary =
+    detectedCount > 0
+      ? { tone: "negative", text: `${detectedCount} active intercept${detectedCount > 1 ? "s" : ""}` }
+      : remediatedCount > 0
+        ? { tone: "positive", text: `${remediatedCount} stages neutralized` }
+        : { tone: "muted", text: "Perimeter nominal" }
+
   return (
-    <Card className={cn("shrink-0 border-border bg-card/85 backdrop-blur-md shadow-xl", className)}>
-      <CardHeader className="border-b border-border/50 pb-3 pt-3.5 px-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-7 items-center justify-center rounded-control border border-border/80 bg-primary/10 text-primary shadow-[0_0_8px_rgba(76,201,217,0.25)]">
-              <Shield className="size-4" />
-            </div>
-            <div>
-              <CardTitle className="font-mono text-xs sm:text-sm font-bold tracking-wider text-foreground uppercase">
-                MITRE ATT&CK INTRUSION LIFECYCLE & ACTIVE INTERCEPT
-              </CardTitle>
-              <CardDescription className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
-                ADVERSARY STAGE TRACKING · AUTONOMOUS AGENT CONTAINMENT TELEMETRY
-              </CardDescription>
-            </div>
-          </div>
+    <section className={cn("flex shrink-0 flex-col gap-3", className)}>
+      <SectionHeader title="Kill chain">
+        <span className="sev-tag" data-tone={summary.tone}>
+          {summary.text}
+        </span>
+      </SectionHeader>
 
-          <div className="flex items-center gap-2">
-            {detectedCount > 0 ? (
-              <Badge
-                variant="destructive"
-                className="gap-1.5 border-destructive/50 bg-destructive/20 font-mono text-[10px] font-bold text-destructive shadow-[0_0_10px_rgba(242,86,95,0.25)]"
-              >
-                <AlertTriangle className="size-3" />
-                <span>{detectedCount} ACTIVE INTERCEPT{detectedCount > 1 ? "S" : ""}</span>
-              </Badge>
-            ) : remediatedCount > 0 ? (
-              <Badge
-                variant="outline"
-                className="gap-1.5 border-positive/50 bg-positive/20 font-mono text-[10px] font-bold text-positive shadow-[0_0_10px_rgba(62,207,142,0.25)]"
-              >
-                <CheckCircle2 className="size-3" />
-                <span>{remediatedCount} STAGES NEUTRALIZED</span>
-              </Badge>
-            ) : (
-              <Badge
-                variant="outline"
-                className="gap-1.5 border-border/70 bg-black/40 font-mono text-[10px] text-muted-foreground"
-              >
-                <Radio className="size-3 text-positive animate-pulse" />
-                <span>PERIMETER NOMINAL · ALL QUIET</span>
-              </Badge>
-            )}
-          </div>
-        </div>
-      </CardHeader>
+      {/* The automated barrier, as one line of fact rather than a banner */}
+      {isContained ? (
+        <p className="meta-mono flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-rule-soft pb-2">
+          <span className="text-ink">Automated containment active</span>
+          <span>{containmentDetails}</span>
+        </p>
+      ) : null}
 
-      <CardContent className="p-3.5 sm:p-4 flex flex-col gap-3.5">
-        {/* Animated Automated Containment Barrier (Displays glowing firewall lock between stages) */}
-        {isContained ? (
-          <div className="animate-containment-firewall rounded-item border border-primary/70 bg-primary/[0.08] p-3 flex flex-wrap items-center justify-between gap-3 shadow-lg">
-            <div className="flex items-center gap-3">
-              <div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_10px_rgba(76,201,217,0.8)]">
-                <Lock className="size-3.5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 font-mono text-xs font-bold text-primary uppercase tracking-wide">
-                  <Flame className="size-3.5 text-warning animate-bounce" />
-                  <span>AUTOMATED BLUE-TEAM CONTAINMENT BARRIER ACTIVE</span>
-                </div>
-                <div className="font-mono text-[11px] text-foreground/90 mt-0.5">
-                  {containmentDetails}
-                </div>
-              </div>
-            </div>
+      {/* The six MITRE ATT&CK stages, as one hairline grid */}
+      <div className="grid grid-cols-1 gap-px border-y border-rule-soft bg-rule-soft sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+        {stages.map((stage) => {
+          const isDetected = stage.status === "Detected"
+          const isRemediated = stage.status === "Remediated/Blocked"
+          const Icon = stage.Icon
 
-            <div className="flex items-center gap-2 font-mono text-[10px]">
-              <span className="rounded border border-positive/40 bg-positive/20 px-2 py-0.5 font-bold text-positive">
-                D3FEND D3-DEF VERIFIED
+          return (
+            <div key={stage.id} className="flex flex-col gap-2 bg-page px-3.5 py-3" title={stage.description}>
+              <span className="eyebrow">
+                {stage.step} · {stage.mitreId}
               </span>
-              <span className="rounded border border-border/80 bg-black/50 px-2 py-0.5 text-muted-foreground">
-                0 REMAINING HOPS
+
+              <span className="flex items-center gap-2">
+                <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="title-serif text-[0.9375rem]">{stage.name}</span>
+              </span>
+
+              <span className="meta-mono flex items-center gap-1.5">
+                <span
+                  className="inline-block size-1.5 shrink-0 rounded-full"
+                  style={{
+                    background: isDetected
+                      ? "var(--negative)"
+                      : isRemediated
+                        ? "var(--positive)"
+                        : "var(--muted-soft)",
+                  }}
+                />
+                <span className={isDetected || isRemediated ? "text-ink" : undefined}>
+                  {isDetected ? "Detected" : isRemediated ? "Blocked" : "Quiet"}
+                </span>
+              </span>
+
+              <span className="meta-mono truncate" title={stage.evidence ?? stage.scope}>
+                {stage.evidence ?? stage.scope}
               </span>
             </div>
-          </div>
-        ) : null}
-
-        {/* 6 MITRE ATT&CK Stage Cards */}
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-          {stages.map((stage) => {
-            const isDetected = stage.status === "Detected"
-            const isRemediated = stage.status === "Remediated/Blocked"
-            const Icon = stage.Icon
-
-            return (
-              <div
-                key={stage.id}
-                className={cn(
-                  "relative flex flex-col justify-between rounded-item border p-3 transition-all",
-                  isDetected && "border-destructive/70 bg-destructive/[0.1] shadow-[0_0_14px_rgba(242,86,95,0.2)]",
-                  isRemediated && "border-positive/50 bg-positive/[0.06] shadow-[0_0_12px_rgba(62,207,142,0.15)]",
-                  !isDetected && !isRemediated && "border-border/70 bg-card/50 hover:border-border hover:bg-card/75",
-                )}
-                title={stage.description}
-              >
-                {/* Header row: Step code and status badge */}
-                <div className="flex items-center justify-between gap-1.5 border-b border-border/40 pb-1.5">
-                  <span className="font-mono text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                    {stage.step} · {stage.mitreId}
-                  </span>
-
-                  {isDetected ? (
-                    <Badge
-                      variant="destructive"
-                      className="h-4 px-1.5 font-mono text-[9px] font-bold border-destructive/50 bg-destructive/30 text-destructive"
-                    >
-                      ACTIVE
-                    </Badge>
-                  ) : isRemediated ? (
-                    <Badge
-                      variant="outline"
-                      className="h-4 px-1.5 font-mono text-[9px] font-bold border-positive/50 bg-positive/20 text-positive"
-                    >
-                      BLOCKED
-                    </Badge>
-                  ) : (
-                    <span className="font-mono text-[9px] text-muted-foreground/60 uppercase">
-                      QUIET
-                    </span>
-                  )}
-                </div>
-
-                {/* Stage title & Icon */}
-                <div className="mt-2.5 flex items-center gap-2">
-                  <Icon
-                    className={cn(
-                      "size-4 shrink-0",
-                      isDetected && "text-destructive",
-                      isRemediated && "text-positive",
-                      !isDetected && !isRemediated && "text-muted-foreground",
-                    )}
-                  />
-                  <span className="font-mono text-xs font-bold text-foreground truncate">
-                    {stage.name}
-                  </span>
-                </div>
-
-                {/* Telemetry Evidence / Scope Chip */}
-                <div className="mt-2.5 pt-2 border-t border-border/30">
-                  {stage.evidence ? (
-                    <div
-                      className={cn(
-                        "rounded border px-1.5 py-1 font-mono text-[10px] leading-tight truncate flex items-center gap-1",
-                        isDetected && "border-destructive/40 bg-destructive/15 text-destructive font-semibold",
-                        isRemediated && "border-positive/40 bg-positive/15 text-positive font-semibold",
-                      )}
-                      title={stage.evidence}
-                    >
-                      <span className="inline-block size-1.5 rounded-full bg-currentColor animate-pulse shrink-0" />
-                      <span className="truncate">{stage.evidence}</span>
-                    </div>
-                  ) : (
-                    <div className="font-mono text-[9px] text-muted-foreground/60 uppercase truncate">
-                      {stage.scope}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </CardContent>
-    </Card>
+          )
+        })}
+      </div>
+    </section>
   )
 }

@@ -1,151 +1,161 @@
+@import "@fontsource-variable/newsreader/index.css";
 @import "@fontsource/space-mono/index.css";
 @import "@fontsource/space-mono/700.css";
 @import "@foundry/ui/globals.css";
 @import "./controls.css";
 
 /*
- * Phalanx theme boundary: the instrument palette, density, radii, and custom
+ * Phalanx theme boundary: the editorial palette, density, radii, and custom
  * constellation colors all live here rather than in page components.
- * Adopts anvilpalamattam.com warm obsidian palette, Space Mono, and refined hairlines.
+ * The language is anvilpalamattam.com: obsidian page, Newsreader for titles and
+ * prose, Space Mono for labels and data, indigo accent, hairline rules, and no
+ * glass, grain, gradient, glow or shadow anywhere.
  */
 @source "../";
 
 :root {
   color-scheme: dark;
 
-  --phalanx-font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --phalanx-font-mono: "Space Mono", "Commit Mono", ui-monospace, monospace;
+  /* Editorial scale, verbatim from the site. --muted and --accent are the
+     site's text/brand colors; the Foundary *surface* tokens of the same name
+     are remapped to --wash in the @theme block below. */
+  --page: #080908;
+  --ink: #f1f0e9;
+  --ink-soft: #d8d8d0;
+  --muted: #aaa99f;
+  --muted-soft: #85877f;
+  --accent: #79a7ff;
+  --accent-on-ink: #9abaff;
+  --rule: rgb(241 240 233 / 18%);
+  --rule-soft: rgb(241 240 233 / 11%);
+  --wash: rgb(241 240 233 / 4%);
+
+  --phalanx-font-sans: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --phalanx-font-mono: "Space Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
   --font-sans: var(--phalanx-font-sans);
   --font-mono: var(--phalanx-font-mono);
+  --font-brand: var(--phalanx-font-sans);
 
-  --page: #080908;
-  --background: #080908;
-  --card: #0f1211;
-  --popover: #131716;
-  --sidebar: #070807;
-  --ink: #f1f0e9;
-  --foreground: #f1f0e9;
-  --strong: #fbfaf6;
-  --secondary: rgb(241 240 233 / 4%);
-  --control: rgb(241 240 233 / 4%);
-  --muted: rgb(241 240 233 / 4%);
-  --muted-foreground: #a3a299;
-  --faint: #787770;
-  --brand-phalanx: #4cc9d9;
-  --brand-phalanx-hover: #72d9e6;
-  --brand-phalanx-foreground: #04171a;
-  --accent-indigo: #79a7ff;
-  --rule: rgb(241 240 233 / 12%);
-  --rule-soft: rgb(241 240 233 / 7%);
-  --border: rgb(241 240 233 / 10%);
-  --hairline: rgb(241 240 233 / 6%);
+  /* Foundary semantic surfaces. Every one of them is the flat page: definition
+     comes from a 1px rule, never from a fill, a blur or an elevation. */
+  --background: var(--page);
+  --card: var(--page);
+  --popover: var(--page);
+  --sidebar: var(--page);
+  --foreground: var(--ink);
+  --strong: var(--ink);
+  --card-foreground: var(--ink);
+  --popover-foreground: var(--ink);
+  --secondary: var(--wash);
+  --secondary-foreground: var(--ink);
+  --control: var(--wash);
+  --well: var(--wash);
+  --row: var(--wash);
+  --muted-foreground: var(--muted);
+  --faint: var(--muted-soft);
+  --subtle: var(--muted);
+  --border: var(--rule-soft);
+  --hairline: var(--rule-soft);
+  --input: rgb(241 240 233 / 0%);
 
-  --well: rgb(241 240 233 / 4%);
-  --row: rgb(241 240 233 / 4%);
+  --brand-phalanx: var(--accent);
+  --brand-phalanx-hover: var(--accent-on-ink);
+  --brand-phalanx-foreground: var(--page);
+  --accent-indigo: var(--accent);
 
-  --subtle: var(--muted-foreground);
+  --primary: var(--accent);
+  --primary-foreground: var(--page);
+  --primary-surface: transparent;
+  --primary-surface-hover: var(--wash);
+  --primary-surface-foreground: var(--muted);
+  --primary-border: var(--rule);
+  --accent-foreground: var(--ink);
 
-  --card-foreground: #f1f0e9;
-  --popover-foreground: #f1f0e9;
-  --secondary-foreground: #f1f0e9;
-
-  --primary: var(--brand-phalanx);
-  --primary-foreground: var(--brand-phalanx-foreground);
-  --primary-surface: rgb(76 201 217 / 8%);
-  --primary-surface-hover: rgb(76 201 217 / 16%);
-  --primary-surface-foreground: var(--brand-phalanx);
-  --primary-border: rgb(76 201 217 / 36%);
-  --accent: rgb(241 240 233 / 4%);
-  --accent-foreground: #f1f0e9;
+  /* Severity keeps its meaning, but only ever as text or a small dot. */
   --destructive: #f2565f;
-  --destructive-foreground: #f1f0e9;
+  --destructive-foreground: var(--ink);
   --positive: #3ecf8e;
-  --positive-foreground: #04120b;
+  --positive-foreground: var(--page);
   --negative: #f2565f;
   --warning: #e0b34d;
-  --warning-foreground: #111113;
-  --info: #4cc9d9;
-  --info-foreground: #071315;
-  --positive-surface: rgb(62 207 142 / 8%);
-  --positive-surface-hover: rgb(62 207 142 / 16%);
-  --negative-surface: rgb(242 86 95 / 8%);
-  --negative-surface-hover: rgb(242 86 95 / 16%);
-  --destructive-surface: var(--negative-surface);
-  --destructive-surface-hover: var(--negative-surface-hover);
-  --warning-surface: rgb(224 179 77 / 8%);
-  --warning-surface-hover: rgb(224 179 77 / 16%);
-  --info-surface: rgb(76 201 217 / 8%);
-  --info-surface-hover: rgb(76 201 217 / 16%);
-  --update: var(--brand-phalanx);
-  --update-foreground: var(--brand-phalanx);
-  --update-surface: var(--primary-surface);
-  --update-surface-hover: var(--primary-surface-hover);
+  --warning-foreground: var(--page);
+  --info: var(--accent);
+  --info-foreground: var(--page);
+  --positive-surface: transparent;
+  --positive-surface-hover: var(--wash);
+  --negative-surface: transparent;
+  --negative-surface-hover: var(--wash);
+  --destructive-surface: transparent;
+  --destructive-surface-hover: var(--wash);
+  --warning-surface: transparent;
+  --warning-surface-hover: var(--wash);
+  --info-surface: transparent;
+  --info-surface-hover: var(--wash);
+  --update: var(--accent);
+  --update-foreground: var(--accent);
+  --update-surface: transparent;
+  --update-surface-hover: var(--wash);
 
-  --input: rgb(241 240 233 / 8%);
-  --ring: var(--brand-phalanx);
-  --overlay-backdrop: rgb(0 0 0 / 72%);
+  --ring: var(--accent);
+  --overlay-backdrop: rgb(8 9 8 / 82%);
 
-  --sidebar-foreground: #f1f0e9;
-  --sidebar-muted-foreground: #a3a299;
-  --sidebar-primary: var(--brand-phalanx);
-  --sidebar-primary-foreground: var(--brand-phalanx-foreground);
-  --sidebar-accent: rgb(241 240 233 / 4%);
-  --sidebar-accent-foreground: #f1f0e9;
-  --sidebar-border: rgb(241 240 233 / 8%);
-  --sidebar-ring: var(--brand-phalanx);
+  --sidebar-foreground: var(--ink);
+  --sidebar-muted-foreground: var(--muted);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--page);
+  --sidebar-accent: var(--wash);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--rule-soft);
+  --sidebar-ring: var(--accent);
   --sidebar-width: 12rem;
   --sidebar-width-icon: 3.25rem;
 
-  --radius: 1.125rem;
-  --control-radius: 0.5rem;
-  --item-radius: 0.375rem;
-  --shell-radius: 1.125rem;
+  --radius: 0.25rem;
+  --control-radius: 0.125rem;
+  --item-radius: 0.125rem;
+  --shell-radius: 0;
   --shell-gutter: 0.5rem;
   --chrome-height: 3.25rem;
   --space-unit: 0.25rem;
   --control-height: 2rem;
 
-  --glass-blur: 16px;
-  --glass-saturation: 1.08;
-  --glass-opacity: 88%;
   --phalanx-scrollbar-width: 6px;
   --phalanx-scrollbar-thumb: rgb(241 240 233 / 10%);
   --phalanx-scrollbar-thumb-hover: rgb(241 240 233 / 20%);
-  --surface-grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  --surface-grain-size: 256px 256px;
 
-  --phalanx-canvas: #080908;
+  --phalanx-canvas: var(--page);
   --phalanx-grid: rgb(241 240 233 / 5%);
-  --phalanx-control-border: rgb(241 240 233 / 10%);
-  --phalanx-control-border-active: rgb(241 240 233 / 20%);
-  --phalanx-attention: rgb(242 86 95 / 8%);
-  --phalanx-attention-border: rgb(242 86 95 / 16%);
-  --phalanx-attention-hairline: rgb(242 86 95 / 8%);
-  --phalanx-attention-text: #ff9ca3;
-  --phalanx-paused: #787770;
-  --phalanx-tool-binding: #a3a299;
+  --phalanx-control-border: var(--rule-soft);
+  --phalanx-control-border-active: var(--rule);
+  --phalanx-attention: transparent;
+  --phalanx-attention-border: rgb(242 86 95 / 30%);
+  --phalanx-attention-hairline: rgb(242 86 95 / 18%);
+  --phalanx-attention-text: #f2565f;
+  --phalanx-paused: var(--muted-soft);
+  --phalanx-tool-binding: var(--muted);
   --phalanx-ok-bar: var(--positive);
   /* Agent classes share one lightness so hue groups discipline without making
-     any one class look more important than another. */
-  --phalanx-class-command: var(--brand-phalanx);
-  --phalanx-class-analysis: var(--accent-indigo);
-  --phalanx-class-action: oklch(0.72 0.15 45);
-  --phalanx-class-comms: oklch(0.72 0.13 310);
+     any one class look more important than another. They sit at the accent's
+     saturation so no class reads as a highlight. */
+  --phalanx-class-command: var(--accent);
+  --phalanx-class-analysis: var(--accent-on-ink);
+  --phalanx-class-action: oklch(0.75 0.10 60);
+  --phalanx-class-comms: oklch(0.75 0.09 310);
 
   /* Coordination bus. Message kind is carried by hue on the packet, not by
      decoration on the node. */
-  --phalanx-bus-task: var(--brand-phalanx);
+  --phalanx-bus-task: var(--phalanx-class-command);
   --phalanx-bus-report: var(--positive);
-  --phalanx-bus-query: var(--accent-indigo);
+  --phalanx-bus-query: var(--phalanx-class-analysis);
   --phalanx-bus-escalation: var(--warning);
-  --phalanx-bus-broadcast: oklch(0.72 0.13 310);
+  --phalanx-bus-broadcast: var(--phalanx-class-comms);
   --phalanx-bus-operator_query: var(--warning);
-  --phalanx-bus-commander_reply: var(--brand-phalanx);
+  --phalanx-bus-commander_reply: var(--phalanx-class-command);
 
   --phalanx-sev1: #f2565f;
   --phalanx-sev2: #e0b34d;
-  --phalanx-sev3: #4cc9d9;
-  --phalanx-sev4: #a3a299;
+  --phalanx-sev3: var(--accent);
+  --phalanx-sev4: var(--muted);
 
   /* Backward compatibility aliases */
   --brand-esper: var(--brand-phalanx);
@@ -185,12 +195,24 @@
 }
 
 @theme inline {
+  /* Foundary names --muted and --accent as *fills*; the site names them as a
+     text color and the brand hue. Keep the utilities pointed at the wash so
+     `bg-muted` and `bg-accent` stay quiet, and let :root keep the site meaning. */
+  --color-muted: var(--wash);
+  --color-accent: var(--wash);
+  --color-accent-foreground: var(--ink);
+  --color-muted-foreground: var(--muted);
+
   --color-page: var(--page);
   --color-ink: var(--ink);
-  --color-accent-indigo: var(--accent-indigo);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted-soft: var(--muted-soft);
+  --color-accent-indigo: var(--accent);
+  --color-accent-on-ink: var(--accent-on-ink);
   --color-hairline: var(--hairline);
   --color-rule: var(--rule);
   --color-rule-soft: var(--rule-soft);
+  --color-wash: var(--wash);
 
   --color-phalanx-canvas: var(--phalanx-canvas);
   --color-phalanx-grid: var(--phalanx-grid);
@@ -252,10 +274,12 @@ body,
 body {
   font-size: 13px;
   font-family: var(--phalanx-font-sans);
-  background-color: var(--background);
-  background-image: var(--surface-grain);
-  background-repeat: repeat;
-  background-size: var(--surface-grain-size);
+  font-weight: 300;
+  background: var(--page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .font-sans {
@@ -266,6 +290,11 @@ body {
   font-family: var(--phalanx-font-mono);
 }
 
+::selection {
+  background: var(--ink);
+  color: var(--page);
+}
+
 ::-webkit-scrollbar {
   width: var(--phalanx-scrollbar-width);
   height: var(--phalanx-scrollbar-width);
@@ -274,7 +303,7 @@ body {
 ::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: var(--phalanx-scrollbar-thumb);
-  transition: background-color 120ms ease-out;
+  transition: background-color 180ms ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -294,28 +323,162 @@ body {
   scrollbar-width: none;
 }
 
+/* ---------------------------------------------------------------- typography
+   The six classes below are the whole type system. Pages compose them; they do
+   not invent sizes. `.eyebrow` is the only place uppercase is permitted. */
+
+.eyebrow {
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.title-serif {
+  color: var(--ink);
+  font-family: var(--phalanx-font-sans);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  text-transform: none;
+}
+
+.prose-serif {
+  color: var(--muted);
+  font-family: var(--phalanx-font-sans);
+  font-size: 0.9375rem;
+  font-weight: 300;
+  line-height: 1.5;
+}
+
+.meta-mono {
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.065em;
+  line-height: 1.55;
+}
+
+/* A run of short concept tags, joined by a middot the markup never carries. */
+.concepts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  color: var(--accent);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.045em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.concepts > * {
+  position: relative;
+}
+
+.concepts > * + *::before {
+  position: absolute;
+  left: -0.45rem;
+  color: var(--muted-soft);
+  content: "·";
+}
+
+/* The site's list row: a hairline underneath, a wash on hover, nothing else. */
+.rule-row {
+  display: grid;
+  align-items: start;
+  gap: 0.875rem 1.25rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--rule-soft);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+a.rule-row:hover,
+button.rule-row:hover,
+.rule-row[data-interactive="true"]:hover {
+  background: var(--wash);
+  color: var(--ink);
+}
+
+/* Severity reads as a color and an outline, never as a fill. */
+.sev-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 0.125rem;
+  background: transparent;
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+}
+
+.sev-tag[data-tone="negative"],
+.sev-tag[data-tone="critical"] {
+  color: var(--negative);
+}
+
+.sev-tag[data-tone="warning"] {
+  color: var(--warning);
+}
+
+.sev-tag[data-tone="positive"] {
+  color: var(--positive);
+}
+
+.sev-tag[data-tone="info"] {
+  color: var(--accent);
+}
+
+.sev-tag[data-tone="muted"] {
+  color: var(--muted);
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 0.0625rem;
+  text-underline-offset: 0.2em;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+/* ------------------------------------------------------------------- chrome */
+
 [data-slot="page-chrome"] {
   min-height: var(--chrome-height);
-  padding-inline: 1rem;
-  border-bottom-width: 0;
-  background: var(--background);
+  padding-inline: 1.25rem;
+  border-bottom: 1px solid var(--rule-soft);
+  background: var(--page);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
 [data-slot="page-chrome"] h1 {
-  font-size: 0.9375rem;
-  letter-spacing: normal;
+  color: var(--ink);
+  font-family: var(--phalanx-font-sans);
+  font-size: 1.25rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 [data-slot="page-chrome"] h1 + span {
-  font-size: 0.75rem;
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.065em;
 }
 
 [data-slot="page-content"] {
   min-height: 0;
   gap: 1rem;
-  padding: 1rem;
+  padding: 1.25rem;
 }
 
 [data-slot="page-content"] > * {
@@ -362,15 +525,19 @@ body {
     var(--phalanx-scrollbar-width) 100%;
 }
 
+/* ----------------------------------------------------------------- surfaces
+   Every panel is the page plus a hairline. No blur, no grain, no gradient, no
+   shadow, no inset highlight, no radius worth noticing. */
+
 [data-slot="card"],
 [data-slot="alert"],
 [data-slot="empty"] {
+  border: 1px solid var(--rule-soft);
   border-radius: var(--shell-radius);
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--card) 88%, transparent);
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%), 0 8px 32px -8px rgb(0 0 0 / 60%);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  background: var(--page);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 [data-slot="card"] {
@@ -378,8 +545,15 @@ body {
 }
 
 [data-slot="dialog-content"],
-[data-slot="alert-dialog-content"] {
-  border-radius: var(--shell-radius);
+[data-slot="alert-dialog-content"],
+[data-slot="sheet-content"],
+.dialog-glass {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--page);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 [data-slot="popover-content"],
@@ -390,90 +564,30 @@ body {
 [data-slot="select-content"],
 [data-slot="menubar-content"],
 [data-slot="menubar-sub-content"],
-[data-slot="combobox-content"] {
+[data-slot="combobox-content"],
+.dropdown-glass {
+  border: 1px solid var(--rule);
   border-radius: var(--item-radius);
-}
-
-[data-slot="sidebar-header"] {
-  min-height: var(--chrome-height);
-  border-bottom: 1px solid var(--sidebar-border);
-  padding: 0 0.875rem;
-}
-
-/* Foundary keeps collapse and the mobile sheet; Phalanx only scopes the visual
-   surface and row tokens to the persistent shell. */
-[data-slot="sidebar-inner"],
-[data-slot="sidebar"][data-mobile="true"] {
-  --sidebar: #070807;
-  --sidebar-foreground: #f1f0e9;
-  --sidebar-muted-foreground: #a3a299;
-  --sidebar-accent: rgb(241 240 233 / 4%);
-  --sidebar-accent-foreground: #f1f0e9;
-  --sidebar-border: rgb(241 240 233 / 8%);
-  --phalanx-sidebar-row-hover: rgb(241 240 233 / 5%);
-  --phalanx-sidebar-row-active: rgb(241 240 233 / 9%);
-  --phalanx-sidebar-row-selected: rgb(241 240 233 / 7%);
-  --esper-sidebar-row-hover: var(--phalanx-sidebar-row-hover);
-  --esper-sidebar-row-active: var(--phalanx-sidebar-row-active);
-  --esper-sidebar-row-selected: var(--phalanx-sidebar-row-selected);
-
-  background-color: var(--sidebar);
-}
-
-[data-slot="sidebar-group"] {
-  padding: 0.5rem;
-}
-
-[data-slot="sidebar-menu"] {
-  gap: 0.125rem;
-}
-
-[data-slot="sidebar-menu-button"] {
-  border-radius: var(--item-radius, 0.375rem);
-}
-
-[data-slot="sidebar-menu-button"].phalanx-nav-row,
-[data-slot="sidebar-menu-button"].esper-nav-row {
-  background-color: transparent;
-}
-
-[data-slot="sidebar-menu-button"].phalanx-nav-row:hover:not([data-active]),
-[data-slot="sidebar-menu-button"].esper-nav-row:hover:not([data-active]) {
-  background-color: var(--phalanx-sidebar-row-hover);
-}
-
-[data-slot="sidebar-menu-button"].phalanx-nav-row:active:not([data-active]),
-[data-slot="sidebar-menu-button"].esper-nav-row:active:not([data-active]) {
-  background-color: var(--phalanx-sidebar-row-active);
-}
-
-[data-slot="sidebar-menu-button"].phalanx-nav-row[data-active],
-[data-slot="sidebar-menu-button"].esper-nav-row[data-active] {
-  background-color: var(--phalanx-sidebar-row-selected);
-  color: var(--sidebar-foreground);
+  background: var(--page);
   box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-[data-slot="sidebar-menu-button"].phalanx-nav-row[data-active]:hover,
-[data-slot="sidebar-menu-button"].esper-nav-row[data-active]:hover {
-  background-color: var(--phalanx-sidebar-row-active);
+[data-slot="dialog-overlay"],
+[data-slot="alert-dialog-overlay"],
+[data-slot="sheet-overlay"],
+.dialog-backdrop {
+  background: var(--overlay-backdrop);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-.phalanx-update-notice,
-.esper-update-notice {
-  align-self: center;
-  margin: 0.5rem 1rem 0;
-  border: 1px solid color-mix(in srgb, var(--brand-phalanx) 28%, transparent);
-  border-radius: 999px;
-  background: var(--primary-surface);
+[data-slot="separator"] {
+  background: var(--rule-soft);
 }
 
-[data-slot="sidebar-menu-button"] svg {
-  width: 0.875rem;
-  height: 0.875rem;
-}
-
-/* Opt-in inset elevation for surfaces that need definition without a shadow. */
+/* Opt-in hairline frame for surfaces that need definition without a border box. */
 .phalanx-hairline,
 .esper-hairline {
   position: relative;
@@ -483,104 +597,204 @@ body {
 .esper-hairline::before {
   position: absolute;
   inset: 0;
-  border: 1px solid var(--hairline);
+  border: 1px solid var(--rule-soft);
   border-radius: inherit;
   content: "";
   pointer-events: none;
 }
 
-/* Apply the t3code glass recipes to existing Foundary overlay slots so no
-   component code needs to own a presentation concern. */
-.dialog-glass,
-[data-slot="dialog-content"],
-[data-slot="alert-dialog-content"],
-[data-slot="sheet-content"] {
-  border-color: rgb(255 255 255 / 8%);
-  background: color-mix(in srgb, var(--popover) var(--glass-opacity), transparent);
-  box-shadow:
-    inset 0 1px rgb(255 255 255 / 4%),
-    0 24px 72px -20px rgb(0 0 0 / 90%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+/* ------------------------------------------------------------------ sidebar */
+
+[data-slot="sidebar"] {
+  border-right: 1px solid var(--rule-soft);
 }
 
-.dropdown-glass,
-[data-slot="popover-content"],
-[data-slot="dropdown-menu-content"],
-[data-slot="dropdown-menu-sub-content"],
-[data-slot="context-menu-content"],
-[data-slot="context-menu-sub-content"],
-[data-slot="select-content"],
-[data-slot="menubar-content"],
-[data-slot="menubar-sub-content"],
-[data-slot="combobox-content"] {
-  border: 1px solid rgb(255 255 255 / 8%);
-  background: color-mix(
-    in srgb,
-    var(--popover) 18%,
-    color-mix(in srgb, var(--popover) var(--glass-opacity), transparent)
-  );
-  box-shadow: 0 18px 44px -18px rgb(0 0 0 / 80%);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
+[data-slot="sidebar-inner"],
+[data-slot="sidebar"][data-mobile="true"] {
+  --phalanx-sidebar-row-hover: var(--wash);
+  --phalanx-sidebar-row-active: var(--wash);
+  --phalanx-sidebar-row-selected: transparent;
+  --esper-sidebar-row-hover: var(--phalanx-sidebar-row-hover);
+  --esper-sidebar-row-active: var(--phalanx-sidebar-row-active);
+  --esper-sidebar-row-selected: var(--phalanx-sidebar-row-selected);
+
+  background: var(--page);
 }
 
-.dialog-backdrop,
-[data-slot="dialog-overlay"],
-[data-slot="alert-dialog-overlay"],
-[data-slot="sheet-overlay"] {
-  background: color-mix(in srgb, var(--background) 64%, transparent);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+[data-slot="sidebar-header"] {
+  min-height: var(--chrome-height);
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--rule-soft);
 }
 
-/* Grain is opt-in outside the app canvas; the SVG and canvas instrument
-   surfaces keep their own flat backgrounds and never receive this texture. */
-.surface-grain {
-  background-image: var(--surface-grain);
-  background-repeat: repeat;
-  background-size: var(--surface-grain-size);
+[data-slot="sidebar-footer"] {
+  border-top: 1px solid var(--rule-soft);
+  background: var(--page);
 }
 
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .dialog-glass,
-  .dropdown-glass,
-  [data-slot="dialog-content"],
-  [data-slot="alert-dialog-content"],
-  [data-slot="sheet-content"],
-  [data-slot="popover-content"],
-  [data-slot="dropdown-menu-content"],
-  [data-slot="dropdown-menu-sub-content"],
-  [data-slot="context-menu-content"],
-  [data-slot="context-menu-sub-content"],
-  [data-slot="select-content"],
-  [data-slot="menubar-content"],
-  [data-slot="menubar-sub-content"],
-  [data-slot="combobox-content"] {
-    background: var(--popover);
-  }
+[data-slot="sidebar-group"] {
+  padding: 0.5rem;
 }
 
-@media (prefers-reduced-transparency: reduce) {
-  .dialog-glass,
-  .dropdown-glass,
-  [data-slot="dialog-content"],
-  [data-slot="alert-dialog-content"],
-  [data-slot="sheet-content"],
-  [data-slot="popover-content"],
-  [data-slot="dropdown-menu-content"],
-  [data-slot="dropdown-menu-sub-content"],
-  [data-slot="context-menu-content"],
-  [data-slot="context-menu-sub-content"],
-  [data-slot="select-content"],
-  [data-slot="menubar-content"],
-  [data-slot="menubar-sub-content"],
-  [data-slot="combobox-content"] {
-    background: var(--popover);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
+[data-slot="sidebar-group-label"] {
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
+
+[data-slot="sidebar-menu"] {
+  gap: 0.125rem;
+}
+
+[data-slot="sidebar-menu-button"] {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+[data-slot="sidebar-menu-button"] svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+[data-slot="sidebar-menu-button"]:hover,
+[data-slot="sidebar-menu-button"]:active {
+  background: transparent;
+  color: var(--ink);
+}
+
+/* Active nav is ink plus a hairline of accent under the label — never a pill. */
+[data-slot="sidebar-menu-button"][data-active],
+[data-slot="sidebar-menu-button"][data-active]:hover {
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+}
+
+[data-slot="sidebar-menu-button"][data-active] .phalanx-nav-label {
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 0.0625rem;
+}
+
+.phalanx-update-notice,
+.esper-update-notice {
+  align-self: center;
+  margin: 0.5rem 1rem 0;
+  border: 1px solid var(--rule);
+  border-radius: var(--control-radius);
+  background: transparent;
+}
+
+/* ------------------------------------------------------------------ controls
+   Buttons are text with a rule around them. There is no filled accent button
+   anywhere in the product; the one solid emphasis available is `.button-ink`. */
+
+[data-slot="button"] {
+  border-radius: var(--control-radius);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+[data-slot="button"][data-size="xs"],
+[data-slot="button"][data-size="sm"] {
+  font-size: 0.6875rem;
+}
+
+[data-slot="button"]:is(
+  [data-variant="default"],
+  [data-variant="outline"],
+  [data-variant="secondary"]
+) {
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--muted);
+}
+
+[data-slot="button"]:is(
+  [data-variant="default"],
+  [data-variant="outline"],
+  [data-variant="secondary"]
+):is(:hover, :active, [aria-expanded="true"]) {
+  border-color: var(--rule);
+  background: var(--wash);
+  color: var(--ink);
+}
+
+[data-slot="button"][data-variant="ghost"] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+[data-slot="button"][data-variant="ghost"]:is(:hover, :active, [aria-expanded="true"]) {
+  background: var(--wash);
+  color: var(--ink);
+}
+
+[data-slot="button"][data-variant="destructive"] {
+  border: 1px solid color-mix(in srgb, var(--negative) 40%, transparent);
+  background: transparent;
+  color: var(--negative);
+}
+
+[data-slot="button"][data-variant="destructive"]:is(:hover, :active) {
+  border-color: var(--negative);
+  background: transparent;
+  color: var(--negative);
+}
+
+[data-slot="button"][data-variant="link"] {
+  color: var(--accent);
+}
+
+/* The single solid emphasis: ink on page, the site's skip-link treatment. */
+[data-slot="button"].button-ink,
+[data-slot="button"].button-ink:is(:hover, :active) {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--page);
+}
+
+[data-slot="input"],
+[data-slot="textarea"],
+[data-slot="select-trigger"],
+[data-slot="sidebar-input"] {
+  border: 1px solid var(--rule);
+  border-radius: 0.125rem;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.75rem;
+}
+
+[data-slot="input"]::placeholder,
+[data-slot="textarea"]::placeholder {
+  color: var(--muted-soft);
+}
+
+[data-slot="input"]:focus-visible,
+[data-slot="textarea"]:focus-visible,
+[data-slot="select-trigger"]:focus-visible,
+[data-slot="sidebar-input"]:focus-visible {
+  border-color: var(--rule);
+  outline: 2px solid var(--accent);
+  outline-offset: 0.2rem;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------- indicators */
 
 .phalanx-signal,
 .esper-signal {
@@ -592,27 +806,26 @@ body {
   background: currentColor;
 }
 
+/* Section headings are an eyebrow with a rule under the whole row. */
 .phalanx-section-title,
 .esper-section-title {
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: normal;
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.phalanx-section-title::after,
-.esper-section-title::after {
-  height: 1px;
-  flex: 1;
-  background: var(--border);
-  content: "";
-}
+/* ------------------------------------------------------------------- motion
+   The whole budget: a page-in, 180ms color transitions, the status dot, and
+   packet motion inside the swarm graph canvas. */
 
 /* Duty-cycle the small status indicators rather than repainting a smooth
-   opacity curve every frame. This mirrors the t3code indicator cadence. */
+   opacity curve every frame. */
 @keyframes status-pulse {
   0%, 40% {
     opacity: 1;
@@ -646,29 +859,53 @@ body {
   animation: fleetDrawerIn 160ms ease-out;
 }
 
+/* The site's page-in: a 500ms fade with a 10px rise. Agent-authored A2UI cards
+   arrive mid-run and use the same entrance, so a new panel reads as arriving
+   rather than as an animation. */
+@keyframes phalanxCardIn {
+  from { transform: translateY(0.625rem); opacity: 0 }
+  to { transform: none; opacity: 1 }
+}
+
+@keyframes esperCardIn {
+  from { transform: translateY(0.625rem); opacity: 0 }
+  to { transform: none; opacity: 1 }
+}
+
+.phalanx-card-in,
+.esper-card-in,
+.page-in {
+  animation: phalanxCardIn 500ms ease both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fleet-blip,
   .fleet-drawer-in,
   .phalanx-status-pulse,
   .esper-status-pulse,
   .status-pulse,
-  .animate-status-pulse {
+  .animate-status-pulse,
+  .phalanx-card-in,
+  .esper-card-in,
+  .page-in {
     animation: none;
   }
 }
 
-/* The swarm graph is a canvas instrument, not a document surface: it keeps a
-   flat background and its own inset frame rather than the page grain. */
+/* -------------------------------------------------------------------- graph
+   The swarm graph is a canvas instrument, not a document surface: it keeps a
+   flat background and a hairline frame. */
+
 .phalanx-graph-shell,
 .esper-graph-shell {
   position: relative;
   height: var(--phalanx-graph-height, var(--esper-graph-height, 30rem));
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--shell-radius);
+  border: 1px solid var(--rule-soft);
+  border-radius: 0;
   background: var(--phalanx-canvas);
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%), 0 12px 40px -12px rgb(0 0 0 / 70%);
+  box-shadow: none;
 }
 
 .phalanx-graph-canvas,
@@ -690,82 +927,11 @@ body {
   z-index: 20;
   max-width: 24rem;
   padding: 0.625rem 0.875rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--rule);
   border-radius: var(--item-radius);
-  background: color-mix(in srgb, var(--popover) 90%, transparent);
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 8%), 0 20px 48px -12px rgb(0 0 0 / 90%);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
+  background: var(--page);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   pointer-events: none;
-}
-
-/* Tactical micro-labels and chips */
-.soc-micro-label {
-  font-family: var(--phalanx-font-mono);
-  font-size: 0.625rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.tactical-border {
-  border: 1px solid var(--border);
-  box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%);
-}
-
-/* Glowing ring and automated containment animations */
-
-@keyframes glow-breathe {
-  0%, 100% {
-    opacity: 0.45;
-    transform: scale(1);
-    filter: drop-shadow(0 0 4px var(--brand-phalanx));
-  }
-  50% {
-    opacity: 0.95;
-    transform: scale(1.08);
-    filter: drop-shadow(0 0 12px var(--brand-phalanx));
-  }
-}
-
-@keyframes containment-firewall {
-  0%, 100% {
-    box-shadow: 0 0 16px rgb(76 201 217 / 45%), inset 0 0 10px rgb(76 201 217 / 35%);
-    border-color: rgb(76 201 217 / 85%);
-  }
-  50% {
-    box-shadow: 0 0 26px rgb(242 86 95 / 65%), inset 0 0 14px rgb(242 86 95 / 45%);
-    border-color: rgb(242 86 95 / 90%);
-  }
-}
-
-.animate-glow-breathe {
-  animation: glow-breathe 2.5s ease-in-out infinite;
-}
-
-.animate-containment-firewall {
-  animation: containment-firewall 1.8s ease-in-out infinite;
-}
-
-/* A2UI cards arrive from an agent mid-run; the entrance makes that legible
-   without turning the surface into an animation. */
-@keyframes phalanxCardIn {
-  from { transform: translateY(6px); opacity: 0 }
-  to { transform: none; opacity: 1 }
-}
-
-@keyframes esperCardIn {
-  from { transform: translateY(6px); opacity: 0 }
-  to { transform: none; opacity: 1 }
-}
-
-.phalanx-card-in,
-.esper-card-in {
-  animation: phalanxCardIn 200ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .phalanx-card-in,
-  .esper-card-in,
-  .animate-glow-breathe,
-  .animate-containment-firewall { animation: none }
 }

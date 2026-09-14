@@ -1,6 +1,4 @@
 import { useMemo, useState } from "react"
-import { Badge } from "@foundry/ui/components/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@foundry/ui/components/card"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { SegmentedControl } from "@foundry/ui/components/segmented-control"
 import { SectionHeader } from "@/components/section-header"
@@ -55,29 +53,32 @@ export function ProtocolPage() {
           <div className="flex flex-col gap-3">
             <SectionHeader title="Hops" />
             {messages.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No traffic yet. Start a scenario.</p>
+              <p className="prose-serif">No traffic yet. Start a scenario.</p>
             ) : (
               <ol className="flex max-h-[42rem] flex-col overflow-y-auto">
                 {messages.slice(0, 120).map((message) => (
                   <li key={message.id}>
                     <button
                       type="button"
-                      className={`grid w-full grid-cols-[4.5rem_1fr] gap-3 border-b border-border/60 py-2 text-left transition-colors hover:bg-accent/50 ${
-                        active?.id === message.id ? "bg-accent/60" : ""
-                      }`}
+                      className="rule-row w-full grid-cols-[4.5rem_minmax(0,1fr)] gap-y-1! text-left"
+                      data-interactive="true"
+                      style={active?.id === message.id ? { background: "var(--wash)" } : undefined}
                       onClick={() => setSelected(message.id)}
                     >
-                      <span className="font-mono text-[11px] text-muted-foreground">{shortTime(message.at)}</span>
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-1.5 font-mono text-[11px] text-foreground">
+                      <span className="meta-mono">{shortTime(message.at)}</span>
+                      <span className="flex min-w-0 flex-col gap-1">
+                        <span className="meta-mono flex items-center gap-1.5 text-ink!">
                           {agents.get(message.fromAgentId)?.callsign ?? message.fromAgentId}
                           <span className="text-muted-foreground">→</span>
                           {message.toAgentId ? agents.get(message.toAgentId)?.callsign ?? message.toAgentId : "broadcast"}
-                          <Badge variant="outline" className="ml-auto font-mono text-[10px] text-muted-foreground">
+                          <span
+                            className="sev-tag ml-auto"
+                            style={{ color: `var(--phalanx-bus-${message.kind}, var(--muted))` }}
+                          >
                             {message.kind}
-                          </Badge>
+                          </span>
                         </span>
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">{message.summary}</span>
+                        <span className="prose-serif truncate">{message.summary}</span>
                       </span>
                     </button>
                   </li>
@@ -90,40 +91,38 @@ export function ProtocolPage() {
             <SectionHeader title="Envelope" />
             {active ? (
               <>
-                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                  <span className="font-mono">taskId {active.taskId ?? "—"}</span>
-                  <span className="font-mono">incident {active.incidentId ?? "—"}</span>
+                <div className="meta-mono flex flex-wrap gap-3">
+                  <span>taskId {active.taskId ?? "—"}</span>
+                  <span>incident {active.incidentId ?? "—"}</span>
                 </div>
-                <pre className="max-h-[38rem] overflow-auto rounded-shell border border-border bg-card p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                <pre className="max-h-[38rem] overflow-auto border border-rule p-3 font-mono text-[0.75rem] leading-relaxed text-muted-foreground">
                   {JSON.stringify(active.envelope, null, 2)}
                 </pre>
               </>
             ) : (
-              <p className="text-xs text-muted-foreground">Select a hop.</p>
+              <p className="prose-serif">Select a hop.</p>
             )}
           </div>
         </div>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-6 xl:grid-cols-2">
           {[...state.surfaces.values()].map((surface) => (
-            <Card key={surface.id}>
-              <CardHeader className="pb-0">
-                <CardTitle className="font-mono text-sm font-medium">{surface.id}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2 pt-3">
-                <div className="flex gap-3 text-[11px] text-muted-foreground">
-                  <span>{Object.keys(surface.components).length} components</span>
-                  <span>root {surface.root ?? "—"}</span>
-                  <span className="ml-auto font-mono">{shortTime(surface.updatedAt)}</span>
-                </div>
-                <pre className="max-h-72 overflow-auto rounded-item border border-border bg-well p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
-                  {JSON.stringify(surface.components, null, 2).slice(0, 4000)}
-                </pre>
-              </CardContent>
-            </Card>
+            <section key={surface.id} className="flex flex-col gap-2">
+              <div className="flex items-center gap-3 border-b border-rule pb-1.5">
+                <span className="meta-mono flex-1 text-ink!">{surface.id}</span>
+                <span className="meta-mono">{shortTime(surface.updatedAt)}</span>
+              </div>
+              <div className="meta-mono flex gap-3">
+                <span>{Object.keys(surface.components).length} components</span>
+                <span>root {surface.root ?? "—"}</span>
+              </div>
+              <pre className="max-h-72 overflow-auto border border-rule p-3 font-mono text-[0.75rem] leading-relaxed text-muted-foreground">
+                {JSON.stringify(surface.components, null, 2).slice(0, 4000)}
+              </pre>
+            </section>
           ))}
           {surfaceMessages.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No surfaces published yet.</p>
+            <p className="prose-serif">No surfaces published yet.</p>
           ) : null}
         </div>
       )}

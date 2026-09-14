@@ -69,8 +69,8 @@
   [data-slot="toggle-group-item"],
   [data-slot="pagination-link"]
 ):not(:disabled):not([aria-disabled="true"]):focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  outline: 2px solid var(--accent);
+  outline-offset: 0.2rem;
 }
 
 /* The visual footprint stays dense for mouse users. On touch hardware, use a
@@ -131,24 +131,25 @@
   }
 }
 
-/* Badge variants resolve to the tokenized 8% rest / 16% interaction surfaces.
- * Later callers can select a semantic color without introducing a new badge
- * implementation or a solid status fill. */
+/* Badges are outlined text, never a filled pill: a 1px rule at 40% of the tone
+ * and a monospaced label. The tone still carries the reading. */
 [data-slot="badge"] {
-  --badge-tone: var(--primary-surface-foreground);
-  --badge-surface: var(--primary-surface);
-  --badge-surface-hover: var(--primary-surface-hover);
-  --badge-border: color-mix(in srgb, var(--badge-tone) 32%, transparent);
+  --badge-tone: var(--muted);
 
-  font-family: var(--phalanx-font-mono);
-  letter-spacing: 0.03em;
-  border-color: var(--badge-border);
-  background-color: var(--badge-surface);
+  padding: 0.1rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--badge-tone) 40%, transparent);
+  border-radius: 0.125rem;
+  background: transparent;
   color: var(--badge-tone);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: none;
 }
 
 [data-slot="badge"]:not(:disabled):not([aria-disabled="true"]):is(:hover, :active) {
-  background-color: var(--badge-surface-hover);
+  background: var(--wash);
 }
 
 [data-slot="badge"]:is(
@@ -158,8 +159,6 @@
   [data-status="success"]
 ) {
   --badge-tone: var(--positive);
-  --badge-surface: var(--positive-surface);
-  --badge-surface-hover: var(--positive-surface-hover);
 }
 
 [data-slot="badge"]:is(
@@ -170,8 +169,6 @@
   [data-status="error"]
 ) {
   --badge-tone: var(--negative);
-  --badge-surface: var(--negative-surface);
-  --badge-surface-hover: var(--negative-surface-hover);
 }
 
 [data-slot="badge"]:is(
@@ -179,26 +176,15 @@
   [data-status="warning"]
 ) {
   --badge-tone: var(--warning);
-  --badge-surface: var(--warning-surface);
-  --badge-surface-hover: var(--warning-surface-hover);
 }
 
 [data-slot="badge"]:is(
   [data-tone="info"],
-  [data-status="info"]
-) {
-  --badge-tone: var(--info);
-  --badge-surface: var(--info-surface);
-  --badge-surface-hover: var(--info-surface-hover);
-}
-
-[data-slot="badge"]:is(
+  [data-status="info"],
   [data-tone="update"],
   [data-status="update"]
 ) {
-  --badge-tone: var(--update-foreground);
-  --badge-surface: var(--update-surface);
-  --badge-surface-hover: var(--update-surface-hover);
+  --badge-tone: var(--accent);
 }
 
 /* Foundary table defaults retain their scroll container while letting callers
@@ -212,18 +198,19 @@
 }
 
 [data-slot="table-header"] {
-  color: var(--muted-foreground);
+  color: var(--muted);
 }
 
 [data-slot="table-head"] {
   height: 2rem;
   min-block-size: 2rem;
   padding-block: 0.25rem;
-  color: var(--muted-foreground);
-  font-size: 0.75rem;
-  font-weight: 500;
+  color: var(--muted);
+  font-family: var(--phalanx-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
   line-height: 1rem;
-  letter-spacing: normal;
+  letter-spacing: 0.065em;
   white-space: nowrap;
 }
 
@@ -251,7 +238,6 @@
   flex: none;
   border-radius: 999px;
   background: var(--status-dot-color);
-  box-shadow: 0 0 4px var(--status-dot-color);
 }
 
 [data-slot="status-dot"][data-tone="positive"] {
@@ -267,20 +253,18 @@
 }
 
 [data-slot="status-dot"][data-tone="info"] {
-  --status-dot-color: var(--info);
+  --status-dot-color: var(--accent);
 }
 
 @keyframes status-dot-pulse {
   0%, 100% {
     opacity: 1;
     transform: scale(1);
-    box-shadow: 0 0 6px var(--status-dot-color);
   }
 
   50% {
     opacity: 0.4;
     transform: scale(0.85);
-    box-shadow: 0 0 2px var(--status-dot-color);
   }
 }
 

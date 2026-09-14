@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Badge } from "@foundry/ui/components/badge"
 import { Button } from "@foundry/ui/components/button"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { SegmentedControl } from "@foundry/ui/components/segmented-control"
 import { StatusDot } from "@foundry/ui/components/status-dot"
-import { ArrowDownToLine, CornerDownLeft, Loader2, Terminal } from "lucide-react"
+import { ArrowDownToLine, CornerDownLeft, Loader2 } from "lucide-react"
 import { shortTime } from "@/lib/format"
 import type { AgentDef, TranscriptEntry } from "@/lib/model"
 import { phalanxApi, useAgentIndex, usePhalanx, useIncidentList } from "@/lib/store"
@@ -13,7 +12,7 @@ import { phalanxApi, useAgentIndex, usePhalanx, useIncidentList } from "@/lib/st
 /* Agent Chat.
    The full text the agents actually produce as they work — every A2A report,
    query, task, broadcast, and interactive operator transmission in order as a
-   live conversation. */
+   live conversation. One turn per hairline row; no bubbles. */
 
 type Filter = "all" | "reports"
 
@@ -38,7 +37,7 @@ const QUICK_PROMPTS = [
 
 function classColor(agent: AgentDef | undefined, isOperator = false): string {
   if (isOperator) return "var(--warning)"
-  return agent ? `var(--phalanx-class-${agent.class})` : "var(--brand-phalanx)"
+  return agent ? `var(--phalanx-class-${agent.class})` : "var(--accent)"
 }
 
 function formatMessageText(text: string) {
@@ -52,7 +51,7 @@ function formatMessageText(text: string) {
             return (
               <code
                 key={partIdx}
-                className="rounded bg-muted/70 px-1 py-0.5 font-mono text-[11px] text-primary"
+                className="font-mono text-[0.75rem] text-accent-indigo!"
               >
                 {part.slice(1, -1)}
               </code>
@@ -60,7 +59,7 @@ function formatMessageText(text: string) {
           }
           if (part.startsWith("**") && part.endsWith("**")) {
             return (
-              <strong key={partIdx} className="font-semibold text-foreground">
+              <strong key={partIdx} className="font-normal text-ink!">
                 {part.slice(2, -2)}
               </strong>
             )
@@ -70,6 +69,38 @@ function formatMessageText(text: string) {
       </span>
     )
   })
+}
+
+/* Agents paste raw instrument output into their reports. Those lines are data,
+   so they get the mono face; the sentences around them stay in the serif. */
+const DATA_LINE = /^\s*\d{4}-\d{2}-\d{2}T/
+
+function renderBody(text: string, rich: boolean, bodyClass: string) {
+  const blocks: { mono: boolean; lines: string[] }[] = []
+  for (const line of text.split("\n")) {
+    const mono = DATA_LINE.test(line) || line.includes("\t")
+    const last = blocks[blocks.length - 1]
+    if (last && last.mono === mono) last.lines.push(line)
+    else blocks.push({ mono, lines: [line] })
+  }
+
+  return blocks
+    .map((block) => ({ mono: block.mono, text: block.lines.join("\n").trim() }))
+    .filter((block) => block.text.length > 0)
+    .map((block, idx) =>
+      block.mono ? (
+        <pre
+          key={idx}
+          className="overflow-x-auto whitespace-pre-wrap font-mono text-[0.6875rem] leading-relaxed text-muted-foreground"
+        >
+          {block.text}
+        </pre>
+      ) : (
+        <div key={idx} className={bodyClass}>
+          {rich ? formatMessageText(block.text) : block.text}
+        </div>
+      ),
+    )
 }
 
 export function ChatPage() {
@@ -152,7 +183,7 @@ export function ChatPage() {
   const rangeIncidents = incidents
 
   return (
-    <PageContent className="min-h-0 flex flex-col gap-3">
+    <PageContent className="flex min-h-0 flex-col gap-3">
       <PageHeader
         title="Agent Chat"
         subtitle={`${state.transcript.length} messages`}
@@ -168,42 +199,39 @@ export function ChatPage() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setIncidentId("all")}
-          className={`rounded-item border px-2.5 py-1 text-xs transition-colors ${incidentId === "all" ? "border-primary/50 bg-primary-surface text-primary" : "border-border text-muted-foreground hover:bg-accent"}`}
-        >
+      {/* Incident scope: a row of quiet labels, the current one underlined in accent. */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-rule-soft pb-2">
+        <ScopeButton active={incidentId === "all"} onClick={() => setIncidentId("all")}>
           All incidents
-        </button>
+        </ScopeButton>
         {rangeIncidents.map((incident) => (
-          <button
+          <ScopeButton
             key={incident.id}
-            type="button"
+            active={incidentId === incident.id}
             onClick={() => setIncidentId(incident.id)}
-            className={`flex items-center gap-1.5 rounded-item border px-2.5 py-1 text-xs transition-colors ${incidentId === incident.id ? "border-primary/50 bg-primary-surface text-primary" : "border-border text-muted-foreground hover:bg-accent"}`}
           >
             <StatusDot tone={incident.status === "resolved" ? "positive" : "negative"} />
-            <span className="font-mono">{incident.code}</span>
-          </button>
+            {incident.code}
+          </ScopeButton>
         ))}
       </div>
 
       <div
         ref={scrollRef}
         onScroll={onScroll}
-        className="relative flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto rounded-shell border border-border bg-card p-4"
+        className="relative flex min-h-0 flex-1 flex-col overflow-y-auto"
       >
         {entries.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
-            <p className="text-sm text-foreground">No agent traffic yet.</p>
-            <p className="max-w-md text-xs text-muted-foreground">
-              Start a scenario, a live-range attack, or use the Operator Console below to query Incident Commanders and specialists.
+            <p className="title-serif text-[1.125rem]">No agent traffic yet.</p>
+            <p className="prose-serif max-w-md">
+              Start a scenario, a live-range attack, or use the operator console below to query
+              incident commanders and specialists.
             </p>
           </div>
         ) : (
           entries.map((entry) => (
-            <ChatBubble
+            <ChatTurn
               key={entry.id}
               entry={entry}
               agents={agents}
@@ -218,7 +246,7 @@ export function ChatPage() {
           <Button
             size="sm"
             variant="outline"
-            className="sticky bottom-2 self-end shadow-md z-10"
+            className="sticky bottom-2 z-10 self-end"
             onClick={() => {
               setFollow(true)
               bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -229,107 +257,91 @@ export function ChatPage() {
         ) : null}
       </div>
 
-      {/* Operator Intervene / Ask Commander Console */}
-      <div className="flex flex-col gap-2 rounded-shell border border-border/80 bg-card/90 p-3 shadow-sm backdrop-blur">
-        {/* Header & Quick-suggestion pills */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <Terminal className="size-3.5 text-warning" />
-            <span>Operator Console</span>
-            <span className="text-[10px] font-normal lowercase text-muted-foreground/70">· intervene / query swarm</span>
-          </div>
+      {/* Operator console: intervene in, or query, the swarm. */}
+      <div className="flex flex-col gap-2 border-t border-rule pt-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <span className="eyebrow">Operator console</span>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60 mr-1 hidden sm:inline">Suggestions:</span>
             {QUICK_PROMPTS.map((item) => (
               <button
                 key={item.label}
                 type="button"
                 disabled={asking}
                 onClick={() => void handleSend(item.prompt)}
-                className="group flex items-center gap-1 rounded-full border border-border/70 bg-accent/40 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground transition-all hover:border-primary/50 hover:bg-primary-surface hover:text-primary disabled:opacity-50 cursor-pointer"
+                className="meta-mono cursor-pointer rounded-[0.125rem] border border-rule-soft px-2 py-0.5 transition-colors hover:border-rule hover:text-ink! disabled:opacity-50"
               >
-                <Terminal className="size-2.5 text-muted-foreground/70 group-hover:text-primary" />
-                <span>{item.label}</span>
+                {item.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Query Input Box */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          {/* Target selector */}
-          <div className="flex items-center gap-1 shrink-0">
-            <select
-              value={targetAgentId}
-              onChange={(e) => setTargetAgentId(e.target.value)}
-              disabled={asking}
-              className="h-8 rounded-item border border-border bg-popover/80 px-2 text-xs font-medium text-foreground focus:border-primary focus:outline-none"
-            >
-              <option value="">Target: Active Commander</option>
-              <optgroup label="Incident Commanders">
-                <option value="ic-atlas">Commander Atlas</option>
-                <option value="ic-vesper">ID Cmdr Vesper</option>
-                <option value="ic-orrery">Campaign Cmdr Orrery</option>
-                <option value="ic-warden">Endpoint Cmdr Warden</option>
-                <option value="ic-marshal">Cloud Cmdr Marshal</option>
-              </optgroup>
-              <optgroup label="Specialists">
-                <option value="network-tide">Network Tide (Network Analyst)</option>
-                <option value="forensics-cinder">Forensics Cinder (Host Forensics)</option>
-                <option value="intel-oracle">Intel Oracle (Threat Intel)</option>
-                <option value="contain-bulwark">Containment Bulwark (Containment)</option>
-                <option value="vuln-lathe">Vuln Lathe (Vulnerability Research)</option>
-                <option value="identity-keystone">Identity Keystone (Identity Analyst)</option>
-                <option value="triage-sentry">Triage Sentry (Alert Triage)</option>
-              </optgroup>
-            </select>
-          </div>
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+          <select
+            value={targetAgentId}
+            onChange={(e) => setTargetAgentId(e.target.value)}
+            disabled={asking}
+            className="h-8 shrink-0 rounded-[0.125rem] border border-rule bg-transparent px-2 font-mono text-xs text-ink! focus:outline-none"
+          >
+            <option value="">Target: active commander</option>
+            <optgroup label="Incident Commanders">
+              <option value="ic-atlas">Commander Atlas</option>
+              <option value="ic-vesper">ID Cmdr Vesper</option>
+              <option value="ic-orrery">Campaign Cmdr Orrery</option>
+              <option value="ic-warden">Endpoint Cmdr Warden</option>
+              <option value="ic-marshal">Cloud Cmdr Marshal</option>
+            </optgroup>
+            <optgroup label="Specialists">
+              <option value="network-tide">Network Tide (Network Analyst)</option>
+              <option value="forensics-cinder">Forensics Cinder (Host Forensics)</option>
+              <option value="intel-oracle">Intel Oracle (Threat Intel)</option>
+              <option value="contain-bulwark">Containment Bulwark (Containment)</option>
+              <option value="vuln-lathe">Vuln Lathe (Vulnerability Research)</option>
+              <option value="identity-keystone">Identity Keystone (Identity Analyst)</option>
+              <option value="triage-sentry">Triage Sentry (Alert Triage)</option>
+            </optgroup>
+          </select>
 
-          {/* Text input */}
-          <div className="relative flex-1">
-            <input
-              type="text"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              onKeyDown={onKeyDown}
-              disabled={asking}
-              placeholder="Ask Commander a question (e.g., blast radius, C2 IOCs, containment status)..."
-              className="w-full rounded-item border border-border bg-popover/50 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-primary/60 focus:bg-popover focus:outline-none"
-            />
-          </div>
+          <input
+            type="text"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            onKeyDown={onKeyDown}
+            disabled={asking}
+            placeholder="Ask the commander a question — blast radius, C2 indicators, containment status"
+            className="h-8 flex-1 rounded-[0.125rem] border border-rule bg-transparent px-3 font-mono text-xs text-ink! placeholder:text-muted-soft focus:outline-none"
+          />
 
-          {/* Send Button */}
           <Button
             size="sm"
+            variant="outline"
             onClick={() => void handleSend()}
             disabled={asking || !prompt.trim()}
-            className="h-8 gap-1.5 px-3 shrink-0"
+            className="h-8 shrink-0 gap-1.5 px-3"
           >
             {asking ? (
               <>
                 <Loader2 className="size-3.5 animate-spin" />
-                <span className="text-xs">Analyzing...</span>
+                <span>Sending</span>
               </>
             ) : (
               <>
                 <CornerDownLeft className="size-3.5" />
-                <span className="text-xs">Transmit</span>
+                <span>Send</span>
               </>
             )}
           </Button>
         </div>
 
-        {/* Loading status or Error */}
         {asking ? (
-          <div className="flex items-center gap-2 pt-0.5 text-[11px] text-primary animate-pulse">
-            <span className="inline-block size-1.5 rounded-full bg-primary" />
-            <span>Commander analyzing live telemetry and synthesizing tactical assessment...</span>
-          </div>
+          <p className="meta-mono">Commander is reading live telemetry and drafting an assessment.</p>
         ) : error ? (
-          <div className="flex items-center justify-between text-[11px] text-destructive bg-destructive/10 px-2 py-1 rounded">
+          <div className="meta-mono flex items-center justify-between gap-3" style={{ color: "var(--negative)" }}>
             <span>{error}</span>
-            <button type="button" onClick={() => setError(null)} className="underline hover:text-foreground">dismiss</button>
+            <button type="button" onClick={() => setError(null)} className="underline hover:text-ink!">
+              dismiss
+            </button>
           </div>
         ) : null}
       </div>
@@ -337,7 +349,29 @@ export function ChatPage() {
   )
 }
 
-function ChatBubble({
+function ScopeButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`meta-mono -mb-2 flex items-center gap-1.5 border-b pb-2 transition-colors ${
+        active ? "border-[var(--accent)] text-ink!" : "border-transparent hover:text-ink!"
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function ChatTurn({
   entry,
   agents,
   incidentCode,
@@ -354,94 +388,42 @@ function ChatBubble({
   const isCommanderReply = entry.kind === "commander_reply"
   const isTask = entry.kind === "task" || entry.kind === "query" || entry.kind === "escalation"
 
-  if (isOperatorQuery) {
-    return (
-      <div className="flex gap-3">
-        <div className="mt-1 flex flex-col items-center gap-1">
-          <span className="inline-block size-2.5 rounded-full" style={{ background: "var(--warning)" }} />
-          <span className="w-px flex-1 bg-border" />
-        </div>
-        <div className="min-w-0 flex-1 rounded-shell border border-warning/35 bg-warning/[0.04] px-3 py-2.5 shadow-sm">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <Badge variant="outline" className="border-warning/50 bg-warning/10 font-mono text-[10px] text-warning tracking-wide">
-              OPERATOR
-            </Badge>
-            <span className="text-[11px] text-muted-foreground">{KIND_LABEL[entry.kind] ?? "queries"}</span>
-            <span className="text-xs font-medium text-foreground">{to?.callsign ?? "Commander"}</span>
-            {incidentCode && entry.incidentId ? (
-              <button
-                type="button"
-                onClick={() => onOpenIncident(entry.incidentId!)}
-                className="font-mono text-[10px] text-muted-foreground hover:text-foreground hover:underline"
-              >
-                {incidentCode}
-              </button>
-            ) : null}
-            <span className="ml-auto font-mono text-[11px] text-muted-foreground">{shortTime(entry.at)}</span>
-          </div>
-          <div className="mt-1.5 text-xs leading-relaxed text-foreground font-medium">
-            {formatMessageText(entry.text)}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (isCommanderReply) {
-    return (
-      <div className="flex gap-3">
-        <div className="mt-1 flex flex-col items-center gap-1">
-          <span className="inline-block size-2.5 rounded-full" style={{ background: "var(--brand-phalanx)" }} />
-          <span className="w-px flex-1 bg-border" />
-        </div>
-        <div className="min-w-0 flex-1 rounded-shell border border-primary/50 bg-primary/[0.06] px-3 py-2.5 shadow-sm shadow-primary/5">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-xs font-semibold text-primary">{from?.callsign ?? "Commander"}</span>
-            <Badge variant="outline" className="border-primary/50 bg-primary/10 font-mono text-[10px] text-primary tracking-wide">
-              COMMANDER SITREP
-            </Badge>
-            <span className="text-[11px] text-muted-foreground">{KIND_LABEL[entry.kind] ?? "transmits to"}</span>
-            <span className="text-xs font-medium text-warning">Operator</span>
-            {incidentCode && entry.incidentId ? (
-              <button
-                type="button"
-                onClick={() => onOpenIncident(entry.incidentId!)}
-                className="font-mono text-[10px] text-muted-foreground hover:text-foreground hover:underline"
-              >
-                {incidentCode}
-              </button>
-            ) : null}
-            <span className="ml-auto font-mono text-[11px] text-muted-foreground">{shortTime(entry.at)}</span>
-          </div>
-          <div className="mt-2 text-xs leading-relaxed text-foreground space-y-0.5">
-            {formatMessageText(entry.text)}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const sender = isOperatorQuery ? "Operator" : from?.callsign ?? entry.fromAgentId
+  const target = isOperatorQuery
+    ? to?.callsign ?? "Commander"
+    : isCommanderReply
+      ? "Operator"
+      : to?.callsign ?? "everyone"
+  const dot = classColor(from, isOperatorQuery)
 
   return (
-    <div className="flex gap-3">
-      <div className="mt-1 flex flex-col items-center gap-1">
-        <span className="inline-block size-2.5 rounded-full" style={{ background: classColor(from) }} />
-        <span className="w-px flex-1 bg-border" />
+    <article className="flex flex-col gap-1.5 border-b border-rule-soft py-3">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="phalanx-signal" style={{ color: dot }} />
+        <span className="eyebrow" style={isOperatorQuery ? { color: "var(--warning)" } : undefined}>
+          {sender}
+        </span>
+        <span className="meta-mono">{KIND_LABEL[entry.kind] ?? entry.kind}</span>
+        <span className="meta-mono text-ink!">{target}</span>
+        {incidentCode && entry.incidentId ? (
+          <button
+            type="button"
+            onClick={() => onOpenIncident(entry.incidentId!)}
+            className="meta-mono hover:text-ink! hover:underline"
+          >
+            {incidentCode}
+          </button>
+        ) : null}
+        <span className="meta-mono ml-auto">{shortTime(entry.at)}</span>
       </div>
-      <div className={`min-w-0 flex-1 rounded-shell border px-3 py-2.5 ${isTask ? "border-border/60 bg-well" : "border-border bg-popover/40"}`}>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-xs font-medium text-foreground">{from?.callsign ?? entry.fromAgentId}</span>
-          <span className="text-[11px] text-muted-foreground">{KIND_LABEL[entry.kind] ?? entry.kind}</span>
-          {to ? <span className="text-xs font-medium text-foreground">{to.callsign}</span> : <span className="text-xs text-muted-foreground">everyone</span>}
-          {incidentCode && entry.incidentId ? (
-            <button type="button" onClick={() => onOpenIncident(entry.incidentId!)} className="font-mono text-[10px] text-muted-foreground hover:text-foreground hover:underline">
-              {incidentCode}
-            </button>
-          ) : null}
-          {isTask ? <Badge variant="outline" className="ml-auto font-mono text-[10px] text-muted-foreground">tasking</Badge> : null}
-          <span className={`${isTask ? "" : "ml-auto"} font-mono text-[11px] text-muted-foreground`}>{shortTime(entry.at)}</span>
-        </div>
-        <p className={`mt-1.5 whitespace-pre-wrap text-xs leading-relaxed ${isTask ? "text-muted-foreground" : "text-foreground"}`}>{entry.text}</p>
+
+      <div className="flex flex-col gap-2">
+        {renderBody(
+          entry.text,
+          isCommanderReply || isOperatorQuery,
+          `prose-serif max-w-[74ch] whitespace-pre-wrap ${isTask ? "" : "text-ink-soft!"}`,
+        )}
       </div>
-    </div>
+    </article>
   )
 }

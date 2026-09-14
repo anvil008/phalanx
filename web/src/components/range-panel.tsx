@@ -1,4 +1,3 @@
-import { Badge } from "@foundry/ui/components/badge"
 import { StatusDot } from "@foundry/ui/components/status-dot"
 import type { RangeStatus } from "@/lib/model"
 
@@ -53,16 +52,16 @@ export function RangePanel({ status, compact = false }: { status: RangeStatus; c
   const multi = [identityActive, ransomActive, bruteActive].filter(Boolean).length >= 1
 
   return (
-    <div className="flex flex-col gap-3 rounded-shell border border-border bg-card p-4">
-      <div className="flex items-center gap-2">
-        <StatusDot tone={contained ? "positive" : "negative"} pulse={!contained} />
-        <span className="text-sm font-medium text-foreground">Live range</span>
-        <Badge variant="outline" className="ml-auto font-mono text-[10px] text-muted-foreground">
-          isolated estate · loopback only
-        </Badge>
+    <div className="flex flex-col gap-3 border border-rule-soft p-4">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span className="flex items-center gap-2">
+          <StatusDot tone={contained ? "positive" : "negative"} pulse={!contained} />
+          <span className="title-serif text-[1.125rem]">Live range</span>
+        </span>
+        <span className="meta-mono ml-auto">isolated estate · loopback only</span>
       </div>
 
-      <p className="text-xs leading-relaxed text-muted-foreground">
+      <p className="prose-serif max-w-[62ch]">
         {multi
           ? "Several real attacks are running at once against instrumented services on this host. Every reading comes from the lab's own logs; the agents read the same bytes."
           : "A real attack script is running against instrumented services on this host. Every reading comes from the lab's own logs; the agents read the same bytes."}
@@ -71,7 +70,7 @@ export function RangePanel({ status, compact = false }: { status: RangeStatus; c
       {/* Gateway front */}
       <Front
         title="Gateway zero-day"
-        commander="ATLAS"
+        commander="Atlas"
         stages={GATEWAY_STAGES}
         reached={stageIndex(GATEWAY_STAGES, status.stages?.gateway ?? status.attackStage)}
         complete={status.attackComplete}
@@ -86,7 +85,7 @@ export function RangePanel({ status, compact = false }: { status: RangeStatus; c
       {identityActive ? (
         <Front
           title="Consent-grant abuse"
-          commander="VESPER"
+          commander="Vesper"
           stages={IDENTITY_STAGES}
           reached={stageIndex(IDENTITY_STAGES, status.stages?.identity ?? "consent")}
           complete={status.enumerationStopped}
@@ -131,15 +130,15 @@ export function RangePanel({ status, compact = false }: { status: RangeStatus; c
       ) : null}
 
       {contained ? (
-        <div className="flex flex-col gap-1.5 rounded-item border border-positive/25 bg-positive-surface px-2.5 py-2">
-          <div className="text-[11px] font-medium text-positive">Containment applied to the range</div>
+        <div className="flex flex-col gap-1.5 border-t border-rule-soft pt-2.5">
+          <div className="meta-mono text-[color:var(--positive)]!">Containment applied to the range</div>
           <RangeFacts label="Revoked" values={status.revokedPrincipals} />
           <RangeFacts label="Blocked" values={status.blockedIndicators} />
           <RangeFacts label="Isolated" values={status.isolatedHosts} />
           {status.enumerationStopped ? <RangeFacts label="Consent" values={["9f31c0 revoked — enumeration stopped"]} /> : null}
         </div>
       ) : compact ? null : (
-        <p className="text-[11px] text-warning">
+        <p className="meta-mono text-[color:var(--warning)]!">
           No containment yet — the attack is still live. The commanders will act on their own authority.
         </p>
       )}
@@ -165,34 +164,27 @@ function Front({
   metrics: { label: string; value: string; tone: Tone }[]
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-item border border-border bg-well px-2.5 py-2">
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-foreground">{title}</span>
-        <Badge variant="outline" className="ml-auto font-mono text-[10px] text-muted-foreground">
-          {commander}
-        </Badge>
+    <div className="flex flex-col gap-2 border-t border-rule-soft pt-2.5">
+      <div className="flex items-baseline gap-2">
+        <span className="title-serif text-[0.9375rem]">{title}</span>
+        <span className="meta-mono ml-auto">{commander}</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         {metrics.map((m) => (
           <Metric key={m.label} label={m.label} value={m.value} tone={m.tone} />
         ))}
       </div>
-      <ol className="flex flex-wrap gap-1.5">
+      <ol className="meta-mono flex flex-wrap gap-x-3.5 gap-y-1">
         {stages.map((stage, index) => {
           const done = index < reached || complete
           const active = index === reached && !complete
           return (
-            <li
-              key={stage.key}
-              className={`rounded-item border px-2 py-0.5 font-mono text-[10px] ${
-                active
-                  ? "border-destructive/40 bg-destructive-surface text-destructive"
-                  : done
-                    ? "border-border text-muted-foreground"
-                    : "border-border/50 text-muted-foreground/40"
-              }`}
-            >
-              {stage.label}
+            <li key={stage.key} className="flex items-center gap-1.5">
+              <span
+                className="inline-block size-1.5 rounded-full"
+                style={{ background: active ? "var(--negative)" : done ? "var(--muted)" : "var(--rule)" }}
+              />
+              <span className={active ? "text-ink" : done ? undefined : "text-muted-soft"}>{stage.label}</span>
             </li>
           )
         })}
@@ -203,11 +195,11 @@ function Front({
 
 function Metric({ label, value, tone }: { label: string; value: string; tone: Tone }) {
   const colour =
-    tone === "positive" ? "text-positive" : tone === "warning" ? "text-warning" : tone === "negative" ? "text-destructive" : "text-foreground"
+    tone === "positive" ? "text-positive" : tone === "warning" ? "text-warning" : tone === "negative" ? "text-destructive" : "text-ink"
   return (
     <div>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className={`mt-0.5 font-mono text-sm ${colour}`}>{value}</div>
+      <div className="eyebrow">{label}</div>
+      <div className={`mt-0.5 font-mono text-sm font-normal ${colour}`}>{value}</div>
     </div>
   )
 }
@@ -215,9 +207,9 @@ function Metric({ label, value, tone }: { label: string; value: string; tone: To
 function RangeFacts({ label, values }: { label: string; values: string[] }) {
   if (values.length === 0) return null
   return (
-    <div className="flex items-baseline gap-2 text-[11px]">
-      <span className="w-14 shrink-0 text-muted-foreground">{label}</span>
-      <span className="font-mono text-foreground">{values.join(", ")}</span>
+    <div className="meta-mono flex items-baseline gap-2">
+      <span className="w-14 shrink-0">{label}</span>
+      <span className="text-ink">{values.join(", ")}</span>
     </div>
   )
 }
