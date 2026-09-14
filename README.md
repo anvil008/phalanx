@@ -247,3 +247,9 @@ mutate the simulation and nothing else. Live agents run with the Agent SDK's
 built-in filesystem and shell tools disabled; the per-agent MCP server is their
 entire tool surface, and each agent only receives the instruments its role
 justifies.
+
+---
+
+## Disclaimer
+
+This is a personal project. The views, code, and opinions expressed here are my own and do not represent those of my current or past employers.
