@@ -116,7 +116,7 @@ export function IncidentsPage() {
 
         <div className="flex flex-col gap-3 lg:flex-row">
           <SwarmGraph
-            key={state.generation}
+            generation={state.generation}
             layout={layout}
             bus={state.bus}
             selected={selectedAgent}

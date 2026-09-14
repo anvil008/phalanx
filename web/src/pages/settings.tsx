@@ -4,16 +4,14 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
-  Flame,
-  KeyRound,
   Loader2,
   Radio,
   RefreshCw,
   Save,
   ShieldCheck,
-  Cpu,
   XCircle,
 } from "lucide-react"
+import { ClaudeLogo, GeminiLogo, OpenAILogo } from "@/components/provider-logos"
 import { Badge } from "@foundry/ui/components/badge"
 import { Button } from "@foundry/ui/components/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@foundry/ui/components/card"
@@ -275,11 +273,16 @@ export function SettingsPage() {
                             : "border-border/60 bg-background/50 hover:bg-accent/40"
                         }`}
                       >
-                        <div className="flex flex-col">
-                          <span>{label}</span>
-                          <span className="mt-0.5 text-[11px] text-muted-foreground">
-                            {isConfigured ? "Key Configured" : "Key Not Set"}
-                          </span>
+                        <div className="flex items-center gap-2.5">
+                          {prov === "gemini" && <GeminiLogo className="h-4 w-4 text-indigo-400 shrink-0" />}
+                          {prov === "anthropic" && <ClaudeLogo className="h-4 w-4 text-amber-500 shrink-0" />}
+                          {prov === "openai" && <OpenAILogo className="h-4 w-4 text-emerald-400 shrink-0" />}
+                          <div className="flex flex-col">
+                            <span>{label}</span>
+                            <span className="mt-0.5 text-[11px] text-muted-foreground">
+                              {isConfigured ? "Key Configured" : "Key Not Set"}
+                            </span>
+                          </div>
                         </div>
                         {isSelected ? (
                           <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -300,7 +303,7 @@ export function SettingsPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Cpu className="h-5 w-5 text-indigo-400" />
+                <GeminiLogo className="h-5 w-5 text-indigo-400" />
                 <CardTitle className="text-base font-semibold">Google Gemini API</CardTitle>
                 {settings?.providers.gemini.configured && (
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
@@ -403,7 +406,7 @@ export function SettingsPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <Flame className="h-5 w-5 text-amber-500" />
+                <ClaudeLogo className="h-5 w-5 text-amber-500" />
                 <CardTitle className="text-base font-semibold">Anthropic Claude API</CardTitle>
                 {settings?.providers.anthropic.configured && (
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">
@@ -506,7 +509,7 @@ export function SettingsPage() {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <KeyRound className="h-5 w-5 text-emerald-400" />
+                <OpenAILogo className="h-5 w-5 text-emerald-400" />
                 <CardTitle className="text-base font-semibold">OpenAI API</CardTitle>
                 {settings?.providers.openai.configured && (
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-400 text-[10px]">

@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { gsap } from "gsap"
-import type { A2AMessageKind, AgentState, BusMessage, IncidentSeverity } from "@/lib/model"
+import type { A2AMessageKind, AgentClass, AgentState, BusMessage, IncidentSeverity } from "@/lib/model"
 import { VIRTUAL, type GraphLayout, type GraphNode } from "@/lib/graph-model"
 import { useAgentIndex } from "@/lib/store"
-import { Grid, Hexagon, Radar, Shield } from "lucide-react"
+import { Grid, Hexagon, Shield } from "lucide-react"
 
 /* The Phalanx Swarm Graph Instrument.
    A native cyber-tactical canvas instrument:
    - "Tactical Mesh": Incident topology with commander hubs and dynamic specialist links.
    - "Hex Constellation": Geometric defensive lattice inspired by anvilpalamattam.com.
    - "Incident Focus": Incident-centric blast radius & containment perimeter.
-   - Real-time radar sweep telemetry scanner with continuous sensor polling wave.
    - Enhanced A2A photon packets traveling along quadratic bezier flight paths. */
 
 const PACKET_MS = 2400
@@ -57,6 +56,7 @@ export interface SwarmGraphProps {
   focusIncidentId?: string | null
   onOpenIncident?: (incidentId: string) => void
   className?: string
+  generation?: number
 }
 
 function cssValue(name: string): string {
@@ -151,6 +151,91 @@ function quadPoint(
     x: inverse * inverse * from.x + 2 * inverse * t * control.cx + t * t * to.x,
     y: inverse * inverse * from.y + 2 * inverse * t * control.cy + t * t * to.y,
   }
+}
+
+/**
+ * Compute positions for "Tactical Mesh" mode:
+ * Structured 2D tactical network mesh organized by operational tier across VIRTUAL dimensions (1240 x 620):
+ * - Command Tier (y: 115): Atlas, Vesper, Orion, Solaris, Aegis
+ * - Analysis Tier (y: 250): Triage, Intel, Forensics, Malware, Hunt, Vuln, Identity, Network
+ * - Action Tier (y: 390): Contain, Remediate, Detect
+ * - Comms & Governance Tier (y: 520): Comms, Legal, Scribe
+ */
+function computeTacticalMeshPositions(nodes: GraphNode[]): Map<string, { x: number; y: number }> {
+  const positions = new Map<string, { x: number; y: number }>()
+
+  const tierConfigs: {
+    tierClass: AgentClass
+    y: number
+    preferredOrder: string[]
+    margin: number
+  }[] = [
+    {
+      tierClass: "command",
+      y: 115,
+      preferredOrder: ["ic-atlas", "ic-vesper", "ic-orrery", "ic-warden", "ic-marshal"],
+      margin: 180,
+    },
+    {
+      tierClass: "analysis",
+      y: 250,
+      preferredOrder: [
+        "triage-sentry",
+        "intel-oracle",
+        "forensics-cinder",
+        "malware-splice",
+        "hunt-drift",
+        "vuln-lathe",
+        "identity-keystone",
+        "network-tide",
+      ],
+      margin: 100,
+    },
+    {
+      tierClass: "action",
+      y: 390,
+      preferredOrder: ["contain-bulwark", "remediate-forge", "detect-loom"],
+      margin: 260,
+    },
+    {
+      tierClass: "comms",
+      y: 520,
+      preferredOrder: ["comms-herald", "legal-canon", "scribe-ledger"],
+      margin: 260,
+    },
+  ]
+
+  for (const { tierClass, y, preferredOrder, margin } of tierConfigs) {
+    const tierNodes = nodes.filter((n) => n.agentClass === tierClass)
+    tierNodes.sort((a, b) => {
+      const idxA = preferredOrder.indexOf(a.id)
+      const idxB = preferredOrder.indexOf(b.id)
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB
+      if (idxA !== -1) return -1
+      if (idxB !== -1) return 1
+      return a.label.localeCompare(b.label)
+    })
+
+    const count = tierNodes.length
+    if (count === 0) continue
+
+    const availableWidth = VIRTUAL.width - margin * 2
+    const step = count > 1 ? availableWidth / (count - 1) : 0
+
+    tierNodes.forEach((node, idx) => {
+      const x = count === 1 ? VIRTUAL.width / 2 : margin + idx * step
+      positions.set(node.id, { x, y })
+    })
+  }
+
+  // Fallback for any unpositioned nodes
+  nodes.forEach((node) => {
+    if (!positions.has(node.id)) {
+      positions.set(node.id, { x: node.x, y: node.y })
+    }
+  })
+
+  return positions
 }
 
 /** Compute positions for "Hex Constellation" mode (symmetrical orbital lattice) */
@@ -265,6 +350,7 @@ export function SwarmGraph({
   focusIncidentId = null,
   onOpenIncident,
   className,
+  generation,
 }: SwarmGraphProps) {
   const shellRef = useRef<HTMLDivElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -279,11 +365,6 @@ export function SwarmGraph({
   const modeRef = useRef<SwarmCanvasMode>(mode)
   modeRef.current = mode
 
-  const [radarActive, setRadarActive] = useState(true)
-  const radarActiveRef = useRef(radarActive)
-  radarActiveRef.current = radarActive
-
-  const radarAngleRef = useRef({ angle: 0 })
   const animCoordsRef = useRef<Map<string, AnimatedCoord>>(new Map())
 
   const agentDefs = useAgentIndex()
@@ -295,25 +376,29 @@ export function SwarmGraph({
   focusRef.current = focusIncidentId
   selectedRef.current = selected
 
-  // GSAP continuous radar sweep timeline
+  // Handle world generation resets or bus clear
+  const prevGenRef = useRef(generation)
   useEffect(() => {
-    const sweep = gsap.to(radarAngleRef.current, {
-      angle: Math.PI * 2,
-      duration: 7.2,
-      repeat: -1,
-      ease: "none",
-    })
-    return () => {
-      sweep.kill()
+    if (generation !== undefined && prevGenRef.current !== undefined && generation !== prevGenRef.current) {
+      packetsRef.current = []
+      seenRef.current.clear()
     }
-  }, [])
+    prevGenRef.current = generation
+  }, [generation])
+
+  useEffect(() => {
+    if (bus.length === 0) {
+      packetsRef.current = []
+      seenRef.current.clear()
+    }
+  }, [bus.length])
 
   // GSAP animate node positions when layout or mode changes
   useEffect(() => {
     let targetPositions = new Map<string, { x: number; y: number }>()
 
     if (mode === "tactical") {
-      layout.nodes.forEach((n) => targetPositions.set(n.id, { x: n.x, y: n.y }))
+      targetPositions = computeTacticalMeshPositions(layout.nodes)
     } else if (mode === "hex") {
       targetPositions = computeHexConstellationPositions(layout.nodes)
     } else if (mode === "focus") {
@@ -325,7 +410,7 @@ export function SwarmGraph({
       const target = targetPositions.get(node.id) || { x: node.x, y: node.y }
       let current = animCoordsRef.current.get(node.id)
       if (!current) {
-        current = { x: node.x, y: node.y }
+        current = { x: target.x, y: target.y }
         animCoordsRef.current.set(node.id, current)
       }
       gsap.to(current, {
@@ -464,68 +549,7 @@ export function SwarmGraph({
         context.stroke()
       }
 
-      // 2. Continuous Radar Sweep Telemetry Wave
-      if (radarActiveRef.current) {
-        const sweepAngle = radarAngleRef.current.angle
-        const radarMaxRadius = Math.max(width, height) * 0.58
 
-        // Concentric distance range rings & compass tick marks
-        const rangeSteps = [80, 160, 240, 320, 420]
-        context.save()
-        context.strokeStyle = "rgba(241, 240, 233, 0.04)"
-        context.lineWidth = 1
-        for (const r of rangeSteps) {
-          const rad = r * scale
-          context.beginPath()
-          context.arc(centerScreen.x, centerScreen.y, rad, 0, Math.PI * 2)
-          context.stroke()
-        }
-
-        // Cardinal bearing lines & Space Mono ticks
-        context.strokeStyle = "rgba(241, 240, 233, 0.03)"
-        context.beginPath()
-        context.moveTo(centerScreen.x - radarMaxRadius, centerScreen.y)
-        context.lineTo(centerScreen.x + radarMaxRadius, centerScreen.y)
-        context.moveTo(centerScreen.x, centerScreen.y - radarMaxRadius)
-        context.lineTo(centerScreen.x, centerScreen.y + radarMaxRadius)
-        context.stroke()
-
-        // Radar sweep arc beam
-        const sweepSpan = 0.42
-        const startAngle = sweepAngle - sweepSpan
-        context.save()
-        context.beginPath()
-        context.moveTo(centerScreen.x, centerScreen.y)
-        context.arc(centerScreen.x, centerScreen.y, radarMaxRadius, startAngle, sweepAngle)
-        context.closePath()
-
-        const sweepGrad = context.createRadialGradient(
-          centerScreen.x,
-          centerScreen.y,
-          10,
-          centerScreen.x,
-          centerScreen.y,
-          radarMaxRadius,
-        )
-        sweepGrad.addColorStop(0, withAlpha(palette.accent, 0.14))
-        sweepGrad.addColorStop(0.7, withAlpha(palette.accent, 0.04))
-        sweepGrad.addColorStop(1, withAlpha(palette.accent, 0))
-        context.fillStyle = sweepGrad
-        context.fill()
-
-        // Leading scanner ray
-        context.strokeStyle = withAlpha(palette.accent, 0.35)
-        context.lineWidth = 1.2
-        context.beginPath()
-        context.moveTo(centerScreen.x, centerScreen.y)
-        context.lineTo(
-          centerScreen.x + radarMaxRadius * Math.cos(sweepAngle),
-          centerScreen.y + radarMaxRadius * Math.sin(sweepAngle),
-        )
-        context.stroke()
-        context.restore()
-        context.restore()
-      }
 
       // 3. Mode-specific structures (Hex Constellation spokes, Incident blast halos)
       if (modeRef.current === "hex") {
@@ -542,7 +566,7 @@ export function SwarmGraph({
           context.stroke()
         }
         context.restore()
-      } else if (modeRef.current === "focus" || modeRef.current === "tactical") {
+      } else if (modeRef.current === "focus") {
         // Incident cluster halos
         for (const cluster of current.clusters) {
           const centre = project(cluster)
@@ -699,23 +723,7 @@ export function SwarmGraph({
           context.setLineDash([])
         }
 
-        // Radar beam passing blip highlight
-        if (radarActiveRef.current) {
-          const dx = point.x - centerScreen.x
-          const dy = point.y - centerScreen.y
-          let nodeAngle = Math.atan2(dy, dx)
-          if (nodeAngle < 0) nodeAngle += Math.PI * 2
-          const diff = Math.abs(radarAngleRef.current.angle - nodeAngle)
-          if (diff < 0.18 || Math.abs(diff - Math.PI * 2) < 0.18) {
-            context.save()
-            context.strokeStyle = withAlpha(colour, 0.55)
-            context.lineWidth = 1.4
-            context.beginPath()
-            context.arc(point.x, point.y, radius + 8, 0, Math.PI * 2)
-            context.stroke()
-            context.restore()
-          }
-        }
+
 
         // Node background & halo
         context.save()
@@ -763,7 +771,7 @@ export function SwarmGraph({
       }
 
       // Reserve Shelf micro-label
-      if (current.reserveLabel && modeRef.current !== "hex") {
+      if (current.reserveLabel && modeRef.current === "focus") {
         context.fillStyle = withAlpha(palette.muted, 0.55)
         context.font = "400 10px 'Space Mono', ui-monospace, monospace"
         context.textAlign = "center"
@@ -828,7 +836,7 @@ export function SwarmGraph({
 
   return (
     <div ref={shellRef} className={`phalanx-graph-shell group relative ${className ?? ""}`}>
-      {/* Top Instrumentation Toolbar: Mode Toggle & Radar Telemetry */}
+      {/* Top Instrumentation Toolbar: Mode Toggle */}
       <div className="absolute top-2.5 left-2.5 right-2.5 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
         {/* Mode Selector */}
         <div className="flex items-center gap-1 rounded-control border border-border/80 bg-background/85 p-1 backdrop-blur-md shadow-md pointer-events-auto">
@@ -869,23 +877,6 @@ export function SwarmGraph({
           >
             <Shield className="size-3" />
             <span>Incident Focus</span>
-          </button>
-        </div>
-
-        {/* Radar Toggle & Instrument Badge */}
-        <div className="flex items-center gap-1.5 pointer-events-auto">
-          <button
-            type="button"
-            onClick={() => setRadarActive(!radarActive)}
-            className={`flex items-center gap-1.5 rounded-control border px-2.5 py-1 text-[10px] font-mono backdrop-blur-md transition-colors ${
-              radarActive
-                ? "border-primary/40 bg-primary/10 text-primary"
-                : "border-border/80 bg-background/80 text-muted-foreground hover:text-foreground"
-            }`}
-            title="Toggle Continuous Radar Sweep Telemetry"
-          >
-            <Radar className={`size-3 ${radarActive ? "animate-spin" : ""}`} style={{ animationDuration: "7s" }} />
-            <span>RADAR {radarActive ? "ONLINE" : "OFFLINE"}</span>
           </button>
         </div>
       </div>

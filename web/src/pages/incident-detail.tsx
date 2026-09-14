@@ -170,7 +170,7 @@ export function IncidentDetailPage() {
 
           <div className="flex flex-col gap-3 2xl:flex-row">
             <SwarmGraph
-              key={state.generation}
+              generation={state.generation}
               layout={layout}
               bus={state.bus}
               selected={selectedAgent}

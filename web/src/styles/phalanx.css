@@ -712,26 +712,7 @@ body {
   box-shadow: inset 0 1px 0 0 rgb(255 255 255 / 7%);
 }
 
-/* Radar sweep, glowing ring, and automated containment animations */
-@keyframes radar-sweep {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes radar-pulse {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.25;
-  }
-  100% {
-    transform: scale(1.9);
-    opacity: 0;
-  }
-}
+/* Glowing ring and automated containment animations */
 
 @keyframes glow-breathe {
   0%, 100% {
@@ -755,10 +736,6 @@ body {
     box-shadow: 0 0 26px rgb(242 86 95 / 65%), inset 0 0 14px rgb(242 86 95 / 45%);
     border-color: rgb(242 86 95 / 90%);
   }
-}
-
-.animate-radar-pulse {
-  animation: radar-pulse 2.4s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
 }
 
 .animate-glow-breathe {
@@ -789,7 +766,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .phalanx-card-in,
   .esper-card-in,
-  .animate-radar-pulse,
   .animate-glow-breathe,
   .animate-containment-firewall { animation: none }
 }

@@ -4,7 +4,6 @@ import {
   Activity,
   AlertTriangle,
   ArrowRight,
-  Bot,
   Brain,
   Check,
   CheckCircle2,
@@ -37,6 +36,7 @@ import { Separator } from "@foundry/ui/components/separator"
 import { StatusDot } from "@foundry/ui/components/status-dot"
 import { cn } from "@foundry/ui/lib/utils"
 import { usePhalanx } from "@/lib/store"
+import { ClaudeLogo, GeminiLogo, OpenAILogo } from "@/components/provider-logos"
 
 /* --------------------------------------------------------------------------
    SYNTAX HIGHLIGHTED CODE VIEWER COMPONENT
@@ -1139,9 +1139,9 @@ export function AboutPage() {
               value={activeModelTab}
               onChange={setActiveModelTab}
               options={[
-                { value: "gemini", label: "Google Gemini", icon: <Brain className="size-3.5 text-cyan-400" /> },
-                { value: "claude", label: "Anthropic Claude", icon: <Bot className="size-3.5 text-amber-400" /> },
-                { value: "openai", label: "OpenAI GPT-5", icon: <Cpu className="size-3.5 text-emerald-400" /> },
+                { value: "gemini", label: "Google Gemini", icon: <GeminiLogo className="size-3.5 text-cyan-400" /> },
+                { value: "claude", label: "Anthropic Claude", icon: <ClaudeLogo className="size-3.5 text-amber-400" /> },
+                { value: "openai", label: "OpenAI GPT-5", icon: <OpenAILogo className="size-3.5 text-emerald-400" /> },
                 { value: "replay", label: "Deterministic Replay", icon: <FastForward className="size-3.5 text-purple-400" /> },
               ]}
               className="w-fit"
@@ -1151,7 +1151,7 @@ export function AboutPage() {
               <Card className="border-border/80 bg-card/50">
                 <CardHeader>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Brain className="size-4 text-cyan-400" />
+                    <GeminiLogo className="size-4 text-cyan-400" />
                     Google Gemini 3 Architecture
                   </CardTitle>
                   <CardDescription className="text-xs">
@@ -1181,7 +1181,7 @@ export function AboutPage() {
               <Card className="border-border/80 bg-card/50">
                 <CardHeader>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Bot className="size-4 text-amber-400" />
+                    <ClaudeLogo className="size-4 text-amber-400" />
                     Anthropic Claude 5 Architecture
                   </CardTitle>
                   <CardDescription className="text-xs">
@@ -1210,7 +1210,7 @@ export function AboutPage() {
               <Card className="border-border/80 bg-card/50">
                 <CardHeader>
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Cpu className="size-4 text-emerald-400" />
+                    <OpenAILogo className="size-4 text-emerald-400" />
                     OpenAI GPT-5 Architecture
                   </CardTitle>
                   <CardDescription className="text-xs">
