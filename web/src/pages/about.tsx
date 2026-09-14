@@ -73,7 +73,7 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
         <span>
           {indent}
           <span className="text-primary">"{key}"</span>
-          <span className="text-muted">{colon}</span>
+          <span className="text-muted-foreground">{colon}</span>
           {renderValueTokens(value)}
         </span>
       )
@@ -89,7 +89,7 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
       return (
         <>
           <span className="text-emerald-300">{strContent}</span>
-          {isComma && <span className="text-muted">,</span>}
+          {isComma && <span className="text-muted-foreground">,</span>}
         </>
       )
     }
@@ -117,7 +117,7 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
           </div>
           <Separator orientation="vertical" className="h-3.5 mx-1" />
           <span className="font-mono text-xs font-semibold text-ink">{title}</span>
-          {subtitle && <span className="hidden font-mono text-[11px] text-muted sm:inline">· {subtitle}</span>}
+          {subtitle && <span className="hidden font-mono text-[11px] text-muted-foreground sm:inline">· {subtitle}</span>}
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-[10px] text-primary">
@@ -127,7 +127,7 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
             size="sm"
             variant="ghost"
             onClick={handleCopy}
-            className="h-7 cursor-pointer gap-1.5 rounded-md px-2 text-xs font-medium text-muted hover:bg-wash hover:text-ink"
+            className="h-7 cursor-pointer gap-1.5 rounded-md px-2 text-xs font-medium text-muted-foreground hover:bg-wash hover:text-ink"
             title="Copy code to clipboard"
           >
             {copied ? (
@@ -151,7 +151,7 @@ function CodeSnippetViewer({ title, subtitle, badgeText, code }: CodeSnippetView
           <tbody>
             {lines.map((line, idx) => (
               <tr key={idx} className="hover:bg-wash">
-                <td className="w-8 select-none pr-3 text-right font-mono text-[11px] text-muted/40">{idx + 1}</td>
+                <td className="w-8 select-none pr-3 text-right font-mono text-[11px] text-muted-foreground/40">{idx + 1}</td>
                 <td className="whitespace-pre font-mono">{renderFormattedLine(line)}</td>
               </tr>
             ))}
@@ -452,7 +452,7 @@ export function AboutPage() {
       {/* Quick Navigation Sticky Bar */}
       <div className="sticky top-0 z-20 -mx-5 -mt-2 mb-6 border-b border-rule-soft bg-page px-5 py-2.5">
         <div className="mx-auto flex max-w-5xl items-center gap-x-2 overflow-x-auto no-scrollbar">
-          <span className="mr-2 hidden text-xs font-semibold tracking-wider text-muted uppercase lg:inline">
+          <span className="mr-2 hidden text-xs font-semibold tracking-wider text-muted-foreground uppercase lg:inline">
             Sections:
           </span>
           {NAV_SECTIONS.map((sec) => (
@@ -460,7 +460,7 @@ export function AboutPage() {
               key={sec.id}
               type="button"
               onClick={() => scrollToSection(sec.id)}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-rule-soft bg-wash px-3 py-1 text-xs font-medium text-muted transition-all duration-150 hover:border-primary/50 hover:bg-primary/10 hover:text-ink active:scale-95"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-rule-soft bg-wash px-3 py-1 text-xs font-medium text-muted-foreground transition-all duration-150 hover:border-primary/50 hover:bg-primary/10 hover:text-ink active:scale-95"
             >
               <sec.icon className="size-3 text-primary" />
               <span>{sec.label}</span>
@@ -476,38 +476,38 @@ export function AboutPage() {
             ------------------------------------------------------------------ */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
-            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Autonomous Agents</div>
+            <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Autonomous Agents</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold tracking-tight text-ink font-mono">19</span>
               <span className="text-xs text-primary font-medium">5 Cmdrs · 14 Specs</span>
             </div>
           </div>
           <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
-            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Security Instruments</div>
+            <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Security Instruments</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold tracking-tight text-ink font-mono">37</span>
-              <span className="text-xs text-muted">SOC & EDR Stack</span>
+              <span className="text-xs text-muted-foreground">SOC & EDR Stack</span>
             </div>
           </div>
           <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
-            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Coordination Bus</div>
+            <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Coordination Bus</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold tracking-tight text-ink font-mono">A2A</span>
               <span className="text-xs text-primary font-medium">JSON-RPC 2.0</span>
             </div>
           </div>
           <div className="rounded-xl border border-rule-soft bg-card/60 p-4  ">
-            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Dynamic Interface</div>
+            <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Dynamic Interface</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold tracking-tight text-ink font-mono">A2UI</span>
               <span className="text-xs text-positive font-medium">Zero Code Exec</span>
             </div>
           </div>
           <div className="col-span-2 sm:col-span-1 rounded-xl border border-rule-soft bg-card/60 p-4  ">
-            <div className="text-[11px] font-medium tracking-wider text-muted uppercase">Mean Containment</div>
+            <div className="text-[11px] font-medium tracking-wider text-muted-foreground uppercase">Mean Containment</div>
             <div className="mt-1 flex items-baseline gap-1.5">
               <span className="text-2xl font-bold tracking-tight text-positive font-mono">&lt; 90s</span>
-              <span className="text-xs text-muted">Autonomous MTTC</span>
+              <span className="text-xs text-muted-foreground">Autonomous MTTC</span>
             </div>
           </div>
         </div>
@@ -521,12 +521,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 EXECUTIVE OVERVIEW
               </Badge>
-              <span className="text-xs text-muted">Core Thesis & Motivation</span>
+              <span className="text-xs text-muted-foreground">Core Thesis & Motivation</span>
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-ink">
               Autonomous Blue Team Swarms vs. Real-Time Cyber Intrusions
             </h2>
-            <p className="text-base leading-relaxed text-muted">
+            <p className="text-base leading-relaxed text-muted-foreground">
               Modern cyber attacks execute at machine speed. Advanced threat actors utilize automated recon, in-memory process
               injection, zero-day chains, and stolen OAuth tokens to compromise infrastructure in minutes. Meanwhile, human Security
               Operations Centers (SOCs) remain throttled by alert fatigue, context switching, and rigid SOAR scripts that break the
@@ -542,7 +542,7 @@ export function AboutPage() {
                 </div>
                 <CardTitle className="text-sm font-semibold">The Paradigm Shift</CardTitle>
               </CardHeader>
-              <CardContent className="text-xs leading-relaxed text-muted">
+              <CardContent className="text-xs leading-relaxed text-muted-foreground">
                 Phalanx abandons fixed DAG workflows. Incident Commanders are LLM agents equipped with open-ended diagnostic
                 tools, reasoning loops, and dynamic discovery capabilities, allowing them to formulate and test hypotheses in
                 real time.
@@ -556,7 +556,7 @@ export function AboutPage() {
                 </div>
                 <CardTitle className="text-sm font-semibold">Decentralized Mesh</CardTitle>
               </CardHeader>
-              <CardContent className="text-xs leading-relaxed text-muted">
+              <CardContent className="text-xs leading-relaxed text-muted-foreground">
                 No central orchestration bottleneck. Agents collaborate peer-to-peer over Google’s Agent2Agent (A2A) protocol.
                 Forensics specialists consult network analysts directly without routing unnecessary round-trips through the commander.
               </CardContent>
@@ -569,7 +569,7 @@ export function AboutPage() {
                 </div>
                 <CardTitle className="text-sm font-semibold">Strict Epistemic Isolation</CardTitle>
               </CardHeader>
-              <CardContent className="text-xs leading-relaxed text-muted">
+              <CardContent className="text-xs leading-relaxed text-muted-foreground">
                 Zero ground-truth contamination. The blue team has no backdoor access to the attack generator’s internal state.
                 Every finding, IOC, and containment action is derived strictly from realistic, simulated enterprise telemetry.
               </CardContent>
@@ -586,12 +586,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 SYSTEM DESIGN
               </Badge>
-              <span className="text-xs text-muted">4-Tier Decoupled Flow</span>
+              <span className="text-xs text-muted-foreground">4-Tier Decoupled Flow</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               Visual 4-Tier Architectural Pipeline
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Phalanx decouples raw security telemetry, autonomous cognitive reasoning, decentralized agent communication, and
               safe UI generation into four distinct, self-contained architectural tiers.
             </p>
@@ -607,17 +607,17 @@ export function AboutPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-ink">Tier 1: Telemetry & Simulated Estate</h3>
-                    <p className="text-xs text-muted">High-fidelity synthetic sensors and sandboxed actuators</p>
+                    <p className="text-xs text-muted-foreground">High-fidelity synthetic sensors and sandboxed actuators</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">EDR Process Trees</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">NetFlow & PCAP</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">CloudTrail & IDP</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Memory Triage</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">EDR Process Trees</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">NetFlow & PCAP</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">CloudTrail & IDP</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">Memory Triage</Badge>
                 </div>
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-muted">
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Provides continuous synthetic sensor event streams without touching live infrastructure. Includes 37 instruments
                 ranging from SIEM free-text search to volatile RAM extraction, as well as safe actuators that sever network adapters,
                 sinkhole IP blocks, rotate credentials, and rebuild hosts from golden images.
@@ -638,17 +638,17 @@ export function AboutPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-ink">Tier 2: Cognitive Blue Specialist Swarm</h3>
-                    <p className="text-xs text-muted">19 autonomous AI defense operators with scoped clearance</p>
+                    <p className="text-xs text-muted-foreground">19 autonomous AI defense operators with scoped clearance</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">5 Commanders</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">8 Analysts</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">3 Response Ops</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">3 Governance</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">5 Commanders</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">8 Analysts</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">3 Response Ops</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">3 Governance</Badge>
                 </div>
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-muted">
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Domain-specific AI operators: Incident Commanders (Atlas, Vesper, Orrery, Warden, Marshal), Forensics (Cinder),
                 Network (Tide), Malware Reversing (Splice), Threat Intel (Oracle), Exploitability (Lathe), Threat Hunter (Drift),
                 Containment (Bulwark), and Detection Engineers (Loom). Each agent is provisioned only with tools fitting its clearance.
@@ -669,17 +669,17 @@ export function AboutPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-ink">Tier 3: Agent2Agent (A2A) Coordination Bus</h3>
-                    <p className="text-xs text-muted">Open, decentralized JSON-RPC 2.0 communication mesh</p>
+                    <p className="text-xs text-muted-foreground">Open, decentralized JSON-RPC 2.0 communication mesh</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">JSON-RPC 2.0</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Google A2A v0.3</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Agent Cards</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Peer-to-Peer</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">JSON-RPC 2.0</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">Google A2A v0.3</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">Agent Cards</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">Peer-to-Peer</Badge>
                 </div>
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-muted">
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Every agent exposes an HTTP discovery card at <code className="font-mono text-ink">/.well-known/agent-card.json</code>.
                 Delegation, status tracking, artifact delivery, and peer-to-peer questioning are dispatched as standard JSON-RPC
                 messages, preserving strict audit trails and zero central hub bottlenecks.
@@ -700,17 +700,17 @@ export function AboutPage() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-ink">Tier 4: A2UI Declarative Interface Runtime</h3>
-                    <p className="text-xs text-muted">Agent-authored operator cockpits with zero client-side code execution</p>
+                    <p className="text-xs text-muted-foreground">Agent-authored operator cockpits with zero client-side code execution</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">A2UI v0.9</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Declarative JSON</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">In-Place Updates</Badge>
-                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">Sanitized UI</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">A2UI v0.9</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">Declarative JSON</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">In-Place Updates</Badge>
+                  <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">Sanitized UI</Badge>
                 </div>
               </div>
-              <p className="mt-3 text-xs leading-relaxed text-muted">
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                 Commanders stream declarative UI specifications directly to the human operator’s dashboard via JSON operations.
                 The frontend translates these abstract component tokens into native <code className="font-mono text-ink">@foundry/ui</code> React
                 widgets. No arbitrary JavaScript is ever executed, eliminating prompt injection and XSS vulnerabilities completely.
@@ -728,12 +728,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 COGNITIVE ENGINE
               </Badge>
-              <span className="text-xs text-muted">The End of Rigid DAGs</span>
+              <span className="text-xs text-muted-foreground">The End of Rigid DAGs</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               Unscripted Orchestration: Why State Machines Fail in Cyber Defense
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Traditional Security Orchestration, Automation, and Response (SOAR) platforms rely on pre-programmed decision
               trees and Directed Acyclic Graphs (DAGs). During real intrusions, this architecture inevitably breaks.
             </p>
@@ -745,7 +745,7 @@ export function AboutPage() {
                 <AlertTriangle className="size-4" />
                 <h3 className="text-sm font-semibold">The Failure Mode of Rigid SOAR</h3>
               </div>
-              <ul className="space-y-2.5 text-xs text-muted leading-relaxed">
+              <ul className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
                 <li className="flex items-start gap-2">
                   <span className="text-destructive font-bold">✕</span>
                   <span><strong>Branch Explosion:</strong> Adversaries constantly mutate tactics. Writing playbooks for every permutation of initial access, evasion, and persistence requires impossible manual upkeep.</span>
@@ -766,7 +766,7 @@ export function AboutPage() {
                 <ShieldCheck className="size-4" />
                 <h3 className="text-sm font-semibold">How Phalanx Commanders Adapt</h3>
               </div>
-              <ul className="space-y-2.5 text-xs text-muted leading-relaxed">
+              <ul className="space-y-2.5 text-xs text-muted-foreground leading-relaxed">
                 <li className="flex items-start gap-2">
                   <span className="text-positive font-bold">✓</span>
                   <span><strong>Dynamic Discovery:</strong> The commander starts with zero workflow. It calls <code className="font-mono text-ink">a2a_discover</code> to read the live roster and dynamically selects specialists based on their declared skills.</span>
@@ -795,28 +795,28 @@ export function AboutPage() {
                 <div className="rounded-lg border border-rule-soft bg-card p-3">
                   <div className="font-mono text-[11px] font-bold text-primary">01 · OBSERVE</div>
                   <div className="mt-1 text-xs font-semibold text-ink">Ingest & Discover</div>
-                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                  <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
                     Parses detection alerts, calls <code className="font-mono">a2a_discover</code>, and inspects available specialists.
                   </p>
                 </div>
                 <div className="rounded-lg border border-rule-soft bg-card p-3">
                   <div className="font-mono text-[11px] font-bold text-primary">02 · ORIENT</div>
                   <div className="mt-1 text-xs font-semibold text-ink">Synthesize Evidence</div>
-                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                  <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
                     Correlates memory artifacts, outbound NetFlow, and CVE records to identify the intrusion vector.
                   </p>
                 </div>
                 <div className="rounded-lg border border-rule-soft bg-card p-3">
                   <div className="font-mono text-[11px] font-bold text-primary">03 · DECIDE</div>
                   <div className="mt-1 text-xs font-semibold text-ink">Task Delegation</div>
-                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                  <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
                     Dispatches targeted tasks to specialists and calculates containment blast radius.
                   </p>
                 </div>
                 <div className="rounded-lg border border-rule-soft bg-card p-3">
                   <div className="font-mono text-[11px] font-bold text-primary">04 · ACT</div>
                   <div className="mt-1 text-xs font-semibold text-ink">Contain & Backtest</div>
-                  <p className="mt-1 text-[11px] text-muted leading-relaxed">
+                  <p className="mt-1 text-[11px] text-muted-foreground leading-relaxed">
                     Authorizes isolation, deploys egress sinkholes, and authors new detection rules.
                   </p>
                 </div>
@@ -834,12 +834,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 WIRE PROTOCOL
               </Badge>
-              <span className="text-xs text-muted">Google Agent2Agent (A2A) v0.3</span>
+              <span className="text-xs text-muted-foreground">Google Agent2Agent (A2A) v0.3</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               Peer-to-Peer A2A Protocol Deep Dive
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Phalanx implements the Google Agent2Agent (A2A) protocol specification over JSON-RPC 2.0. Rather than invoking internal
               function pointers, all inter-agent task delegation and communication moves as fully-formed wire envelopes.
             </p>
@@ -857,7 +857,7 @@ export function AboutPage() {
                 ]}
                 className="w-fit"
               />
-              <span className="hidden font-mono text-xs text-muted sm:inline">
+              <span className="hidden font-mono text-xs text-muted-foreground sm:inline">
                 Endpoint: <code className="text-primary">/api/a2a/agents/&#123;id&#125;</code>
               </span>
             </div>
@@ -893,21 +893,21 @@ export function AboutPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-rule-soft bg-card/40 p-3.5">
               <div className="font-mono text-xs font-semibold text-primary">Decentralized Discovery</div>
-              <p className="mt-1 text-xs text-muted leading-relaxed">
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Specialists publish declared capabilities, parameters, and <code className="font-mono text-ink">delegateWhen</code> criteria.
                 Agents discover peers dynamically without hardcoded addresses.
               </p>
             </div>
             <div className="rounded-lg border border-rule-soft bg-card/40 p-3.5">
               <div className="font-mono text-xs font-semibold text-primary">Lateral P2P Communication</div>
-              <p className="mt-1 text-xs text-muted leading-relaxed">
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Specialists query peers directly (e.g. Forensics requests PCAP from Network Analyst) to accelerate analysis
                 without congesting the Commander.
               </p>
             </div>
             <div className="rounded-lg border border-rule-soft bg-card/40 p-3.5">
               <div className="font-mono text-xs font-semibold text-primary">Full Protocol Auditability</div>
-              <p className="mt-1 text-xs text-muted leading-relaxed">
+              <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                 Every hop is logged with unique <code className="font-mono text-ink">taskId</code> and <code className="font-mono text-ink">contextId</code>,
                 enabling complete replayability on the Protocol Trace page.
               </p>
@@ -924,12 +924,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 DYNAMIC UI RUNTIME
               </Badge>
-              <span className="text-xs text-muted">A2UI v0.9 Specification</span>
+              <span className="text-xs text-muted-foreground">A2UI v0.9 Specification</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               A2UI v0.9 Runtime Surface Generation
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               How can autonomous agents author dynamic, high-impact operator dashboards without introducing Cross-Site Scripting
               (XSS) or arbitrary code execution vulnerabilities? Phalanx uses the A2UI v0.9 declarative specification.
             </p>
@@ -938,10 +938,10 @@ export function AboutPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Agent Emitted A2UI Payload
                 </span>
-                <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted">updateComponents</Badge>
+                <Badge variant="outline" className="border-rule-soft bg-wash font-mono text-[10px] text-muted-foreground">updateComponents</Badge>
               </div>
               <CodeSnippetViewer
                 title="surface / incident-inc-8841"
@@ -953,7 +953,7 @@ export function AboutPage() {
 
             <div className="flex flex-col">
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted uppercase tracking-wider">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Native Client Render Result
                 </span>
                 <Badge variant="outline" className="border-positive/30 bg-positive/10 text-positive font-mono text-[10px]">
@@ -975,20 +975,20 @@ export function AboutPage() {
 
                 <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg border border-rule-soft bg-card p-3">
                   <div>
-                    <div className="text-[10px] text-muted uppercase">Threat Vector</div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Threat Vector</div>
                     <div className="font-mono text-xs font-bold text-destructive">C2 Beacon Active</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-muted uppercase">Target Host</div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Target Host</div>
                     <div className="font-mono text-xs font-bold text-warning">app-api-21</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-muted uppercase">Blast Radius</div>
+                    <div className="text-[10px] text-muted-foreground uppercase">Blast Radius</div>
                     <div className="font-mono text-xs font-bold text-info">Single Service Pod</div>
                   </div>
                 </div>
 
-                <p className="mt-3 text-xs leading-relaxed text-muted">
+                <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
                   Adversary implant actively communicating with external C2 185.121.44.19. Containment operator recommends network isolation.
                 </p>
 
@@ -1006,7 +1006,7 @@ export function AboutPage() {
             <h4 className="text-xs font-semibold text-ink uppercase tracking-wider mb-2">
               Key Guarantees of A2UI Runtime Surfaces
             </h4>
-            <div className="grid gap-3 sm:grid-cols-3 text-xs text-muted">
+            <div className="grid gap-3 sm:grid-cols-3 text-xs text-muted-foreground">
               <div>
                 <strong className="text-ink">Catalog Enforcement:</strong> Agents can only invoke elements pre-registered in
                 <code className="font-mono text-primary"> /api/a2ui/catalog.json</code> (<code className="font-mono">Card</code>, <code className="font-mono">MetricRow</code>, <code className="font-mono">Timeline</code>).
@@ -1032,12 +1032,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 INSTRUMENTATION
               </Badge>
-              <span className="text-xs text-muted">37 Simulated SOC Instruments</span>
+              <span className="text-xs text-muted-foreground">37 Simulated SOC Instruments</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               The Simulated Tool Estate & Zero-Ground-Truth Isolation
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Phalanx agents are equipped with 37 simulated security instruments covering the full spectrum of SOC operations.
               Agents are strictly quarantined from hidden scenario ground truth, forcing realistic forensic deduction.
             </p>
@@ -1064,7 +1064,7 @@ export function AboutPage() {
                   "cursor-pointer rounded-lg border px-2.5 py-1 text-xs font-medium transition-all select-none",
                   toolCategory === cat.id
                     ? "border-primary bg-primary/15 text-primary font-semibold"
-                    : "border-rule-soft bg-wash text-muted hover:bg-wash hover:text-ink"
+                    : "border-rule-soft bg-wash text-muted-foreground hover:bg-wash hover:text-ink"
                 )}
               >
                 {cat.label}
@@ -1092,17 +1092,17 @@ export function AboutPage() {
                           ? "border-purple-500/40 text-purple-400 bg-purple-500/10"
                           : tool.clearance === "act"
                           ? "border-warning/40 text-warning bg-warning/10"
-                          : "border-rule-soft text-muted"
+                          : "border-rule-soft text-muted-foreground"
                       )}
                     >
                       {tool.clearance}
                     </Badge>
                   </div>
-                  <p className="mt-2 text-xs leading-relaxed text-muted">
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                     {tool.description}
                   </p>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-rule-soft pt-2 text-[10px] text-muted">
+                <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-rule-soft pt-2 text-[10px] text-muted-foreground">
                   <span className="font-semibold text-ink/70">Assigned:</span>
                   {tool.agents.map((ag) => (
                     <span key={ag} className="rounded border border-rule-soft bg-wash px-1 font-mono text-[10px] text-ink">
@@ -1124,12 +1124,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 MODELS & RUNTIME
               </Badge>
-              <span className="text-xs text-muted">Frontier AI & Replay Engine</span>
+              <span className="text-xs text-muted-foreground">Frontier AI & Replay Engine</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               Multi-Model Flexibility & Deterministic Replay
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Enterprise security defense demands vendor independence. Phalanx features a plug-and-play provider architecture
               supporting leading models alongside an offline deterministic replay engine.
             </p>
@@ -1159,7 +1159,7 @@ export function AboutPage() {
                     Massive 2M token context window and native multi-turn tool calling
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted leading-relaxed">
+                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted-foreground leading-relaxed">
                   <div className="rounded-lg border border-rule-soft bg-card p-4">
                     <div className="font-semibold text-ink mb-1">Commander: Gemini 3.1 Pro</div>
                     <p>
@@ -1189,7 +1189,7 @@ export function AboutPage() {
                     Hybrid thinking and rigorous chain-of-thought forensic reasoning
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted leading-relaxed">
+                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted-foreground leading-relaxed">
                   <div className="rounded-lg border border-rule-soft bg-card p-4">
                     <div className="font-semibold text-ink mb-1">Commander: Claude Sonnet 5</div>
                     <p>
@@ -1218,7 +1218,7 @@ export function AboutPage() {
                     Strict JSON schema adherence and enterprise tool orchestration
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted leading-relaxed">
+                <CardContent className="grid gap-4 sm:grid-cols-2 text-xs text-muted-foreground leading-relaxed">
                   <div className="rounded-lg border border-rule-soft bg-card p-4">
                     <div className="font-semibold text-ink mb-1">Commander: GPT-5</div>
                     <p>
@@ -1246,7 +1246,7 @@ export function AboutPage() {
                     Zero-token, 100% reproducible scientific benchmark and evaluation mode
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3 text-xs text-muted leading-relaxed">
+                <CardContent className="space-y-3 text-xs text-muted-foreground leading-relaxed">
                   <p>
                     Phalanx ships with a pre-recorded, millisecond-accurate deterministic replay director. It streams the authentic
                     tool responses, A2A coordination messages, and dynamic A2UI dashboards with zero model API calls.
@@ -1280,12 +1280,12 @@ export function AboutPage() {
               <Badge variant="outline" className="border-primary/40 bg-primary/10 font-mono text-xs text-primary">
                 COMPARATIVE ANALYSIS
               </Badge>
-              <span className="text-xs text-muted">Architectural Benchmarks</span>
+              <span className="text-xs text-muted-foreground">Architectural Benchmarks</span>
             </div>
             <h2 className="text-2xl font-bold tracking-tight text-ink">
               Traditional SOAR Playbooks vs. Autonomous Multi-Agent Swarms
             </h2>
-            <p className="text-sm leading-relaxed text-muted">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               A detailed architectural comparison illustrating the transition from rigid automation to autonomous agentic cyber defense.
             </p>
           </div>
@@ -1295,19 +1295,19 @@ export function AboutPage() {
               <thead>
                 <tr className="border-b border-rule-soft bg-card">
                   <th className="p-3.5 font-semibold text-ink">Dimension</th>
-                  <th className="p-3.5 font-semibold text-muted">Rigid SOAR Playbooks</th>
+                  <th className="p-3.5 font-semibold text-muted-foreground">Rigid SOAR Playbooks</th>
                   <th className="p-3.5 font-semibold text-primary">Phalanx Autonomous Swarm</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Orchestration Model</td>
-                  <td className="p-3.5 text-muted">Static DAG / BPMN state machines with hardcoded conditionals.</td>
+                  <td className="p-3.5 text-muted-foreground">Static DAG / BPMN state machines with hardcoded conditionals.</td>
                   <td className="p-3.5 font-medium text-ink">Dynamic LLM Incident Commander with runtime skill discovery.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Novel / Evasive Attacks</td>
-                  <td className="p-3.5 text-muted">
+                  <td className="p-3.5 text-muted-foreground">
                     <span className="inline-flex items-center gap-1 text-destructive font-medium">
                       <XCircle className="size-3" /> Fails on unmapped branches; requires human intervention.
                     </span>
@@ -1320,37 +1320,37 @@ export function AboutPage() {
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Coordination Topology</td>
-                  <td className="p-3.5 text-muted">Central hub-and-spoke bottleneck; sequential step execution.</td>
+                  <td className="p-3.5 text-muted-foreground">Central hub-and-spoke bottleneck; sequential step execution.</td>
                   <td className="p-3.5 font-medium text-ink">Decentralized peer-to-peer mesh over Google A2A protocol.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Operator Cockpit</td>
-                  <td className="p-3.5 text-muted">Static pre-built forms and manual ticketing queues.</td>
+                  <td className="p-3.5 text-muted-foreground">Static pre-built forms and manual ticketing queues.</td>
                   <td className="p-3.5 font-medium text-ink">Runtime-authored A2UI v0.9 declarative surfaces updating in place.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Cross-Domain Telemetry</td>
-                  <td className="p-3.5 text-muted">Fragmented scripts (isolated IP lookup without host context).</td>
+                  <td className="p-3.5 text-muted-foreground">Fragmented scripts (isolated IP lookup without host context).</td>
                   <td className="p-3.5 font-medium text-ink">Holistic correlation across EDR, NetFlow, memory, and Cloud IAM.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Containment Decisioning</td>
-                  <td className="p-3.5 text-muted">Blind automated triggers or manual escalation queues.</td>
+                  <td className="p-3.5 text-muted-foreground">Blind automated triggers or manual escalation queues.</td>
                   <td className="p-3.5 font-medium text-ink">Blast-radius aware reasoning balancing dwell time vs service impact.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Post-Incident Hardening</td>
-                  <td className="p-3.5 text-muted">Manual post-mortem ticket written days or weeks later.</td>
+                  <td className="p-3.5 text-muted-foreground">Manual post-mortem ticket written days or weeks later.</td>
                   <td className="p-3.5 font-medium text-ink">Autonomous Sigma/YARA rule authoring and 30-day backtesting.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Extensibility</td>
-                  <td className="p-3.5 text-muted">Complex workflow refactoring and fragile custom integration code.</td>
+                  <td className="p-3.5 text-muted-foreground">Complex workflow refactoring and fragile custom integration code.</td>
                   <td className="p-3.5 font-medium text-ink">Drop-in modularity: new agents publish an <code className="font-mono text-xs">agent-card.json</code>.</td>
                 </tr>
                 <tr className="hover:bg-wash">
                   <td className="p-3.5 font-semibold text-ink">Offline Benchmarking</td>
-                  <td className="p-3.5 text-muted">Rarely supported; requires active infrastructure connections.</td>
+                  <td className="p-3.5 text-muted-foreground">Rarely supported; requires active infrastructure connections.</td>
                   <td className="p-3.5 font-medium text-ink">100% offline deterministic replay engine for scientific evaluation.</td>
                 </tr>
               </tbody>
@@ -1365,7 +1365,7 @@ export function AboutPage() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-ink">Experience the Swarm in Action</h3>
-              <p className="text-xs text-muted">
+              <p className="text-xs text-muted-foreground">
                 Run scenarios, inspect agent skills, or test live AI model configurations.
               </p>
             </div>
@@ -1441,7 +1441,7 @@ export function AboutPage() {
             </Card>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rule-soft bg-wash px-4 py-3 text-xs text-muted">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rule-soft bg-wash px-4 py-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
               <Radio className="size-4 text-primary" />
               <span>Deep dive into the live JSON-RPC 2.0 message stream on the <Link to="/protocol" className="text-ink underline decoration-primary/50 underline-offset-2 hover:text-primary">Protocol Trace</Link> page.</span>
