@@ -21,15 +21,16 @@ import { phalanxApi, usePhalanx } from "@/lib/store"
 
 interface DemoHeroProps {
   className?: string
+  collapsible?: boolean
 }
 
-export function DemoHero({ className }: DemoHeroProps) {
+export function DemoHero({ className, collapsible = true }: DemoHeroProps) {
   const state = usePhalanx()
   const incidents = [...state.incidents.values()]
   const isRunning = incidents.length > 0 || state.detections.length > 0
 
   const [userCollapsed, setUserCollapsed] = useState<boolean | null>(null)
-  const isCollapsed = userCollapsed ?? false
+  const isCollapsed = collapsible ? (userCollapsed ?? false) : false
 
   const [activeTab, setActiveTab] = useState<"simulated" | "range">("simulated")
   const [busyAction, setBusyAction] = useState<string | null>(null)
@@ -360,16 +361,18 @@ export function DemoHero({ className }: DemoHeroProps) {
                 <span className="ml-1">RESET</span>
               </Button>
 
-              <Button
-                size="xs"
-                variant="ghost"
-                onClick={() => setUserCollapsed(true)}
-                className="h-7 px-2 text-[11px] font-mono text-muted-foreground hover:text-foreground"
-                title="Collapse to compact strip"
-              >
-                <ChevronUp className="size-3.5" />
-                <span className="ml-1">COMPACT</span>
-              </Button>
+              {collapsible ? (
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setUserCollapsed(true)}
+                  className="h-7 px-2 text-[11px] font-mono text-muted-foreground hover:text-foreground"
+                  title="Collapse to compact strip"
+                >
+                  <ChevronUp className="size-3.5" />
+                  <span className="ml-1">COMPACT</span>
+                </Button>
+              ) : null}
             </div>
           </div>
 

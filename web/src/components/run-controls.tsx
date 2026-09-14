@@ -1,7 +1,8 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { Button } from "@foundry/ui/components/button"
 import { StatusDot } from "@foundry/ui/components/status-dot"
-import { RotateCcw } from "lucide-react"
+import { ArrowRight, RotateCcw } from "lucide-react"
 import { phalanxApi, usePhalanx } from "@/lib/store"
 
 /* Run controls.
@@ -108,6 +109,15 @@ export function RunControls() {
         >
           <RotateCcw className="size-3.5" />
         </Button>
+
+        <Link
+          to="/simulations"
+          className="ml-auto inline-flex items-center gap-1 text-[11px] font-mono text-muted-foreground hover:text-ink transition-colors"
+          title="Open dedicated Simulation Lab with tactical dossiers"
+        >
+          <span>Simulation Lab</span>
+          <ArrowRight className="size-3" />
+        </Link>
       </div>
 
       {notice ? (

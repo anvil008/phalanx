@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { PageContent, PageHeader } from "@foundry/ui/components/page-chrome"
 import { StatusDot } from "@foundry/ui/components/status-dot"
 import { A2UISurface } from "@/components/a2ui-surface"
-import { DemoHero } from "@/components/demo-hero"
+import { RunControls } from "@/components/run-controls"
 import { KillChain } from "@/components/kill-chain"
 import { RangePanel } from "@/components/range-panel"
 import { BusTrace } from "@/components/bus-trace"
@@ -56,7 +56,10 @@ export function MissionControlPage() {
         }
       />
 
-      <DemoHero />
+      {/* Compact run controls strip matching Incident Response Team */}
+      <div className="panel px-3 py-2.5">
+        <RunControls />
+      </div>
 
       {/* Posture, as one panel of readings divided by hairlines */}
       <div className="panel grid shrink-0 grid-cols-2 gap-px overflow-hidden bg-rule-soft sm:grid-cols-3 xl:grid-cols-6">

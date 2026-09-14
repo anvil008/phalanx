@@ -1,4 +1,4 @@
-import { Boxes, MessagesSquare, Network, Radar, ScrollText, Settings, ShieldAlert, type LucideIcon } from "lucide-react"
+import { Boxes, FlaskConical, MessagesSquare, Network, Radar, ScrollText, Settings, ShieldAlert, type LucideIcon } from "lucide-react"
 
 export interface NavItem {
   to: string
@@ -17,6 +17,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Operations",
     items: [
       { to: "/", label: "Mission Control", icon: Radar, end: true },
+      { to: "/simulations", label: "Simulation Lab", icon: FlaskConical },
       { to: "/incidents", label: "Incident Response Team", icon: ShieldAlert },
       { to: "/chat", label: "Agent Chat", icon: MessagesSquare },
     ],

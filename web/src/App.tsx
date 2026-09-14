@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell"
 import { PhalanxProvider } from "@/lib/store"
 import { MissionControlPage } from "@/pages/mission-control"
 
+const SimulationsPage = lazy(() => import("@/pages/simulations").then(({ SimulationsPage }) => ({ default: SimulationsPage })))
 const IncidentsPage = lazy(() => import("@/pages/incidents").then(({ IncidentsPage }) => ({ default: IncidentsPage })))
 const IncidentDetailPage = lazy(() =>
   import("@/pages/incident-detail").then(({ IncidentDetailPage }) => ({ default: IncidentDetailPage })),
@@ -22,6 +23,7 @@ export function App() {
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<MissionControlPage />} />
+            <Route path="/simulations" element={<SimulationsPage />} />
             <Route path="/incidents" element={<IncidentsPage />} />
             <Route path="/incidents/:id" element={<IncidentDetailPage />} />
             <Route path="/range" element={<RangePage />} />
