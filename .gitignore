@@ -1,11 +1,20 @@
-node_modules
-**/node_modules
+# Dependencies & build artifacts
+node_modules/
 **/node_modules/
 dist/
+**/dist/
 webdist/
+**/webdist/
 *.log
+.DS_Store
+
+# Environment & local secrets
 .env
 .env.*
 !.env.example
 .phalanx.config.json
-.DS_Store
+
+# Workspaces & caches
+.jj/
+.workspaces/
+.cache/

@@ -1,5 +1,8 @@
 # Phalanx
 
+[![CI](https://github.com/anvil008/phalanx/actions/workflows/ci.yml/badge.svg)](https://github.com/anvil008/phalanx/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 A live demonstration of an autonomous blue-team agent swarm: an incident
 commander that plans instead of executing a workflow, specialists that talk to
 each other over the Agent2Agent protocol, and an operator interface the agents
@@ -146,7 +149,6 @@ specialists they both want.
 **Prerequisites**: Node 22.6+ (the server runs `node --experimental-strip-types`) and npm 10+.
 
 ```sh
-cd phalanx
 cp .env.example .env
 npm install
 npm run build --workspace=web     # emits server/webdist
@@ -159,7 +161,6 @@ The server binds `0.0.0.0`, so it is reachable from the rest of the network at
 For development, run the two halves separately:
 
 ```sh
-cd phalanx
 npm run dev --workspace=server    # :8095
 npm run dev --workspace=web       # :5195, proxies /api to the server
 ```
